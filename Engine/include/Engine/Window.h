@@ -9,6 +9,7 @@ public:
     ~Window();
 
     bool shouldClose() const;
+    void setTitle(const std::string& title);
 
 private:
     GLFWwindow* m_window;

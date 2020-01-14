@@ -4,6 +4,8 @@ project ("Game")
 
 add_executable("Game"
     main.cpp
+    FrameRateCounter.h
+    FrameRateCounter.cpp
 )
 
 target_include_directories("Game"
