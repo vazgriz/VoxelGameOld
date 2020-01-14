@@ -7,6 +7,9 @@ Engine::Engine() {
         std::cout << "GLFW error: " << description << std::endl;
     });
     glfwInit();
+
+    m_updateClock = std::make_unique<Clock>(0.0f);
+    m_updateGroup = std::make_unique<SystemGroup>(*m_updateClock);
 }
 
 Engine::~Engine() {
@@ -20,5 +23,7 @@ void Engine::addWindow(Window& window) {
 void Engine::run() {
     while (!m_window->shouldClose()) {
         glfwPollEvents();
+        m_updateClock->update();
+        m_updateGroup->update();
     }
 }

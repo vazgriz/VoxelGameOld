@@ -12,6 +12,10 @@ add_library("Engine"
     Engine.cpp
     include/Engine/Window.h
     Window.cpp
+    include/Engine/System.h
+    System.cpp
+    include/Engine/Clock.h
+    Clock.cpp
 )
 
 target_include_directories("Engine"
