@@ -10,10 +10,12 @@ add_subdirectory(${GLFW_ROOT} ${GLFW_BUILD} EXCLUDE_FROM_ALL)
 add_library("Engine"
     include/Engine/Engine.h
     Engine.cpp
+    include/Engine/Window.h
+    Window.cpp
 )
 
 target_include_directories("Engine"
-    PRIVATE "${GLFW_ROOT}/include"
+    PUBLIC "${GLFW_ROOT}/include"
     PUBLIC "./include"
 )
 
