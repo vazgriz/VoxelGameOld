@@ -8,6 +8,7 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(${GLFW_ROOT} ${GLFW_BUILD} EXCLUDE_FROM_ALL)
 
 add_library("Engine"
+    vma.cpp
     include/Engine/Engine.h
     Engine.cpp
     include/Engine/Window.h
@@ -27,6 +28,7 @@ target_include_directories("Engine"
     PUBLIC "./include"
     PUBLIC "${VULKAN_ROOT}/Include"
     PUBLIC "${VKW_ROOT}/include"
+    PUBLIC "${VMA_INCLUDE}"
 )
 
 target_link_libraries("Engine"
