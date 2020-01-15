@@ -38,6 +38,10 @@ void SystemGroup::update() {
     }
 
     for (auto system : m_systems) {
+        system->preUpdate(*m_clock);
+    }
+
+    for (auto system : m_systems) {
         system->update(*m_clock);
     }
 }

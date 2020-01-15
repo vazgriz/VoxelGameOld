@@ -18,6 +18,8 @@ add_library("Engine"
     Clock.cpp
     include/Engine/Renderer.h
     Renderer.cpp
+    include/Engine/RenderSystem.h
+    RenderSystem.cpp
 )
 
 target_include_directories("Engine"

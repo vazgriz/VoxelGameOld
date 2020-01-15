@@ -6,6 +6,8 @@ add_executable("Game"
     main.cpp
     FrameRateCounter.h
     FrameRateCounter.cpp
+    TriangleRenderer.h
+    TriangleRenderer.cpp
 )
 
 target_include_directories("Game"

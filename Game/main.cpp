@@ -2,8 +2,10 @@
 #include <Engine/Engine.h>
 #include <Engine/Window.h>
 #include <Engine/Renderer.h>
+#include <Engine/RenderSystem.h>
 
 #include "FrameRateCounter.h"
+#include "TriangleRenderer.h"
 
 int main() {
     Engine engine;
@@ -17,7 +19,15 @@ int main() {
     FrameRateCounter counter(0, window, "VoxelGame");
     engine.getUpdateGroup().add(counter);
 
+    RenderSystem renderSystem(100, renderer);
+    engine.getUpdateGroup().add(renderSystem);
+
+    TriangleRenderer triangleRenderer(10, renderer, renderSystem);
+    engine.getUpdateGroup().add(triangleRenderer);
+
     engine.run();
+
+    renderSystem.wait();
 
     return 0;
 }

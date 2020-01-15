@@ -92,6 +92,7 @@ void Renderer::pickPhysicalDevice(Window& window) {
     }
 
     createSwapchain();
+    createImageViews();
 }
 
 void Renderer::createSurface(Window& window) {
