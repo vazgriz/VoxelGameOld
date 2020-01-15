@@ -2,9 +2,9 @@
 #include <VulkanWrapper/VulkanWrapper.h>
 #include "Engine/Window.h"
 
-class Renderer {
+class Graphics {
 public:
-    Renderer();
+    Graphics();
 
     vk::Instance& instance() const { return *m_instance; }
     vk::Surface& surface() const { return*m_surface; }

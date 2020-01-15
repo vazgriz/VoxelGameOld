@@ -1,4 +1,4 @@
-#include "Engine/Renderer.h"
+#include "Engine/Graphics.h"
 #include "Engine/Window.h"
 #include <GLFW/glfw3.h>
 #include <unordered_set>
@@ -18,11 +18,11 @@ struct QueueIndices {
     }
 };
 
-Renderer::Renderer() {
+Graphics::Graphics() {
     createInstance();
 }
 
-void Renderer::createInstance() {
+void Graphics::createInstance() {
     vk::ApplicationInfo appInfo = {};
     appInfo.applicationName = "Voxel Game";
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -73,7 +73,7 @@ QueueIndices getIndices(const vk::PhysicalDevice& physicalDevice, const vk::Surf
     return indices;
 }
 
-void Renderer::pickPhysicalDevice(Window& window) {
+void Graphics::pickPhysicalDevice(Window& window) {
     m_window = &window;
 
     if (m_instance->physicalDevices().size() == 0) {
@@ -95,13 +95,13 @@ void Renderer::pickPhysicalDevice(Window& window) {
     createImageViews();
 }
 
-void Renderer::createSurface(Window& window) {
+void Graphics::createSurface(Window& window) {
     VkSurfaceKHR surface;
     VKW_CHECK(glfwCreateWindowSurface(m_instance->handle(), window.handle(), m_instance->callbacks(), &surface));
     m_surface = std::make_unique<vk::Surface>(*m_instance, surface);
 }
 
-void Renderer::createDevice(const vk::PhysicalDevice& physicalDevice, uint32_t graphicsIndex, uint32_t presentIndex) {
+void Graphics::createDevice(const vk::PhysicalDevice& physicalDevice, uint32_t graphicsIndex, uint32_t presentIndex) {
     std::vector<vk::DeviceQueueCreateInfo> queueInfos;
     std::unordered_set<uint32_t> queueFamilySet = { graphicsIndex, presentIndex };
 
@@ -160,7 +160,7 @@ vk::Extent2D chooseSwapExtent(const Window& window, const vk::SurfaceCapabilitie
     }
 }
 
-void Renderer::createSwapchain() {
+void Graphics::createSwapchain() {
     vk::SurfaceCapabilities capabilities = m_surface->getCapabilities(m_device->physicalDevice());
     std::vector<vk::SurfaceFormat> formats = m_surface->getFormats(m_device->physicalDevice());
     std::vector<vk::PresentMode> presentModes = m_surface->getPresentModes(m_device->physicalDevice());
@@ -200,7 +200,7 @@ void Renderer::createSwapchain() {
     m_swapchain = std::make_unique<vk::Swapchain>(*m_device, info);
 }
 
-void Renderer::createImageViews() {
+void Graphics::createImageViews() {
     for (auto& image : m_swapchain->images()) {
         vk::ImageViewCreateInfo info = {};
         info.image = &image;

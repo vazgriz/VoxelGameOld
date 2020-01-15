@@ -17,8 +17,8 @@ add_library("Engine"
     System.cpp
     include/Engine/Clock.h
     Clock.cpp
-    include/Engine/Renderer.h
-    Renderer.cpp
+    include/Engine/Graphics.h
+    Graphics.cpp
     include/Engine/RenderSystem.h
     RenderSystem.cpp
 )

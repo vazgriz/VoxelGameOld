@@ -5,12 +5,12 @@
 
 class TriangleRenderer :public System {
 public:
-    TriangleRenderer(uint32_t priority, Renderer& renderer, RenderSystem& renderSystem);
+    TriangleRenderer(uint32_t priority, Graphics& renderer, RenderSystem& renderSystem);
 
     void update(Clock& clock);
 
 private:
-    Renderer* m_renderer;
+    Graphics* m_graphics;
     RenderSystem* m_renderSystem;
     std::unique_ptr<vk::CommandPool> m_commandPool;
     std::vector<vk::CommandBuffer> m_commandBuffers;

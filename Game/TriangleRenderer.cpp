@@ -17,19 +17,19 @@ std::vector<char> readFile(const std::string& filename) {
     return buffer;
 }
 
-TriangleRenderer::TriangleRenderer(uint32_t priority, Renderer& renderer, RenderSystem& renderSystem) : System(priority) {
-    m_renderer = &renderer;
+TriangleRenderer::TriangleRenderer(uint32_t priority, Graphics& renderer, RenderSystem& renderSystem) : System(priority) {
+    m_graphics = &renderer;
     m_renderSystem = &renderSystem;
 
     vk::CommandPoolCreateInfo info = {};
-    info.queueFamilyIndex = m_renderer->graphicsQueue()->familyIndex();
+    info.queueFamilyIndex = m_graphics->graphicsQueue()->familyIndex();
     info.flags = vk::CommandPoolCreateFlags::ResetCommandBuffer;
 
-    m_commandPool = std::make_unique<vk::CommandPool>(m_renderer->device(), info);
+    m_commandPool = std::make_unique<vk::CommandPool>(m_graphics->device(), info);
 
     vk::CommandBufferAllocateInfo bufferInfo = {};
     bufferInfo.commandPool = m_commandPool.get();
-    bufferInfo.commandBufferCount = static_cast<uint32_t>(m_renderer->swapchain().images().size());
+    bufferInfo.commandBufferCount = static_cast<uint32_t>(m_graphics->swapchain().images().size());
 
     m_commandBuffers = m_commandPool->allocate(bufferInfo);
 
@@ -41,7 +41,7 @@ TriangleRenderer::TriangleRenderer(uint32_t priority, Renderer& renderer, Render
 
 void TriangleRenderer::createRenderPass() {
     vk::AttachmentDescription attachment = {};
-    attachment.format = m_renderer->swapchain().format();
+    attachment.format = m_graphics->swapchain().format();
     attachment.samples = vk::SampleCountFlags::_1;
     attachment.loadOp = vk::AttachmentLoadOp::DontCare;
     attachment.storeOp = vk::AttachmentStoreOp::Store;
@@ -62,19 +62,19 @@ void TriangleRenderer::createRenderPass() {
     info.attachments = { attachment };
     info.subpasses = { subpass };
 
-    m_renderPass = std::make_unique<vk::RenderPass>(m_renderer->device(), info);
+    m_renderPass = std::make_unique<vk::RenderPass>(m_graphics->device(), info);
 }
 
 void TriangleRenderer::createFramebuffers() {
-    for (size_t i = 0; i < m_renderer->swapchain().images().size(); i++) {
+    for (size_t i = 0; i < m_graphics->swapchain().images().size(); i++) {
         vk::FramebufferCreateInfo info = {};
         info.renderPass = m_renderPass.get();
-        info.attachments = { m_renderer->swapchainImageViews()[i] };
-        info.width = m_renderer->swapchain().extent().width;
-        info.height = m_renderer->swapchain().extent().height;
+        info.attachments = { m_graphics->swapchainImageViews()[i] };
+        info.width = m_graphics->swapchain().extent().width;
+        info.height = m_graphics->swapchain().extent().height;
         info.layers = 1;
 
-        m_framebuffers.emplace_back(m_renderer->device(), info);
+        m_framebuffers.emplace_back(m_graphics->device(), info);
     }
 }
 
@@ -92,7 +92,7 @@ void TriangleRenderer::update(Clock& clock) {
     vk::RenderPassBeginInfo renderPassInfo = {};
     renderPassInfo.renderPass = m_renderPass.get();
     renderPassInfo.framebuffer = &m_framebuffers[index];
-    renderPassInfo.renderArea.extent = m_renderer->swapchain().extent();
+    renderPassInfo.renderArea.extent = m_graphics->swapchain().extent();
     renderPassInfo.clearValues = { { 0.0f, 0.0f, 0.0f, 1.0f } };
 
     commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::Inline);
@@ -109,7 +109,7 @@ void TriangleRenderer::update(Clock& clock) {
 void TriangleRenderer::createPipelineLayout() {
     vk::PipelineLayoutCreateInfo info = {};
 
-    m_pipelineLayout = std::make_unique<vk::PipelineLayout>(m_renderer->device(), info);
+    m_pipelineLayout = std::make_unique<vk::PipelineLayout>(m_graphics->device(), info);
 }
 
 vk::ShaderModule createShaderModule(vk::Device& device, const std::vector<char>& byteCode) {
@@ -123,8 +123,8 @@ void TriangleRenderer::createPipeline() {
     std::vector<char> vertShaderCode = readFile("shaders/shader.vert.spv");
     std::vector<char> fragShaderCode = readFile("shaders/shader.frag.spv");
 
-    vk::ShaderModule vertShader = createShaderModule(m_renderer->device(), vertShaderCode);
-    vk::ShaderModule fragShader = createShaderModule(m_renderer->device(), fragShaderCode);
+    vk::ShaderModule vertShader = createShaderModule(m_graphics->device(), vertShaderCode);
+    vk::ShaderModule fragShader = createShaderModule(m_graphics->device(), fragShaderCode);
 
     vk::PipelineShaderStageCreateInfo vertInfo = {};
     vertInfo.module = &vertShader;
@@ -144,13 +144,13 @@ void TriangleRenderer::createPipeline() {
     inputAssemblyInfo.topology = vk::PrimitiveTopology::TriangleList;
 
     vk::Viewport viewport = {};
-    viewport.width = static_cast<float>(m_renderer->swapchain().extent().width);
-    viewport.height = static_cast<float>(m_renderer->swapchain().extent().height);
+    viewport.width = static_cast<float>(m_graphics->swapchain().extent().width);
+    viewport.height = static_cast<float>(m_graphics->swapchain().extent().height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     vk::Rect2D scissor = {};
-    scissor.extent = m_renderer->swapchain().extent();
+    scissor.extent = m_graphics->swapchain().extent();
 
     vk::PipelineViewportStateCreateInfo viewportInfo = {};
     viewportInfo.viewports = { viewport };
@@ -188,5 +188,5 @@ void TriangleRenderer::createPipeline() {
     info.renderPass = m_renderPass.get();
     info.subpass = 0;
 
-    m_pipeline = std::make_unique<vk::GraphicsPipeline>(m_renderer->device(), info);
+    m_pipeline = std::make_unique<vk::GraphicsPipeline>(m_graphics->device(), info);
 }

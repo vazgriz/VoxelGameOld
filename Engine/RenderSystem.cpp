@@ -1,6 +1,6 @@
 #include "Engine/RenderSystem.h"
 
-RenderSystem::RenderSystem(uint32_t priority, Renderer& renderer) : System(priority) {
+RenderSystem::RenderSystem(uint32_t priority, Graphics& renderer) : System(priority) {
     m_renderer = &renderer;
 
     for (size_t i = 0; i < m_renderer->swapchain().images().size(); i++) {

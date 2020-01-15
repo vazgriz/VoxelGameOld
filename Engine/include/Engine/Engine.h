@@ -1,6 +1,7 @@
 #pragma once
 #include "Engine/Clock.h"
-#include "Engine/Renderer.h"
+#include "Engine/Mesh.h"
+#include "Engine/Graphics.h"
 #include "Engine/RenderSystem.h"
 #include "Engine/System.h"
 #include "Engine/Window.h"
