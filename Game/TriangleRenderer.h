@@ -16,7 +16,11 @@ private:
     std::vector<vk::CommandBuffer> m_commandBuffers;
     std::unique_ptr<vk::RenderPass> m_renderPass;
     std::vector<vk::Framebuffer> m_framebuffers;
+    std::unique_ptr<vk::PipelineLayout> m_pipelineLayout;
+    std::unique_ptr<vk::Pipeline> m_pipeline;
 
     void createRenderPass();
     void createFramebuffers();
+    void createPipelineLayout();
+    void createPipeline();
 };
