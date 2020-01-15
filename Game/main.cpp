@@ -1,8 +1,5 @@
 #include <iostream>
 #include <Engine/Engine.h>
-#include <Engine/Window.h>
-#include <Engine/Renderer.h>
-#include <Engine/RenderSystem.h>
 
 #include "FrameRateCounter.h"
 #include "TriangleRenderer.h"

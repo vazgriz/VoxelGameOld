@@ -1,6 +1,9 @@
 #pragma once
-#include "Engine/Window.h"
+#include "Engine/Clock.h"
+#include "Engine/Renderer.h"
+#include "Engine/RenderSystem.h"
 #include "Engine/System.h"
+#include "Engine/Window.h"
 
 class Engine {
 public:
