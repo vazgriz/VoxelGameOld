@@ -16,13 +16,19 @@ add_library("Engine"
     System.cpp
     include/Engine/Clock.h
     Clock.cpp
+    include/Engine/Renderer.h
+    Renderer.cpp
 )
 
 target_include_directories("Engine"
     PUBLIC "${GLFW_ROOT}/include"
     PUBLIC "./include"
+    PUBLIC "${VULKAN_ROOT}/Include"
+    PUBLIC "${VKW_ROOT}/include"
 )
 
 target_link_libraries("Engine"
     "${GLFW_BUILD}/src/glfw3.lib"
+    "${VKW_BUILD}/src/VulkanWrapper.lib"
+    "${VULKAN_ROOT}/Lib/vulkan-1.lib"
 )
