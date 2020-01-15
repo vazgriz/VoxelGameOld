@@ -10,7 +10,8 @@ int main() {
     Window window(800, 600, "VoxelGame");
     engine.addWindow(window);
 
-    Graphics graphics;
+    engine.setGraphics({});
+    Graphics& graphics = engine.getGraphics();
     graphics.pickPhysicalDevice(window);
 
     FrameRateCounter counter(0, window, "VoxelGame");
