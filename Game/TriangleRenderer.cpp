@@ -144,6 +144,22 @@ void TriangleRenderer::createPipeline() {
     std::vector<vk::PipelineShaderStageCreateInfo> stages = { std::move(vertInfo), std::move(fragInfo) };
 
     vk::PipelineVertexInputStateCreateInfo vertexInputInfo = {};
+    vertexInputInfo.vertexBindingDescriptions = {
+        {
+            0, sizeof(glm::vec3)
+        },
+        {
+            1, sizeof(glm::vec3)
+        }
+    };
+    vertexInputInfo.vertexAttributeDescriptions = {
+        {
+            0, 0, vk::Format::R32G32B32_Sfloat
+        },
+        {
+            1, 1, vk::Format::R32G32B32_Sfloat
+        }
+    };
 
     vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo = {};
     inputAssemblyInfo.topology = vk::PrimitiveTopology::TriangleList;
@@ -197,9 +213,9 @@ void TriangleRenderer::createPipeline() {
 }
 
 static std::vector<glm::vec3> vertices = {
-    { 0, 1, 0 },
-    { 1, 0, 0},
-    { -1, 0, 0}
+    { 0, -1, 0 },
+    { 1, 1, 0},
+    { -1, 1, 0}
 };
 
 static std::vector<glm::vec3> colors = {
