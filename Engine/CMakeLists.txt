@@ -27,6 +27,8 @@ add_library("Engine"
     Buffer.cpp
     include/Engine/Mesh.h
     Mesh.cpp
+    include/Engine/RenderGraph/RenderGraph.h
+    RenderGraph.cpp
 )
 
 target_include_directories("Engine"

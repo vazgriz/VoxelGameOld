@@ -5,6 +5,7 @@
 #include "Engine/Graphics.h"
 #include "Engine/MemoryManager.h"
 #include "Engine/Mesh.h"
+#include "Engine/RenderGraph/RenderGraph.h"
 #include "Engine/RenderSystem.h"
 #include "Engine/System.h"
 #include "Engine/Window.h"
