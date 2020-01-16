@@ -1,6 +1,8 @@
 #include <Engine/System.h>
 #include <algorithm>
 
+using namespace VoxelEngine;
+
 System::System(int32_t priority) {
     m_group = nullptr;
     setPriority(priority);

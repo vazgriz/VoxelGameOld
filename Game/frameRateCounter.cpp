@@ -2,14 +2,14 @@
 #include <sstream>
 #include <iomanip>
 
-FrameRateCounter::FrameRateCounter(int32_t priority, Window& window, std::string titlePrefix) : System(priority) {
+FrameRateCounter::FrameRateCounter(int32_t priority, VoxelEngine::Window& window, std::string titlePrefix) : System(priority) {
     m_window = &window;
     m_titlePrefix = titlePrefix;
     m_frameCount = 0;
     m_timer = 0;
 }
 
-void FrameRateCounter::update(Clock& clock) {
+void FrameRateCounter::update(VoxelEngine::Clock& clock) {
     m_timer += clock.delta();
     m_frameCount++;
 

@@ -3,14 +3,14 @@
 #include <Engine/Window.h>
 #include <Engine/Clock.h>
 
-class FrameRateCounter : public System {
+class FrameRateCounter : public VoxelEngine::System {
 public:
-    FrameRateCounter(int32_t priority, Window& window, std::string titlePrefix);
+    FrameRateCounter(int32_t priority, VoxelEngine::Window& window, std::string titlePrefix);
 
-    void update(Clock& clock);
+    void update(VoxelEngine::Clock& clock);
 
 private:
-    Window* m_window;
+    VoxelEngine::Window* m_window;
     std::string m_titlePrefix;
     size_t m_frameCount;
     float m_timer;

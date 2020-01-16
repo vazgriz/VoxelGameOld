@@ -5,6 +5,8 @@
 #include <limits>
 #include <algorithm>
 
+using namespace VoxelEngine;
+
 const std::vector<std::string> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
@@ -93,6 +95,7 @@ void Graphics::pickPhysicalDevice(Window& window) {
 
     createSwapchain();
     createImageViews();
+    m_memory = std::make_unique<MemoryManager>(*m_device);
 }
 
 void Graphics::createSurface(Window& window) {

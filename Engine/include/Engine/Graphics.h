@@ -1,35 +1,41 @@
 #pragma once
 #include <VulkanWrapper/VulkanWrapper.h>
 #include "Engine/Window.h"
+#include "Engine/MemoryManager.h"
 
-class Graphics {
-public:
-    Graphics();
+namespace VoxelEngine {
+    class Graphics {
+    public:
+        Graphics();
 
-    vk::Instance& instance() const { return *m_instance; }
-    vk::Surface& surface() const { return*m_surface; }
-    vk::Device& device() const { return *m_device; }
-    const vk::Queue* graphicsQueue() const { return m_graphicsQueue; }
-    const vk::Queue* presentQueue() const { return m_presentQueue; }
-    vk::Swapchain& swapchain() const { return *m_swapchain; }
-    const std::vector<vk::ImageView>& swapchainImageViews() const { return m_swapchainImageViews; }
+        vk::Instance& instance() const { return *m_instance; }
+        vk::Surface& surface() const { return*m_surface; }
+        vk::Device& device() const { return *m_device; }
+        const vk::Queue* graphicsQueue() const { return m_graphicsQueue; }
+        const vk::Queue* presentQueue() const { return m_presentQueue; }
+        vk::Swapchain& swapchain() const { return *m_swapchain; }
+        const std::vector<vk::ImageView>& swapchainImageViews() const { return m_swapchainImageViews; }
+        MemoryManager& memory() const { return *m_memory; }
 
-    void pickPhysicalDevice(Window& window);
+        void pickPhysicalDevice(Window& window);
 
-private:
-    Window* m_window;
+    private:
+        Window* m_window;
 
-    std::unique_ptr<vk::Instance> m_instance;
-    std::unique_ptr<vk::Surface> m_surface;
-    std::unique_ptr<vk::Device> m_device;
-    const vk::Queue* m_graphicsQueue;
-    const vk::Queue* m_presentQueue;
-    std::unique_ptr<vk::Swapchain> m_swapchain;
-    std::vector<vk::ImageView> m_swapchainImageViews;
+        std::unique_ptr<vk::Instance> m_instance;
+        std::unique_ptr<vk::Surface> m_surface;
+        std::unique_ptr<vk::Device> m_device;
 
-    void createInstance();
-    void createSurface(Window& window);
-    void createDevice(const vk::PhysicalDevice& physicalDevice, uint32_t graphicsIndex, uint32_t presentIndex);
-    void createSwapchain();
-    void createImageViews();
-};
+        std::unique_ptr<MemoryManager> m_memory;
+        const vk::Queue* m_graphicsQueue;
+        const vk::Queue* m_presentQueue;
+        std::unique_ptr<vk::Swapchain> m_swapchain;
+        std::vector<vk::ImageView> m_swapchainImageViews;
+
+        void createInstance();
+        void createSurface(Window& window);
+        void createDevice(const vk::PhysicalDevice& physicalDevice, uint32_t graphicsIndex, uint32_t presentIndex);
+        void createSwapchain();
+        void createImageViews();
+    };
+}

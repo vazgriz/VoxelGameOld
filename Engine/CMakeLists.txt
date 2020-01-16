@@ -21,6 +21,12 @@ add_library("Engine"
     Graphics.cpp
     include/Engine/RenderSystem.h
     RenderSystem.cpp
+    include/Engine/MemoryManager.h
+    MemoryManager.cpp
+    include/Engine/Buffer.h
+    Buffer.cpp
+    include/Engine/Mesh.h
+    Mesh.cpp
 )
 
 target_include_directories("Engine"
@@ -29,6 +35,7 @@ target_include_directories("Engine"
     PUBLIC "${VULKAN_ROOT}/Include"
     PUBLIC "${VKW_ROOT}/include"
     PUBLIC "${VMA_INCLUDE}"
+    PUBLIC "${GLM_INCLUDE}"
 )
 
 target_link_libraries("Engine"

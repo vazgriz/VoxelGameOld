@@ -5,22 +5,22 @@
 #include "TriangleRenderer.h"
 
 int main() {
-    Engine engine;
+    VoxelEngine::Engine engine;
 
-    Window window(800, 600, "VoxelGame");
+    VoxelEngine::Window window(800, 600, "VoxelGame");
     engine.addWindow(window);
 
     engine.setGraphics({});
-    Graphics& graphics = engine.getGraphics();
+    VoxelEngine::Graphics& graphics = engine.getGraphics();
     graphics.pickPhysicalDevice(window);
 
     FrameRateCounter counter(0, window, "VoxelGame");
     engine.getUpdateGroup().add(counter);
 
-    RenderSystem renderSystem(100, graphics);
+    VoxelEngine::RenderSystem renderSystem(100, graphics);
     engine.getUpdateGroup().add(renderSystem);
 
-    TriangleRenderer triangleRenderer(10, graphics, renderSystem);
+    TriangleRenderer triangleRenderer(10, engine, renderSystem);
     engine.getUpdateGroup().add(triangleRenderer);
 
     engine.run();

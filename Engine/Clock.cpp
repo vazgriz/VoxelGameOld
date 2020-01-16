@@ -1,6 +1,8 @@
 #include "Engine/Clock.h"
 #include <GLFW/glfw3.h>
 
+using namespace VoxelEngine;
+
 Clock::Clock() {
     m_time = static_cast<float>(glfwGetTime());
     m_delta = 0;
