@@ -1,4 +1,5 @@
 #include "Engine/RenderGraph/TransferNode.h"
+#include "Engine/Utilities.h"
 
 using namespace VoxelEngine;
 
@@ -37,18 +38,6 @@ void TransferNode::createStaging() {
     for (size_t i = 0; i < m_renderGraph->framesInFlight(); i++) {
         m_stagingBuffers.emplace_back(std::make_unique<VoxelEngine::Buffer>(*m_engine, info, allocInfo));
         m_stagingBufferPtrs.push_back(m_stagingBuffers.back()->getMapping());
-    }
-}
-
-size_t align(size_t ptr, size_t alignment) {
-    size_t mask = alignment - 1;
-    size_t tail = ptr & mask;
-
-    if (tail == 0) {
-        return ptr;
-    } else {
-        size_t unalign = alignment - tail;
-        return ptr + unalign;
     }
 }
 
