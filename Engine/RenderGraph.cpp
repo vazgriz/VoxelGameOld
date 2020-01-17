@@ -3,79 +3,9 @@
 
 using namespace VoxelEngine;
 
-RenderGraph::BufferInput::BufferInput(Node& node, vk::AccessFlags accessMask, vk::PipelineStageFlags stages) {
-    m_node = &node;
-    m_dstFlags = accessMask;
-    m_dstStages = stages;
-}
-
-void RenderGraph::BufferInput::input(const Buffer& buffer) {
-    m_inputs.insert({ &buffer, { &buffer.buffer(), VK_WHOLE_SIZE, 0 } });
-}
-
-void RenderGraph::BufferInput::clear() {
-    m_inputs.clear();
-}
-
-RenderGraph::BufferOutput::BufferOutput(Node& node, vk::AccessFlags accessMask, vk::PipelineStageFlags stages) {
-    m_node = &node;
-    m_srcFlags = accessMask;
-    m_srcStages = stages;
-}
-
-void RenderGraph::BufferOutput::output(const Buffer& buffer) {
-    m_outputs.insert({ &buffer, { &buffer.buffer(), VK_WHOLE_SIZE, 0 } });
-}
-
-void RenderGraph::BufferOutput::clear() {
-    m_outputs.clear();
-}
-
-RenderGraph::ImageInput::ImageInput(Node& node, vk::AccessFlags accessMask, vk::PipelineStageFlags stages) {
-    m_node = &node;
-    m_dstFlags = accessMask;
-    m_dstStages = stages;
-}
-
-void RenderGraph::ImageInput::clear() {
-
-}
-
-RenderGraph::ImageOutput::ImageOutput(Node& node, vk::AccessFlags accessMask, vk::PipelineStageFlags stages) {
-    m_node = &node;
-    m_srcFlags = accessMask;
-    m_srcStages = stages;
-}
-
-void RenderGraph::ImageOutput::clear() {
-
-}
-
 RenderGraph::Edge::Edge(Node& source, Node& dest) {
     m_sourceNode = &source;
     m_destNode = &dest;
-}
-
-RenderGraph::BufferEdge::BufferEdge(RenderGraph::BufferOutput& source, RenderGraph::BufferInput& dest) 
-: Edge(source.node(), dest.node()) {
-    m_source = &source;
-    m_dest = &dest;
-}
-
-void RenderGraph::BufferEdge::makeTransferEdge() {
-    source().addOutputEdge(*this);
-    dest().addInputEdge(*this);
-}
-
-RenderGraph::ImageEdge::ImageEdge(RenderGraph::ImageOutput& source, RenderGraph::ImageInput& dest)
-    : Edge(source.node(), dest.node()) {
-    m_source = &source;
-    m_dest = &dest;
-}
-
-void RenderGraph::ImageEdge::makeTransferEdge() {
-    source().addOutputEdge(*this);
-    dest().addInputEdge(*this);
 }
 
 RenderGraph::Node::Node(RenderGraph& graph, const vk::Queue& queue, vk::PipelineStageFlags stages) {
@@ -115,36 +45,8 @@ void RenderGraph::Node::addExternalSignal(vk::Semaphore& semaphore) {
     m_submitInfo.signalSemaphores.push_back(semaphore);
 }
 
-void RenderGraph::Node::addBufferInput(BufferInput& input) {
-    m_bufferInputs.push_back(&input);
-}
+void RenderGraph::Node::sync(const Buffer& buffer) {
 
-void RenderGraph::Node::addBufferOutput(BufferOutput& output) {
-    m_bufferOutputs.push_back(&output);
-}
-
-void RenderGraph::Node::addImageInput(ImageInput& input) {
-    m_imageInputs.push_back(&input);
-}
-
-void RenderGraph::Node::addImageOutput(ImageOutput& output) {
-    m_imageOutputs.push_back(&output);
-}
-
-void RenderGraph::Node::addInputEdge(BufferEdge& edge) {
-    m_inputBufferEdges.push_back(&edge);
-}
-
-void RenderGraph::Node::addOutputEdge(BufferEdge& edge) {
-    m_outputBufferEdges.push_back(&edge);
-}
-
-void RenderGraph::Node::addInputEdge(ImageEdge& edge) {
-    m_inputImageEdges.push_back(&edge);
-}
-
-void RenderGraph::Node::addOutputEdge(ImageEdge& edge) {
-    m_outputImageEdges.push_back(&edge);
 }
 
 void RenderGraph::Node::addOutput(Node& output) {
@@ -159,23 +61,28 @@ void RenderGraph::Node::makeInputTransfers(vk::CommandBuffer& commandBuffer) {
 
     std::vector<vk::BufferMemoryBarrier> bufferBarriers;
 
-    for (auto edge : m_inputBufferEdges) {
-        for (auto& pair : edge->destInput().inputs()) {
-            auto& outputs = edge->sourceOutput().outputs();
-            auto it = outputs.find(pair.first);
+    for (auto edge : m_inputEdges) {
+        auto& sourceNode = edge->source();
+        auto& inputs = sourceNode.getSyncBuffers();
 
-            if (it != outputs.end()) {
-                srcStages |= edge->sourceOutput().stages();
-                dstStages |= edge->destInput().stages();
+        for (auto& pair : getSyncBuffers()) {
+            auto it = inputs.find(pair.first);
+
+            if (it != inputs.end()) {
+                auto& sourceSegment = it->second;
+                auto& localSegment = pair.second;
+
+                srcStages |= sourceSegment.stages;
+                dstStages |= localSegment.stages;
 
                 vk::BufferMemoryBarrier barrier = {};
-                barrier.buffer = &pair.first->buffer();
-                barrier.size = pair.second.size;
-                barrier.offset = pair.second.offset;
-                barrier.srcAccessMask = edge->sourceOutput().flags();
-                barrier.srcQueueFamilyIndex = edge->source().queue().familyIndex();
-                barrier.dstAccessMask = edge->destInput().flags();
-                barrier.dstQueueFamilyIndex = edge->dest().queue().familyIndex();
+                barrier.buffer = localSegment.buffer;
+                barrier.size = localSegment.size;
+                barrier.offset = localSegment.offset;
+                barrier.srcAccessMask = sourceSegment.accessMask;
+                barrier.srcQueueFamilyIndex = sourceNode.queue().familyIndex();
+                barrier.dstAccessMask = localSegment.accessMask;
+                barrier.dstQueueFamilyIndex = queue().familyIndex();
 
                 bufferBarriers.push_back(barrier);
             }
@@ -198,23 +105,28 @@ void RenderGraph::Node::makeOutputTransfers(vk::CommandBuffer& commandBuffer) {
 
     std::vector<vk::BufferMemoryBarrier> bufferBarriers;
 
-    for (auto edge : m_outputBufferEdges) {
-        for (auto& pair : edge->sourceOutput().outputs()) {
-            auto& inputs = edge->destInput().inputs();
-            auto it = inputs.find(pair.first);
+    for (auto edge : m_outputEdges) {
+        auto& destNode = edge->dest();
+        auto& outputs = destNode.getSyncBuffers();
 
-            if (it != inputs.end()) {
-                srcStages |= edge->sourceOutput().stages();
-                dstStages |= edge->destInput().stages();
+        for (auto& pair : getSyncBuffers()) {
+            auto it = outputs.find(pair.first);
+
+            if (it != outputs.end()) {
+                auto& localSegment = pair.second;
+                auto& destSegment = it->second;
+
+                srcStages |= localSegment.stages;
+                dstStages |= destSegment.stages;
 
                 vk::BufferMemoryBarrier barrier = {};
-                barrier.buffer = &pair.first->buffer();
+                barrier.buffer = localSegment.buffer;
                 barrier.size = pair.second.size;
                 barrier.offset = pair.second.offset;
-                barrier.srcAccessMask = edge->sourceOutput().flags();
-                barrier.srcQueueFamilyIndex = edge->source().queue().familyIndex();
-                barrier.dstAccessMask = edge->destInput().flags();
-                barrier.dstQueueFamilyIndex = edge->dest().queue().familyIndex();
+                barrier.srcAccessMask = localSegment.accessMask;
+                barrier.srcQueueFamilyIndex = queue().familyIndex();
+                barrier.dstAccessMask = destSegment.accessMask;
+                barrier.dstQueueFamilyIndex = destNode.queue().familyIndex();
 
                 bufferBarriers.push_back(barrier);
             }
@@ -245,9 +157,9 @@ void RenderGraph::Node::internalRender(uint32_t currentFrame) {
 
     commandBuffer.begin(info);
 
-    //makeInputTransfers(commandBuffer);
+    makeInputTransfers(commandBuffer);
     render(currentFrame, commandBuffer);
-    //makeOutputTransfers(commandBuffer);
+    makeOutputTransfers(commandBuffer);
 
     commandBuffer.end();
 }
@@ -262,21 +174,8 @@ void RenderGraph::Node::wait() {
     vk::Fence::wait(m_queue->device(), m_fences, true, -1);
 }
 
-void RenderGraph::Node::clearInputsAndOutputs() {
-    for (auto& input : m_bufferInputs) {
-        input->clear();
-    }
-
-    for (auto& output : m_bufferOutputs) {
-        output->clear();
-    }
-    for (auto& input : m_imageInputs) {
-        input->clear();
-    }
-
-    for (auto& output : m_imageOutputs) {
-        output->clear();
-    }
+void RenderGraph::Node::clearSync() {
+    m_syncBuffers.clear();
 }
 
 RenderGraph::RenderGraph(vk::Device& device, uint32_t framesInFlight) {
@@ -285,9 +184,9 @@ RenderGraph::RenderGraph(vk::Device& device, uint32_t framesInFlight) {
     m_currentFrame = 0;
 }
 
-void RenderGraph::addEdge(std::unique_ptr<Edge> edge) {
+void RenderGraph::addEdge(Edge&& edge) {
     m_edges.emplace_back(std::move(edge));
-    auto& edge_ = *m_edges.back();
+    auto& edge_ = m_edges.back();
     edge_.source().addOutput(edge_.dest());
 }
 
@@ -303,13 +202,6 @@ void RenderGraph::bake() {
     });
 
     makeSemaphores();
-
-    for (auto& edge : m_edges) {
-        //if (edge->source().m_queue->familyIndex() != edge->dest().m_queue->familyIndex()) {
-            m_transferEdges.push_back(edge.get());
-            edge->makeTransferEdge();
-        //}
-    }
 }
 
 void RenderGraph::makeSemaphores() {
@@ -343,7 +235,6 @@ void RenderGraph::execute() const {
 
     for (auto node : m_nodeList) {
         node->submit(m_currentFrame);
-        node->clearInputsAndOutputs();
     }
 
     for (auto node : m_nodeList) {

@@ -26,8 +26,6 @@ TriangleRenderer::TriangleRenderer(VoxelEngine::Engine& engine, VoxelEngine::Ren
     m_acquireNode = &acquireNode;
     m_transferNode = &transferNode;
 
-    m_bufferInput = std::make_unique<VoxelEngine::RenderGraph::BufferInput>(*this, vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
-
     createRenderPass();
     createFramebuffers();
     createPipelineLayout();
@@ -243,7 +241,7 @@ void TriangleRenderer::createMesh() {
     m_transferNode->transfer(*colorBuffer, colorSize, 0, colors.data());
     m_transferNode->transfer(*indexBuffer, indexSize, 0, indices.data());
 
-    m_bufferInput->input(*vertexBuffer);
-    m_bufferInput->input(*colorBuffer);
-    m_bufferInput->input(*indexBuffer);
+    sync(*vertexBuffer);
+    sync(*colorBuffer);
+    sync(*indexBuffer);
 }

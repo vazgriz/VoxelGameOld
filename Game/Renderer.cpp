@@ -13,9 +13,9 @@ Renderer::Renderer(uint32_t priority, VoxelEngine::Engine& engine) : VoxelEngine
     m_transferNode = &m_renderGraph->addNode<VoxelEngine::TransferNode>(*m_engine, *m_renderGraph);
     m_triangleRenderer = &m_renderGraph->addNode<TriangleRenderer>(*m_engine, *m_renderGraph, *m_acquireNode, *m_transferNode);
 
-    m_renderGraph->addEdge(std::make_unique<VoxelEngine::RenderGraph::BufferEdge>(m_transferNode->bufferOutput(), m_triangleRenderer->bufferInput()));
-    m_renderGraph->addEdge(std::make_unique<VoxelEngine::RenderGraph::Edge>(*m_acquireNode, *m_triangleRenderer));
-    m_renderGraph->addEdge(std::make_unique<VoxelEngine::RenderGraph::Edge>(*m_triangleRenderer, *m_presentNode));
+    m_renderGraph->addEdge({ *m_transferNode, *m_triangleRenderer });
+    m_renderGraph->addEdge({ *m_acquireNode, *m_triangleRenderer });
+    m_renderGraph->addEdge({ *m_triangleRenderer, *m_presentNode });
 
     m_renderGraph->bake();
 }

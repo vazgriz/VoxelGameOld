@@ -13,8 +13,6 @@ public:
     void render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer);
     void postRender(uint32_t currentFrame) {}
 
-    VoxelEngine::RenderGraph::BufferInput& bufferInput() const { return *m_bufferInput; }
-
 private:
     VoxelEngine::Engine* m_engine;
     VoxelEngine::Graphics* m_graphics;
@@ -25,8 +23,6 @@ private:
     std::unique_ptr<vk::PipelineLayout> m_pipelineLayout;
     std::unique_ptr<vk::Pipeline> m_pipeline;
     std::unique_ptr<VoxelEngine::Mesh> m_mesh;
-
-    std::unique_ptr<VoxelEngine::RenderGraph::BufferInput> m_bufferInput;
 
     void createRenderPass();
     void createFramebuffers();

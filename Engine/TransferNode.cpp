@@ -7,8 +7,6 @@ TransferNode::TransferNode(Engine& engine, RenderGraph& graph)
     m_engine = &engine;
     m_renderGraph = &graph;
 
-    m_bufferOutput = std::make_unique<RenderGraph::BufferOutput>(*this, vk::AccessFlags::TransferWrite, vk::PipelineStageFlags::Transfer);
-
     createStaging();
 }
 
@@ -70,5 +68,5 @@ void TransferNode::transfer(const VoxelEngine::Buffer& buffer, vk::DeviceSize si
 
     m_ptr += size;
 
-    m_bufferOutput->output(buffer);
+    sync(buffer);
 }
