@@ -13,6 +13,7 @@ namespace VoxelEngine {
         vk::Device& device() const { return *m_device; }
         const vk::Queue* graphicsQueue() const { return m_graphicsQueue; }
         const vk::Queue* presentQueue() const { return m_presentQueue; }
+        const vk::Queue* transferQueue() const { return m_transferQueue; }
         vk::Swapchain& swapchain() const { return *m_swapchain; }
         const std::vector<vk::ImageView>& swapchainImageViews() const { return m_swapchainImageViews; }
         MemoryManager& memory() const { return *m_memory; }
@@ -29,12 +30,13 @@ namespace VoxelEngine {
         std::unique_ptr<MemoryManager> m_memory;
         const vk::Queue* m_graphicsQueue;
         const vk::Queue* m_presentQueue;
+        const vk::Queue* m_transferQueue;
         std::unique_ptr<vk::Swapchain> m_swapchain;
         std::vector<vk::ImageView> m_swapchainImageViews;
 
         void createInstance();
         void createSurface(Window& window);
-        void createDevice(const vk::PhysicalDevice& physicalDevice, uint32_t graphicsIndex, uint32_t presentIndex);
+        void createDevice(const vk::PhysicalDevice& physicalDevice, uint32_t graphicsIndex, uint32_t presentIndex, uint32_t transferIndex);
         void createSwapchain();
         void createImageViews();
     };

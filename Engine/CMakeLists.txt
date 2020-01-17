@@ -31,6 +31,8 @@ add_library("Engine"
     AcquireNode.cpp
     include/Engine/RenderGraph/PresentNode.h
     PresentNode.cpp
+    include/Engine/RenderGraph/TransferNode.h
+    TransferNode.cpp
 )
 
 target_include_directories("Engine"

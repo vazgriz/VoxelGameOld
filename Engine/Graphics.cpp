@@ -14,9 +14,10 @@ const std::vector<std::string> deviceExtensions = {
 struct QueueIndices {
     uint32_t graphicsFamily = -1;
     uint32_t presentFamily = -1;
+    uint32_t transferFamily = -1;
 
     bool valid() {
-        return graphicsFamily != -1 && presentFamily != -1;
+        return graphicsFamily != -1 && presentFamily != -1 && transferFamily != -1;
     }
 };
 
@@ -54,6 +55,19 @@ void Graphics::createInstance() {
 QueueIndices getIndices(const vk::PhysicalDevice& physicalDevice, const vk::Surface& surface) {
     QueueIndices indices;
 
+    //earch for dedicated transfer queue
+    //ie no graphics or compute
+    for (uint32_t i = 0; i < physicalDevice.queueFamilies().size(); i++) {
+        auto& queueFamily = physicalDevice.queueFamilies()[i];
+
+        if ((queueFamily.queueFlags & vk::QueueFlags::Transfer) == vk::QueueFlags::Transfer
+            && (queueFamily.queueFlags & vk::QueueFlags::Graphics) == vk::QueueFlags::None
+            && (queueFamily.queueFlags & vk::QueueFlags::Compute) == vk::QueueFlags::None) {
+            indices.transferFamily = i;
+            break;
+        }
+    }
+
     for (uint32_t i = 0; i < physicalDevice.queueFamilies().size(); i++) {
         auto& queueFamily = physicalDevice.queueFamilies()[i];
 
@@ -67,9 +81,20 @@ QueueIndices getIndices(const vk::PhysicalDevice& physicalDevice, const vk::Surf
             indices.presentFamily = i;
         }
 
+        //search for any transfer queue
+        if ((queueFamily.queueFlags & vk::QueueFlags::Transfer) == vk::QueueFlags::Transfer) {
+            indices.transferFamily = i;
+        }
+
         if (indices.valid()) {
             break;
         }
+    }
+
+    //if no transfer queue found, graphics queue is used
+    //guaranteed to support transfer operations
+    if (indices.transferFamily == -1) {
+        indices.transferFamily = indices.graphicsFamily;
     }
 
     return indices;
@@ -88,7 +113,7 @@ void Graphics::pickPhysicalDevice(Window& window) {
         QueueIndices indices = getIndices(physicalDevice, *m_surface);
 
         if (indices.valid()) {
-            createDevice(physicalDevice, indices.graphicsFamily, indices.presentFamily);
+            createDevice(physicalDevice, indices.graphicsFamily, indices.presentFamily, indices.transferFamily);
             break;
         }
     }
@@ -104,9 +129,9 @@ void Graphics::createSurface(Window& window) {
     m_surface = std::make_unique<vk::Surface>(*m_instance, surface);
 }
 
-void Graphics::createDevice(const vk::PhysicalDevice& physicalDevice, uint32_t graphicsIndex, uint32_t presentIndex) {
+void Graphics::createDevice(const vk::PhysicalDevice& physicalDevice, uint32_t graphicsIndex, uint32_t presentIndex, uint32_t transferIndex) {
     std::vector<vk::DeviceQueueCreateInfo> queueInfos;
-    std::unordered_set<uint32_t> queueFamilySet = { graphicsIndex, presentIndex };
+    std::unordered_set<uint32_t> queueFamilySet = { graphicsIndex, presentIndex, transferIndex };
 
     float priority = 1.0f;
     for (auto index : queueFamilySet) {
@@ -128,6 +153,7 @@ void Graphics::createDevice(const vk::PhysicalDevice& physicalDevice, uint32_t g
 
     m_graphicsQueue = &m_device->getQueue(graphicsIndex, 0);
     m_presentQueue = &m_device->getQueue(presentIndex, 0);
+    m_transferQueue = &m_device->getQueue(transferIndex, 0);
 }
 
 vk::SurfaceFormat chooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormat>& availableFormats) {

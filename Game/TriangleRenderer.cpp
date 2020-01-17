@@ -19,11 +19,14 @@ std::vector<char> readFile(const std::string& filename) {
     return buffer;
 }
 
-TriangleRenderer::TriangleRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode)
+TriangleRenderer::TriangleRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode)
     : VoxelEngine::RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue(), vk::PipelineStageFlags::ColorAttachmentOutput) {
     m_engine = &engine;
     m_graphics = &engine.getGraphics();
     m_acquireNode = &acquireNode;
+    m_transferNode = &transferNode;
+
+    m_bufferInput = std::make_unique<VoxelEngine::RenderGraph::BufferInput>(*this, vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
 
     createRenderPass();
     createFramebuffers();
@@ -235,4 +238,12 @@ void TriangleRenderer::createMesh() {
     m_mesh->addBinding(3, colorBuffer, vk::Format::R32G32B32A32_Sfloat);
 
     m_mesh->setIndexBuffer(3, indexBuffer, vk::IndexType::Uint32, 0);
+
+    m_transferNode->transfer(*vertexBuffer, vertexSize, 0, vertices.data());
+    m_transferNode->transfer(*colorBuffer, colorSize, 0, colors.data());
+    m_transferNode->transfer(*indexBuffer, indexSize, 0, indices.data());
+
+    m_bufferInput->input(*vertexBuffer);
+    m_bufferInput->input(*colorBuffer);
+    m_bufferInput->input(*indexBuffer);
 }

@@ -3,6 +3,7 @@
 #include <Engine/RenderGraph/RenderGraph.h>
 #include <Engine/RenderGraph/AcquireNode.h>
 #include <Engine/RenderGraph/PresentNode.h>
+#include <Engine/RenderGraph/TransferNode.h>
 #include "TriangleRenderer.h"
 
 class Renderer : public VoxelEngine::System {
@@ -19,5 +20,6 @@ private:
     std::unique_ptr<VoxelEngine::RenderGraph> m_renderGraph;
     VoxelEngine::AcquireNode* m_acquireNode;
     VoxelEngine::PresentNode* m_presentNode;
+    VoxelEngine::TransferNode* m_transferNode;
     TriangleRenderer* m_triangleRenderer;
 };
