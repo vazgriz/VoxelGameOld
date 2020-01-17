@@ -1,19 +1,21 @@
 #pragma once
 #include <VulkanWrapper/VulkanWrapper.h>
 #include <Engine/Engine.h>
+#include <Engine/RenderGraph/RenderGraph.h>
+#include <Engine/RenderGraph/AcquireNode.h>
 
-class TriangleRenderer :public VoxelEngine::System {
+class TriangleRenderer :public VoxelEngine::RenderGraph::Node {
 public:
-    TriangleRenderer(uint32_t priority, VoxelEngine::Engine& engine, VoxelEngine::RenderSystem& renderSystem);
+    TriangleRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode);
 
-    void update(VoxelEngine::Clock& clock);
+    void preRender(uint32_t currentFrame) {}
+    void render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer);
+    void postRender(uint32_t currentFrame) {}
 
 private:
     VoxelEngine::Engine* m_engine;
     VoxelEngine::Graphics* m_graphics;
-    VoxelEngine::RenderSystem* m_renderSystem;
-    std::unique_ptr<vk::CommandPool> m_commandPool;
-    std::vector<vk::CommandBuffer> m_commandBuffers;
+    VoxelEngine::AcquireNode* m_acquireNode;
     std::unique_ptr<vk::RenderPass> m_renderPass;
     std::vector<vk::Framebuffer> m_framebuffers;
     std::unique_ptr<vk::PipelineLayout> m_pipelineLayout;
@@ -25,5 +27,4 @@ private:
     void createPipelineLayout();
     void createPipeline();
     void createMesh();
-    void transferMesh(const std::shared_ptr<VoxelEngine::Buffer>& vertexBuffer, const std::shared_ptr<VoxelEngine::Buffer>& colorBuffer, const std::shared_ptr<VoxelEngine::Buffer>& indexBuffer);
 };

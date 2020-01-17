@@ -1,8 +1,10 @@
 #include <iostream>
 #include <Engine/Engine.h>
+#include <Engine/RenderGraph/AcquireNode.h>
+#include <Engine/RenderGraph/PresentNode.h>
 
 #include "FrameRateCounter.h"
-#include "TriangleRenderer.h"
+#include "Renderer.h"
 
 int main() {
     VoxelEngine::Engine engine;
@@ -17,15 +19,12 @@ int main() {
     FrameRateCounter counter(0, window, "VoxelGame");
     engine.getUpdateGroup().add(counter);
 
-    VoxelEngine::RenderSystem renderSystem(100, graphics);
-    engine.getUpdateGroup().add(renderSystem);
-
-    TriangleRenderer triangleRenderer(10, engine, renderSystem);
-    engine.getUpdateGroup().add(triangleRenderer);
+    Renderer renderer(100, engine);
+    engine.getUpdateGroup().add(renderer);
 
     engine.run();
 
-    renderSystem.wait();
+    renderer.wait();
 
     return 0;
 }

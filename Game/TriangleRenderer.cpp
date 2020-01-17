@@ -19,22 +19,11 @@ std::vector<char> readFile(const std::string& filename) {
     return buffer;
 }
 
-TriangleRenderer::TriangleRenderer(uint32_t priority, VoxelEngine::Engine& engine, VoxelEngine::RenderSystem& renderSystem) : System(priority) {
+TriangleRenderer::TriangleRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode)
+    : VoxelEngine::RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue(), vk::PipelineStageFlags::ColorAttachmentOutput) {
     m_engine = &engine;
     m_graphics = &engine.getGraphics();
-    m_renderSystem = &renderSystem;
-
-    vk::CommandPoolCreateInfo info = {};
-    info.queueFamilyIndex = m_graphics->graphicsQueue()->familyIndex();
-    info.flags = vk::CommandPoolCreateFlags::ResetCommandBuffer;
-
-    m_commandPool = std::make_unique<vk::CommandPool>(m_graphics->device(), info);
-
-    vk::CommandBufferAllocateInfo bufferInfo = {};
-    bufferInfo.commandPool = m_commandPool.get();
-    bufferInfo.commandBufferCount = static_cast<uint32_t>(m_graphics->swapchain().images().size());
-
-    m_commandBuffers = m_commandPool->allocate(bufferInfo);
+    m_acquireNode = &acquireNode;
 
     createRenderPass();
     createFramebuffers();
@@ -82,20 +71,10 @@ void TriangleRenderer::createFramebuffers() {
     }
 }
 
-void TriangleRenderer::update(VoxelEngine::Clock& clock) {
-    uint32_t index = m_renderSystem->getIndex();
-    vk::CommandBuffer& commandBuffer = m_commandBuffers[index];
-
-    commandBuffer.reset(vk::CommandBufferResetFlags::None);
-
-    vk::CommandBufferBeginInfo beginInfo = {};
-    beginInfo.flags = vk::CommandBufferUsageFlags::OneTimeSubmit;
-
-    commandBuffer.begin(beginInfo);
-
+void TriangleRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer) {
     vk::RenderPassBeginInfo renderPassInfo = {};
     renderPassInfo.renderPass = m_renderPass.get();
-    renderPassInfo.framebuffer = &m_framebuffers[index];
+    renderPassInfo.framebuffer = &m_framebuffers[m_acquireNode->swapchainIndex()];
     renderPassInfo.renderArea.extent = m_graphics->swapchain().extent();
     renderPassInfo.clearValues = { { 0.0f, 0.0f, 0.0f, 1.0f } };
 
@@ -106,9 +85,6 @@ void TriangleRenderer::update(VoxelEngine::Clock& clock) {
     m_mesh->draw(commandBuffer);
 
     commandBuffer.endRenderPass();
-    commandBuffer.end();
-
-    m_renderSystem->submit(commandBuffer);
 }
 
 void TriangleRenderer::createPipelineLayout() {
@@ -259,63 +235,4 @@ void TriangleRenderer::createMesh() {
     m_mesh->addBinding(3, colorBuffer, vk::Format::R32G32B32A32_Sfloat);
 
     m_mesh->setIndexBuffer(3, indexBuffer, vk::IndexType::Uint32, 0);
-
-    transferMesh(vertexBuffer, colorBuffer, indexBuffer);
-}
-
-void TriangleRenderer::transferMesh(const std::shared_ptr<VoxelEngine::Buffer>& vertexBuffer, const std::shared_ptr<VoxelEngine::Buffer>& colorBuffer, const std::shared_ptr<VoxelEngine::Buffer>& indexBuffer) {
-    size_t vertexSize = vertices.size() * sizeof(glm::vec3);
-    size_t colorSize = colors.size() * sizeof(glm::vec3);
-    size_t indexSize = indices.size() * sizeof(uint32_t);
-
-    vk::BufferCreateInfo stagingInfo = {};
-    stagingInfo.size = vertexSize + colorSize + indexSize;
-    stagingInfo.usage = vk::BufferUsageFlags::TransferSrc;
-    stagingInfo.sharingMode = vk::SharingMode::Exclusive;
-
-    VmaAllocationCreateInfo stagingAllocInfo = {};
-    stagingAllocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
-    stagingAllocInfo.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-    stagingAllocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
-    VoxelEngine::Buffer stagingBuffer(*m_engine, stagingInfo, stagingAllocInfo);
-
-    void* mapping = stagingBuffer.getMapping();
-    memcpy(mapping, vertices.data(), vertexSize);
-    memcpy(static_cast<char*>(mapping) + vertexSize, colors.data(), colorSize);
-    memcpy(static_cast<char*>(mapping) + vertexSize + colorSize, indices.data(), indexSize);
-
-    vk::CommandBufferAllocateInfo info = {};
-    info.commandPool = m_commandPool.get();
-    info.commandBufferCount = 1;
-
-    vk::CommandBuffer commandBuffer = std::move(m_commandPool->allocate(info)[0]);
-
-    vk::CommandBufferBeginInfo beginInfo = {};
-    beginInfo.flags = vk::CommandBufferUsageFlags::OneTimeSubmit;
-
-    commandBuffer.begin(beginInfo);
-
-    vk::BufferCopy vertexCopy = {};
-    vertexCopy.size = vertexSize;
-
-    vk::BufferCopy colorCopy = {};
-    colorCopy.size = colorSize;
-    colorCopy.srcOffset = vertexSize;
-
-    vk::BufferCopy indexCopy = {};
-    indexCopy.size = indexSize;
-    indexCopy.srcOffset = vertexSize + colorSize;
-
-    commandBuffer.copyBuffer(stagingBuffer.buffer(), vertexBuffer->buffer(), vertexCopy);
-    commandBuffer.copyBuffer(stagingBuffer.buffer(), colorBuffer->buffer(), colorCopy);
-    commandBuffer.copyBuffer(stagingBuffer.buffer(), indexBuffer->buffer(), indexCopy);
-
-    commandBuffer.end();
-
-    vk::SubmitInfo submitInfo = {};
-    submitInfo.commandBuffers = { commandBuffer };
-
-    m_engine->getGraphics().graphicsQueue()->submit(submitInfo, nullptr);
-    m_engine->getGraphics().graphicsQueue()->waitIdle();
 }

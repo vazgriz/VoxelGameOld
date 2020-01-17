@@ -19,8 +19,6 @@ add_library("Engine"
     Clock.cpp
     include/Engine/Graphics.h
     Graphics.cpp
-    include/Engine/RenderSystem.h
-    RenderSystem.cpp
     include/Engine/MemoryManager.h
     MemoryManager.cpp
     include/Engine/Buffer.h
@@ -29,6 +27,10 @@ add_library("Engine"
     Mesh.cpp
     include/Engine/RenderGraph/RenderGraph.h
     RenderGraph.cpp
+    include/Engine/RenderGraph/AcquireNode.h
+    AcquireNode.cpp
+    include/Engine/RenderGraph/PresentNode.h
+    PresentNode.cpp
 )
 
 target_include_directories("Engine"

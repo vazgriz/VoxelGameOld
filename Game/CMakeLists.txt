@@ -6,6 +6,8 @@ add_executable("Game"
     main.cpp
     FrameRateCounter.h
     FrameRateCounter.cpp
+    Renderer.h
+    Renderer.cpp
     TriangleRenderer.h
     TriangleRenderer.cpp
 )
