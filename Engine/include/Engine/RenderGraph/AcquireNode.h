@@ -6,7 +6,7 @@
 namespace VoxelEngine {
     class AcquireNode : public RenderGraph::Node {
     public:
-        AcquireNode(RenderGraph& graph, const vk::Queue& queue, vk::Swapchain& swapchain);
+        AcquireNode(VoxelEngine::Engine& engine, RenderGraph& graph);
 
         vk::Swapchain& swapchain() const { return *m_swapchain; }
         uint32_t swapchainIndex() const { return m_swapchainIndex; }

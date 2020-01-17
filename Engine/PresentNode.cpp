@@ -2,12 +2,13 @@
 
 using namespace VoxelEngine;
 
-PresentNode::PresentNode(RenderGraph& graph, const vk::Queue& queue, const vk::Queue& presentQueue, vk::PipelineStageFlags stage, AcquireNode& acquireNode) : RenderGraph::Node(graph, queue, stage) {
-    m_presentQueue = &presentQueue;
+PresentNode::PresentNode(VoxelEngine::Engine& engine, RenderGraph& graph, vk::PipelineStageFlags stage, AcquireNode& acquireNode)
+    : RenderGraph::Node(graph, *engine.getGraphics().presentQueue(), stage) {
+    m_presentQueue = engine.getGraphics().presentQueue();
     m_acquireNode = &acquireNode;
 
     vk::SemaphoreCreateInfo info = {};
-    m_semaphore = std::make_unique<vk::Semaphore>(presentQueue.device(), info);
+    m_semaphore = std::make_unique<vk::Semaphore>(m_presentQueue->device(), info);
 
     addExternalSignal(*m_semaphore);
 }

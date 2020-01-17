@@ -5,7 +5,7 @@
 namespace VoxelEngine {
     class PresentNode : public RenderGraph::Node {
     public:
-        PresentNode(RenderGraph& graph, const vk::Queue& queue, const vk::Queue& presentQueue, vk::PipelineStageFlags stage, AcquireNode& acquireNode);
+        PresentNode(VoxelEngine::Engine& engine, RenderGraph& graph, vk::PipelineStageFlags stage, AcquireNode& acquireNode);
 
         void preRender(uint32_t currentFrame) {}
         void render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer) {}

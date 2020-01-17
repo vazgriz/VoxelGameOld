@@ -2,11 +2,12 @@
 
 using namespace VoxelEngine;
 
-AcquireNode::AcquireNode(RenderGraph& graph, const vk::Queue& queue, vk::Swapchain& swapchain) : RenderGraph::Node(graph, queue, vk::PipelineStageFlags::TopOfPipe) {
-    m_swapchain = &swapchain;
+AcquireNode::AcquireNode(VoxelEngine::Engine& engine, RenderGraph& graph)
+    : RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue(), vk::PipelineStageFlags::TopOfPipe) {
+    m_swapchain = &engine.getGraphics().swapchain();
 
     vk::SemaphoreCreateInfo info = {};
-    m_semaphore = std::make_unique<vk::Semaphore>(swapchain.device(), info);
+    m_semaphore = std::make_unique<vk::Semaphore>(m_swapchain->device(), info);
 
     addExternalWait(*m_semaphore, vk::PipelineStageFlags::ColorAttachmentOutput);
 }
