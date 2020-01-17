@@ -33,6 +33,12 @@ add_library("Engine"
     PresentNode.cpp
     include/Engine/RenderGraph/TransferNode.h
     TransferNode.cpp
+    include/Engine/Utilities.h
+    Utilities.cpp
+    include/Engine/UniformWriter.h
+    UniformWriter.cpp
+    include/Engine/BufferWriter.h
+    BufferWriter.cpp
 )
 
 target_include_directories("Engine"
