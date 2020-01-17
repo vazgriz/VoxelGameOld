@@ -241,7 +241,7 @@ void TriangleRenderer::createMesh() {
     m_transferNode->transfer(*colorBuffer, colorSize, 0, colors.data());
     m_transferNode->transfer(*indexBuffer, indexSize, 0, indices.data());
 
-    sync(*vertexBuffer);
-    sync(*colorBuffer);
-    sync(*indexBuffer);
+    sync(*vertexBuffer, vertexSize, 0, vk::AccessFlags::TransferRead | vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
+    sync(*colorBuffer, colorSize, 0, vk::AccessFlags::TransferRead | vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
+    sync(*indexBuffer, indexSize, 0, vk::AccessFlags::TransferRead | vk::AccessFlags::IndexRead, vk::PipelineStageFlags::VertexInput);
 }

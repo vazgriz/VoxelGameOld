@@ -54,7 +54,7 @@ namespace VoxelEngine {
             vk::CommandPool& commandPool() const { return *m_commandPool; }
             const std::unordered_map<vk::Buffer*, BufferSegment>& getSyncBuffers() { return m_syncBuffers; }
 
-            void sync(const Buffer& buffer);
+            void sync(const Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, vk::AccessFlags accessMask, vk::PipelineStageFlags stages);
 
         private:
             const vk::Queue* m_queue;

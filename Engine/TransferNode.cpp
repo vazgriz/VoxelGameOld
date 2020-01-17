@@ -68,5 +68,5 @@ void TransferNode::transfer(const VoxelEngine::Buffer& buffer, vk::DeviceSize si
 
     m_ptr += size;
 
-    sync(buffer);
+    sync(buffer, size, offset, vk::AccessFlags::TransferWrite, vk::PipelineStageFlags::Transfer);
 }

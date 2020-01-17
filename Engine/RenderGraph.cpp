@@ -45,8 +45,9 @@ void RenderGraph::Node::addExternalSignal(vk::Semaphore& semaphore) {
     m_submitInfo.signalSemaphores.push_back(semaphore);
 }
 
-void RenderGraph::Node::sync(const Buffer& buffer) {
-
+void RenderGraph::Node::sync(const Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, vk::AccessFlags accessMask, vk::PipelineStageFlags stages) {
+    vk::Buffer* vkBuffer = &buffer.buffer();
+    m_syncBuffers.insert({ vkBuffer, { vkBuffer, size, offset, accessMask, stages } });
 }
 
 void RenderGraph::Node::addOutput(Node& output) {
