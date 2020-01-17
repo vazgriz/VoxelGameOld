@@ -82,7 +82,7 @@ QueueIndices getIndices(const vk::PhysicalDevice& physicalDevice, const vk::Surf
         }
 
         //search for any transfer queue
-        if ((queueFamily.queueFlags & vk::QueueFlags::Transfer) == vk::QueueFlags::Transfer) {
+        if (indices.transferFamily == -1 && (queueFamily.queueFlags & vk::QueueFlags::Transfer) == vk::QueueFlags::Transfer) {
             indices.transferFamily = i;
         }
 
