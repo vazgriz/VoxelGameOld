@@ -39,6 +39,8 @@ add_library("Engine"
     UniformWriter.cpp
     include/Engine/BufferWriter.h
     BufferWriter.cpp
+    include/Engine/Camera.h
+    Camera.cpp
 )
 
 target_include_directories("Engine"

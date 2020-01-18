@@ -12,6 +12,8 @@ int main() {
     VoxelEngine::Window window(800, 600, "VoxelGame");
     engine.addWindow(window);
 
+    VoxelEngine::Camera camera(window.getWidth(), window.getHeight(), glm::radians(90.0f), 0.01f, 1000.0f);
+
     engine.setGraphics({});
     VoxelEngine::Graphics& graphics = engine.getGraphics();
     graphics.pickPhysicalDevice(window);

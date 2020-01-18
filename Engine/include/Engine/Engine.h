@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/Buffer.h"
+#include "Engine/Camera.h"
 #include "Engine/Clock.h"
 #include "Engine/Mesh.h"
 #include "Engine/Graphics.h"
