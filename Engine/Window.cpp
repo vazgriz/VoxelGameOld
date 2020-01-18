@@ -3,6 +3,9 @@
 using namespace VoxelEngine;
 
 Window::Window(uint32_t width, uint32_t height, const std::string& title) {
+    m_width = width;
+    m_height = height;
+
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     m_window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
 }

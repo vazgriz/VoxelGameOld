@@ -4,11 +4,12 @@
 #include <Engine/RenderGraph/AcquireNode.h>
 #include <Engine/RenderGraph/PresentNode.h>
 #include <Engine/RenderGraph/TransferNode.h>
+#include <Engine/CameraSystem.h>
 #include "TriangleRenderer.h"
 
 class Renderer : public VoxelEngine::System {
 public:
-    Renderer(uint32_t priority, VoxelEngine::Engine& engine);
+    Renderer(uint32_t priority, VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem);
 
     VoxelEngine::TransferNode& transferNode() const { return *m_transferNode; }
 

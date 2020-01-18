@@ -15,6 +15,7 @@ CameraSystem::CameraSystem(Engine& engine, uint32_t priority) : System(priority)
     createDescriptorSetLayout();
     createDescriptorSet();
     createUniformBuffer();
+    writeDescriptorSet();
 }
 
 void CameraSystem::update(Clock& clock) {
@@ -68,4 +69,17 @@ void CameraSystem::createUniformBuffer() {
     allocInfo.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
     m_uniformBuffer = std::make_unique<Buffer>(*m_engine, info, allocInfo);
+}
+
+void CameraSystem::writeDescriptorSet() {
+    vk::DescriptorBufferInfo info = {};
+    info.buffer = &m_uniformBuffer->buffer();
+    info.range = sizeof(CameraUniform);
+
+    vk::WriteDescriptorSet write = {};
+    write.dstSet = m_descriptorSet.get();
+    write.bufferInfo = { info };
+    write.descriptorType = vk::DescriptorType::UniformBuffer;
+
+    vk::DescriptorSet::update(m_engine->getGraphics().device(), { write }, nullptr);
 }

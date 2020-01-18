@@ -33,6 +33,7 @@ namespace VoxelEngine {
         void createDescriptorSetLayout();
         void createDescriptorSet();
         void createUniformBuffer();
+        void writeDescriptorSet();
 
         void updateUniform();
     };

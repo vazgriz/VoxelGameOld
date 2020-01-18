@@ -22,12 +22,15 @@ int main() {
 
     VoxelEngine::Camera camera(engine, window.getWidth(), window.getHeight(), glm::radians(90.0f), 0.01f, 1000.0f);
     VoxelEngine::CameraSystem cameraSystem(engine, 1);
+    cameraSystem.setCamera(camera);
     engine.getUpdateGroup().add(cameraSystem);
 
-    Renderer renderer(100, engine);
+    Renderer renderer(100, engine, cameraSystem);
     engine.getUpdateGroup().add(renderer);
 
     cameraSystem.setTransferNode(renderer.transferNode());
+
+    camera.setPosition({ 0, 0, -2 });
 
     engine.run();
 

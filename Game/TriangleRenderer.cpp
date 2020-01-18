@@ -19,18 +19,40 @@ std::vector<char> readFile(const std::string& filename) {
     return buffer;
 }
 
-TriangleRenderer::TriangleRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode)
+TriangleRenderer::TriangleRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem)
     : VoxelEngine::RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue(), vk::PipelineStageFlags::ColorAttachmentOutput) {
     m_engine = &engine;
     m_graphics = &engine.getGraphics();
     m_acquireNode = &acquireNode;
     m_transferNode = &transferNode;
+    m_cameraSystem = &cameraSystem;
 
     createRenderPass();
     createFramebuffers();
     createPipelineLayout();
     createPipeline();
     createMesh();
+}
+
+void TriangleRenderer::preRender(uint32_t currentFrame) {
+    sync(m_cameraSystem->uniformBuffer(), VK_WHOLE_SIZE, 0, vk::AccessFlags::ShaderRead, vk::PipelineStageFlags::VertexShader);
+}
+
+void TriangleRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer) {
+    vk::RenderPassBeginInfo renderPassInfo = {};
+    renderPassInfo.renderPass = m_renderPass.get();
+    renderPassInfo.framebuffer = &m_framebuffers[m_acquireNode->swapchainIndex()];
+    renderPassInfo.renderArea.extent = m_graphics->swapchain().extent();
+    renderPassInfo.clearValues = { { 0.0f, 0.0f, 0.0f, 1.0f } };
+
+    commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::Inline);
+
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::Graphics, *m_pipeline);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::Graphics, *m_pipelineLayout, 0, { m_cameraSystem->descriptorSet() }, nullptr);
+
+    m_mesh->draw(commandBuffer);
+
+    commandBuffer.endRenderPass();
 }
 
 void TriangleRenderer::createRenderPass() {
@@ -72,24 +94,9 @@ void TriangleRenderer::createFramebuffers() {
     }
 }
 
-void TriangleRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer) {
-    vk::RenderPassBeginInfo renderPassInfo = {};
-    renderPassInfo.renderPass = m_renderPass.get();
-    renderPassInfo.framebuffer = &m_framebuffers[m_acquireNode->swapchainIndex()];
-    renderPassInfo.renderArea.extent = m_graphics->swapchain().extent();
-    renderPassInfo.clearValues = { { 0.0f, 0.0f, 0.0f, 1.0f } };
-
-    commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::Inline);
-
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::Graphics, *m_pipeline);
-
-    m_mesh->draw(commandBuffer);
-
-    commandBuffer.endRenderPass();
-}
-
 void TriangleRenderer::createPipelineLayout() {
     vk::PipelineLayoutCreateInfo info = {};
+    info.setLayouts = { m_cameraSystem->descriptorLayout() };
 
     m_pipelineLayout = std::make_unique<vk::PipelineLayout>(m_graphics->device(), info);
 }
@@ -190,9 +197,9 @@ void TriangleRenderer::createPipeline() {
 }
 
 static std::vector<glm::vec3> vertices = {
-    { 0, -1, 0 },
-    { 1, 1, 0},
-    { -1, 1, 0}
+    { 0, 1, 0 },
+    { 1, -1, 0},
+    { -1, -1, 0}
 };
 
 static std::vector<glm::vec3> colors = {

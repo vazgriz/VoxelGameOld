@@ -45,6 +45,11 @@ add_library("Engine"
     CameraSystem.cpp
 )
 
+target_compile_definitions("Engine" PUBLIC
+    GLM_FORCE_RADIANS
+    GLM_FORCE_DEPTH_ZERO_TO_ONE
+)
+
 target_include_directories("Engine"
     PUBLIC "${GLFW_ROOT}/include"
     PUBLIC "./include"

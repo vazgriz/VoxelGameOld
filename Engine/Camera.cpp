@@ -6,6 +6,11 @@ using namespace VoxelEngine;
 
 Camera::Camera(Engine& engine, uint32_t width, uint32_t height, float fov, float nearPlane, float farPlane) {
     m_engine = &engine;
+    m_width = width;
+    m_height = height;
+
+    m_position = {};
+    m_rotation = glm::identity<glm::quat>();
 
     setFOV(fov);
     setNearPlane(nearPlane);
@@ -49,5 +54,5 @@ void Camera::setRotation(glm::quat rotation) {
 }
 
 void Camera::createViewMatrix() {
-    m_viewMatrix = glm::lookAt(m_rotation * glm::vec3(1, 0, 0), m_rotation * glm::vec3(0, 1, 0), m_rotation * glm::vec3(0, 0, 1)) * glm::translate(m_position);
+    m_viewMatrix = glm::translate(m_position);
 }
