@@ -10,6 +10,8 @@ class Renderer : public VoxelEngine::System {
 public:
     Renderer(uint32_t priority, VoxelEngine::Engine& engine);
 
+    VoxelEngine::TransferNode& transferNode() const { return *m_transferNode; }
+
     void wait();
 
     void update(VoxelEngine::Clock& clock);

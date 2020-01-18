@@ -41,6 +41,8 @@ add_library("Engine"
     BufferWriter.cpp
     include/Engine/Camera.h
     Camera.cpp
+    include/Engine/CameraSystem.h
+    CameraSystem.cpp
 )
 
 target_include_directories("Engine"

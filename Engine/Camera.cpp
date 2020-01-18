@@ -4,7 +4,9 @@
 
 using namespace VoxelEngine;
 
-Camera::Camera(uint32_t width, uint32_t height, float fov, float nearPlane, float farPlane) {
+Camera::Camera(Engine& engine, uint32_t width, uint32_t height, float fov, float nearPlane, float farPlane) {
+    m_engine = &engine;
+
     setFOV(fov);
     setNearPlane(nearPlane);
     setFarPlane(farPlane);
