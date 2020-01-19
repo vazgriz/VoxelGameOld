@@ -8,6 +8,7 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(${GLFW_ROOT} ${GLFW_BUILD} EXCLUDE_FROM_ALL)
 
 add_library("Engine"
+    include/Engine/math.h
     vma.cpp
     include/Engine/Engine.h
     Engine.cpp

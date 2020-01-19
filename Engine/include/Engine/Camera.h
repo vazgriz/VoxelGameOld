@@ -1,8 +1,7 @@
 #pragma once
 #include "Engine/Engine.h"
+#include "Engine/math.h"
 #include <VulkanWrapper/VulkanWrapper.h>
-#include <glm/glm.hpp>
-#include <glm/ext/quaternion_float.hpp>
 
 namespace VoxelEngine {
     class Engine;
