@@ -3,8 +3,8 @@
 #include <cmath>
 #include <glm/ext/quaternion_transform.hpp>
 
-using Key = VoxelEngine::Input::Key;
-using MouseButton = VoxelEngine::Input::MouseButton;
+using Key = VoxelEngine::Key;
+using MouseButton = VoxelEngine::MouseButton;
 
 FreeCam::FreeCam(uint32_t priority, VoxelEngine::Camera& camera, VoxelEngine::Input& input) : System(priority) {
     m_camera = &camera;
@@ -18,12 +18,12 @@ FreeCam::FreeCam(uint32_t priority, VoxelEngine::Camera& camera, VoxelEngine::In
 void FreeCam::update(VoxelEngine::Clock& clock) {
     if (!m_locked && m_input->mouseButtonDown(MouseButton::Button1)) {
         m_locked = true;
-        m_input->setCursorState(VoxelEngine::Input::CursorState::Locked);
+        m_input->setCursorState(VoxelEngine::CursorState::Locked);
     }
 
     if (m_locked && m_input->keyDown(Key::Escape)) {
         m_locked = false;
-        m_input->setCursorState(VoxelEngine::Input::CursorState::Normal);
+        m_input->setCursorState(VoxelEngine::CursorState::Normal);
     }
 
     if (m_locked) {

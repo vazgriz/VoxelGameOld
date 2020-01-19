@@ -18,7 +18,7 @@ void Input::handleKeyInput(int key_, int scancode, int action, int mods) {
     m_keyDowns.clear();
     m_keyUps.clear();
 
-    Input::Key key = static_cast<Input::Key>(key_);
+    Key key = static_cast<Key>(key_);
     auto it = m_keyStates.find(key);
 
     if (it == m_keyStates.end()) {
@@ -47,7 +47,7 @@ void Input::handleMouseButtonInput(int mouseButton, int action, int mods) {
     m_mouseButtonDowns.clear();
     m_mouseButtonUps.clear();
 
-    Input::MouseButton button = static_cast<Input::MouseButton>(mouseButton);
+    MouseButton button = static_cast<MouseButton>(mouseButton);
     auto it = m_mouseButtonStates.find(button);
 
     if (it == m_mouseButtonStates.end()) {
@@ -80,7 +80,7 @@ void Input::handleMousePosition(double x, double y) {
     m_onMouseMovedSignal.publish(m_delta);
 }
 
-Input::KeyState Input::keyState(Key key) const {
+KeyState Input::keyState(Key key) const {
     KeyState state = KeyState::None;
 
     if (keyDown(key)) {
@@ -110,7 +110,7 @@ bool Input::keyUp(Key key) const {
     return m_keyUps.find(key) != m_keyUps.end();
 }
 
-Input::KeyState Input::mouseButtonState(MouseButton mouseButton) const {
+KeyState Input::mouseButtonState(MouseButton mouseButton) const {
     KeyState state = KeyState::None;
 
     if (mouseButtonDown(mouseButton)) {
