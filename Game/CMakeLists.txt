@@ -10,6 +10,8 @@ add_executable("Game"
     Renderer.cpp
     TriangleRenderer.h
     TriangleRenderer.cpp
+    FreeCam.h
+    FreeCam.cpp
 )
 
 target_link_libraries("Game"

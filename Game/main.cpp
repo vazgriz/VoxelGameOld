@@ -6,6 +6,7 @@
 
 #include "FrameRateCounter.h"
 #include "Renderer.h"
+#include "FreeCam.h"
 
 int main() {
     VoxelEngine::Engine engine;
@@ -21,7 +22,7 @@ int main() {
     engine.getUpdateGroup().add(counter);
 
     VoxelEngine::Camera camera(engine, window.getWidth(), window.getHeight(), glm::radians(90.0f), 0.01f, 1000.0f);
-    VoxelEngine::CameraSystem cameraSystem(engine, 1);
+    VoxelEngine::CameraSystem cameraSystem(engine, 90);
     cameraSystem.setCamera(camera);
     engine.getUpdateGroup().add(cameraSystem);
 
@@ -31,6 +32,9 @@ int main() {
     cameraSystem.setTransferNode(renderer.transferNode());
 
     camera.setPosition({ 0, 0, -2 });
+
+    FreeCam freeCam(10, camera, window.input());
+    engine.getUpdateGroup().add(freeCam);
 
     engine.run();
 
