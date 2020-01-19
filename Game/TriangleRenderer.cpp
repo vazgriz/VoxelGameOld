@@ -59,7 +59,7 @@ void TriangleRenderer::createRenderPass() {
     vk::AttachmentDescription attachment = {};
     attachment.format = m_graphics->swapchain().format();
     attachment.samples = vk::SampleCountFlags::_1;
-    attachment.loadOp = vk::AttachmentLoadOp::DontCare;
+    attachment.loadOp = vk::AttachmentLoadOp::Clear;
     attachment.storeOp = vk::AttachmentStoreOp::Store;
     attachment.stencilLoadOp = vk::AttachmentLoadOp::DontCare;
     attachment.stencilStoreOp = vk::AttachmentStoreOp::DontCare;
