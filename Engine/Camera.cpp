@@ -56,6 +56,6 @@ void Camera::setRotation(glm::quat rotation) {
 void Camera::createViewMatrix() {
     glm::vec3 right = m_rotation * glm::vec3(1, 0, 0);
     glm::vec3 up = m_rotation * glm::vec3(0, 1, 0);
-    glm::vec3 forward = m_rotation * glm::vec3(0, 0, 1);
-    m_viewMatrix = glm::mat4(glm::vec4(right, 0), glm::vec4(up, 0), glm::vec4(forward, 0), glm::vec4(0, 0, 0, 1)) * glm::translate(m_position);
+    glm::vec3 forward = m_rotation * glm::vec3(0, 0, -1);
+    m_viewMatrix = glm::lookAtRH(m_position, m_position + forward, up);
 }

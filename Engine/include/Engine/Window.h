@@ -5,9 +5,11 @@
 #include <memory>
 
 namespace VoxelEngine {
+    class Engine;
     class Input;
 
     class Window {
+        friend class Engine;
     public:
         Window(uint32_t width, uint32_t height, const std::string& title);
         ~Window();
@@ -28,6 +30,10 @@ namespace VoxelEngine {
 
         std::unique_ptr<Input> m_input;
 
+        void update();
+
         static void handleKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods);
+        static void handleMouseButtonInput(GLFWwindow* window, int mouseButton, int action, int mods);
+        static void handleMousePosition(GLFWwindow* window, double xpos, double ypos);
     };
 }

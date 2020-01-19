@@ -14,16 +14,35 @@ Window::Window(uint32_t width, uint32_t height, const std::string& title) {
 
     glfwSetWindowUserPointer(m_window, this);
     glfwSetKeyCallback(m_window, &handleKeyInput);
+    glfwSetMouseButtonCallback(m_window, &handleMouseButtonInput);
+    glfwSetCursorPosCallback(m_window, &handleMousePosition);
 }
 
 Window::~Window() {
     glfwDestroyWindow(m_window);
 }
 
+void Window::update() {
+    m_input->preUpdate();
+    glfwPollEvents();
+}
+
 void Window::handleKeyInput(GLFWwindow* window_, int key, int scancode, int action, int mods) {
     Window* window = static_cast<Window*>(glfwGetWindowUserPointer(window_));
     Input* input = window->m_input.get();
-    input->handleInput(key, scancode, action, mods);
+    input->handleKeyInput(key, scancode, action, mods);
+}
+
+void Window::handleMouseButtonInput(GLFWwindow* window_, int mouseButton, int action, int mods) {
+    Window* window = static_cast<Window*>(glfwGetWindowUserPointer(window_));
+    Input* input = window->m_input.get();
+    input->handleMouseButtonInput(mouseButton, action, mods);
+}
+
+void Window::handleMousePosition(GLFWwindow* window_, double xpos, double ypos) {
+    Window* window = static_cast<Window*>(glfwGetWindowUserPointer(window_));
+    Input* input = window->m_input.get();
+    input->handleMousePosition(xpos, ypos);
 }
 
 bool Window::shouldClose() const {

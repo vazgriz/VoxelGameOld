@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/Engine.h"
+#include "Engine/math.h"
 #include "GLFW/glfw3.h"
 #include "entt/signal/sigh.hpp"
 #include <unordered_set>
@@ -133,6 +134,20 @@ namespace VoxelEngine {
             Menu = GLFW_KEY_MENU,
         };
 
+        enum class MouseButton : int32_t {
+            Button1 = GLFW_MOUSE_BUTTON_1,
+            Button2 = GLFW_MOUSE_BUTTON_2,
+            Button3 = GLFW_MOUSE_BUTTON_3,
+            Button4 = GLFW_MOUSE_BUTTON_4,
+            Button5 = GLFW_MOUSE_BUTTON_5,
+            Button6 = GLFW_MOUSE_BUTTON_6,
+            Button7 = GLFW_MOUSE_BUTTON_7,
+            Button8 = GLFW_MOUSE_BUTTON_8,
+            Left = Button1,
+            Right = Button2,
+            Middle = Button3
+        };
+
         enum class KeyState {
             None = 0,
             Down = 1,
@@ -140,12 +155,27 @@ namespace VoxelEngine {
             Up = 4
         };
 
+        enum class CursorState {
+            Normal,
+            Locked
+        };
+
         KeyState keyState(Key key) const;
         bool keyDown(Key key) const;
         bool keyHold(Key key) const;
         bool keyUp(Key key) const;
 
+        KeyState mouseButtonState(MouseButton mouseButton) const;
+        bool mouseButtonDown(MouseButton mouseButton) const;
+        bool mouseButtonHold(MouseButton mouseButton) const;
+        bool mouseButtonUp(MouseButton mouseButton) const;
+
+        void setCursorState(CursorState state);
+        glm::vec2 mouseDelta() const;
+
         entt::sink<void(Key, KeyState)>& onKeyChanged() { return m_onKeyChanged;  }
+        entt::sink<void(MouseButton, KeyState)>& onMouseButtonChanged() { return m_onMouseButtonChanged; }
+        entt::sink<void(glm::vec2)>& onMouseMoved() { return m_onMouseMoved; }
 
     private:
         Input(GLFWwindow* window);
@@ -154,12 +184,28 @@ namespace VoxelEngine {
 
         entt::sigh<void(Key, KeyState)> m_onKeyChangedSignal;
         entt::sink<void(Key, KeyState)> m_onKeyChanged;
+        entt::sigh<void(MouseButton, KeyState)> m_onMouseButtonChangedSignal;
+        entt::sink<void(MouseButton, KeyState)> m_onMouseButtonChanged;
+        entt::sigh<void(glm::vec2)> m_onMouseMovedSignal;
+        entt::sink<void(glm::vec2)> m_onMouseMoved;
 
         std::unordered_set<Key> m_keyStates;
         std::unordered_set<Key> m_keyDowns;
         std::unordered_set<Key> m_keyUps;
 
-        void handleInput(int key, int scancode, int action, int mods);
+        std::unordered_set<MouseButton> m_mouseButtonStates;
+        std::unordered_set<MouseButton> m_mouseButtonDowns;
+        std::unordered_set<MouseButton> m_mouseButtonUps;
+
+        CursorState m_cursorState;
+        glm::vec2 m_mousePosition;
+        glm::vec2 m_delta;
+
+        void preUpdate();
+
+        void handleKeyInput(int key, int scancode, int action, int mods);
+        void handleMouseButtonInput(int mouseButton, int action, int mods);
+        void handleMousePosition(double x, double y);
     };
 
     static inline Input::KeyState operator | (Input::KeyState a, Input::KeyState b) {

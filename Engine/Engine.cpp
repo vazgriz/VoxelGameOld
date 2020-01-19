@@ -28,7 +28,7 @@ void Engine::addWindow(Window& window) {
 
 void Engine::run() {
     while (!m_window->shouldClose()) {
-        glfwPollEvents();
+        m_window->update();
         m_updateClock->update();
         m_updateGroup->update();
     }
