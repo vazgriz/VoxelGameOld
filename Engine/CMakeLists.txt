@@ -44,6 +44,8 @@ add_library("Engine"
     Camera.cpp
     include/Engine/CameraSystem.h
     CameraSystem.cpp
+    include/Engine/Input.h
+    Input.cpp
 )
 
 target_compile_definitions("Engine" PUBLIC
@@ -58,6 +60,7 @@ target_include_directories("Engine"
     PUBLIC "${VKW_ROOT}/include"
     PUBLIC "${VMA_INCLUDE}"
     PUBLIC "${GLM_INCLUDE}"
+    PUBLIC "${ENTT_INCLUDE}"
 )
 
 target_link_libraries("Engine"
@@ -65,3 +68,5 @@ target_link_libraries("Engine"
     "${VKW_BUILD}/src/VulkanWrapper.lib"
     "${VULKAN_ROOT}/Lib/vulkan-1.lib"
 )
+
+set_property(TARGET "Engine" PROPERTY CXX_STANDARD 17)

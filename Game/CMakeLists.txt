@@ -12,10 +12,6 @@ add_executable("Game"
     TriangleRenderer.cpp
 )
 
-target_include_directories("Game"
-    PRIVATE "../Engine/include"
-)
-
 target_link_libraries("Game"
     "Engine"
 )
@@ -42,3 +38,5 @@ add_custom_target(
 )
 
 add_dependencies("Game" CompileShaders)
+
+set_property(TARGET "Game" PROPERTY CXX_STANDARD 17)
