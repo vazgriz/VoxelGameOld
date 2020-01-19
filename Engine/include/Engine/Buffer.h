@@ -13,6 +13,7 @@ namespace VoxelEngine {
 
         vk::Buffer& buffer() const { return *m_buffer; }
         void* getMapping() const;
+        size_t size() const { return m_buffer->size(); }
 
     private:
         Engine* m_engine;
