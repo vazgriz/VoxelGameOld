@@ -26,6 +26,7 @@ namespace VoxelEngine {
         entt::sink<void(uint32_t, uint32_t)>& onResized() { return m_onResized; }
         entt::sink<void(uint32_t, uint32_t)>& onFramebufferResized() { return m_onFramebufferResized; }
 
+        bool minimized() const;
         bool shouldClose() const;
         void setTitle(const std::string& title);
 
@@ -39,6 +40,7 @@ namespace VoxelEngine {
         std::unique_ptr<Input> m_input;
 
         bool m_resized = false;
+        bool m_minimized = false;
 
         entt::sigh<void(uint32_t, uint32_t)> m_onResizedSignal;
         entt::sink<void(uint32_t, uint32_t)> m_onResized;
@@ -50,6 +52,7 @@ namespace VoxelEngine {
 
         static void handleWindowResize(GLFWwindow* window, int width, int height);
         static void handleFramebufferResize(GLFWwindow* window, int width, int height);
+        static void handleIconify(GLFWwindow* window, int iconified);
 
         static void handleKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods);
         static void handleMouseButtonInput(GLFWwindow* window, int mouseButton, int action, int mods);

@@ -27,7 +27,10 @@ void Engine::addWindow(Window& window) {
 void Engine::run() {
     while (!m_window->shouldClose()) {
         m_window->update();
-        m_updateClock->update();
-        m_updateGroup->update();
+
+        if (!m_window->minimized()) {
+            m_updateClock->update();
+            m_updateGroup->update();
+        }
     }
 }

@@ -16,6 +16,7 @@ Window::Window(uint32_t width, uint32_t height, const std::string& title)
 
     glfwSetWindowSizeCallback(m_window, &handleWindowResize);
     glfwSetFramebufferSizeCallback(m_window, &handleFramebufferResize);
+    glfwSetWindowIconifyCallback(m_window, &handleIconify);
 
     glfwSetKeyCallback(m_window, &handleKeyInput);
     glfwSetMouseButtonCallback(m_window, &handleMouseButtonInput);
@@ -38,12 +39,20 @@ Window::~Window() {
 
 void Window::update() {
     m_input->preUpdate();
-    glfwPollEvents();
+
+    if (minimized()) {
+        glfwWaitEvents();
+    } else {
+        glfwPollEvents();
+    }
 
     if (m_resized) {
         m_resized = false;
-        m_onResizedSignal.publish(m_width, m_height);
-        m_onFramebufferResizedSignal.publish(m_framebufferWidth, m_framebufferHeight);
+
+        if (!minimized()) {
+            m_onResizedSignal.publish(m_width, m_height);
+            m_onFramebufferResizedSignal.publish(m_framebufferWidth, m_framebufferHeight);
+        }
     }
 }
 
@@ -59,6 +68,11 @@ void Window::handleFramebufferResize(GLFWwindow* window_, int width, int height)
     window->m_resized = true;
     window->m_framebufferWidth = static_cast<uint32_t>(width);
     window->m_framebufferHeight = static_cast<uint32_t>(height);
+}
+
+void Window::handleIconify(GLFWwindow* window_, int iconified) {
+    Window* window = static_cast<Window*>(glfwGetWindowUserPointer(window_));
+    window->m_minimized = static_cast<bool>(iconified);
 }
 
 void Window::handleKeyInput(GLFWwindow* window_, int key, int scancode, int action, int mods) {
@@ -77,6 +91,10 @@ void Window::handleMousePosition(GLFWwindow* window_, double xpos, double ypos) 
     Window* window = static_cast<Window*>(glfwGetWindowUserPointer(window_));
     Input* input = window->m_input.get();
     input->handleMousePosition(xpos, ypos);
+}
+
+bool Window::minimized() const {
+    return m_minimized || m_framebufferWidth == 0 || m_framebufferHeight == 0;
 }
 
 bool Window::shouldClose() const {
