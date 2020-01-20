@@ -8,8 +8,6 @@ add_executable("Game"
     FrameRateCounter.cpp
     Renderer.h
     Renderer.cpp
-    TriangleRenderer.h
-    TriangleRenderer.cpp
     FreeCam.h
     FreeCam.cpp
     Chunk.h
