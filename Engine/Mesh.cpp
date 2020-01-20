@@ -3,31 +3,47 @@
 using namespace VoxelEngine;
 
 Mesh::Mesh() {
-
+    m_indexCount = 0;
+    m_vertexCount = 0;
 }
 
-void Mesh::addBinding(uint32_t vertexCount, std::shared_ptr<Buffer> buffer, vk::Format format, vk::DeviceSize offset) {
-    m_bindings.push_back({ buffer, format });
+void Mesh::addBinding(std::shared_ptr<Buffer> buffer, vk::DeviceSize offset) {
+    m_bindings.push_back(buffer);
     m_buffers.push_back(buffer->buffer());
     m_offsets.push_back(offset);
-    m_vertexCount = vertexCount;
 }
 
-void Mesh::setIndexBuffer(uint32_t indexCount, std::shared_ptr<Buffer> buffer, vk::IndexType type, vk::DeviceSize offset) {
+void Mesh::setIndexBuffer(std::shared_ptr<Buffer> buffer, vk::IndexType type, vk::DeviceSize offset) {
     m_indexBuffer = buffer;
     m_indexType = type;
-    m_hasIndex = buffer != nullptr;
     m_indexOffset = offset;
-    m_indexCount = indexCount;
+}
+
+void Mesh::clearBindings() {
+    m_bindings.clear();
+    m_buffers.clear();
+    m_offsets.clear();
+}
+
+void Mesh::clearIndexBuffer() {
+    m_indexBuffer.reset();
+}
+
+void Mesh::draw(vk::CommandBuffer& commandBuffer, uint32_t vertexCount) const {
+    commandBuffer.bindVertexBuffers(0, m_buffers, m_offsets);
+    commandBuffer.draw(vertexCount, 1, 0, 0);
+}
+
+void Mesh::drawIndexed(vk::CommandBuffer& commandBuffer, uint32_t indexCount) const {
+    commandBuffer.bindVertexBuffers(0, m_buffers, m_offsets);
+    commandBuffer.bindIndexBuffer(m_indexBuffer->buffer(), 0, m_indexType);
+    commandBuffer.drawIndexed(indexCount, 1, 0, 0, 0);
 }
 
 void Mesh::draw(vk::CommandBuffer& commandBuffer) const {
-    commandBuffer.bindVertexBuffers(0, m_buffers, m_offsets);
+    draw(commandBuffer, m_vertexCount);
+}
 
-    if (m_hasIndex) {
-        commandBuffer.bindIndexBuffer(m_indexBuffer->buffer(), 0, m_indexType);
-        commandBuffer.drawIndexed(m_indexCount, 1, 0, 0, 0);
-    } else {
-        commandBuffer.draw(m_vertexCount, 1, 0, 0);
-    }
+void Mesh::drawIndexed(vk::CommandBuffer& commandBuffer) const {
+    drawIndexed(commandBuffer, m_indexCount);
 }

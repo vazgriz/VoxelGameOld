@@ -72,7 +72,7 @@ void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuff
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::Graphics, *m_pipelineLayout, 0, { m_cameraSystem->descriptorSet() }, nullptr);
 
-    m_mesh->draw(commandBuffer);
+    m_mesh->drawIndexed(commandBuffer);
 
     commandBuffer.endRenderPass();
 }
@@ -327,10 +327,11 @@ void ChunkRenderer::transferMesh() {
     std::shared_ptr<VoxelEngine::Buffer> colorBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, colorInfo, allocInfo);
     std::shared_ptr<VoxelEngine::Buffer> indexBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, indexInfo, allocInfo);
 
-    m_mesh->addBinding(static_cast<uint32_t>(m_vertexData.size()), vertexBuffer, vk::Format::R32G32B32_Sint);
-    m_mesh->addBinding(static_cast<uint32_t>(m_colorData.size()), colorBuffer, vk::Format::R8G8B8A8_Unorm);
+    m_mesh->addBinding(vertexBuffer);
+    m_mesh->addBinding(colorBuffer);
 
-    m_mesh->setIndexBuffer(static_cast<uint32_t>(m_indexData.size()), indexBuffer, vk::IndexType::Uint32, 0);
+    m_mesh->setIndexBuffer(indexBuffer, vk::IndexType::Uint32, 0);
+    m_mesh->setIndexCount(m_indexData.size());
 
     m_transferNode->transfer(*vertexBuffer, vertexSize, 0, m_vertexData.data());
     m_transferNode->transfer(*colorBuffer, colorSize, 0, m_colorData.data());
