@@ -14,6 +14,8 @@ add_executable("Game"
     FreeCam.cpp
     Chunk.h
     Chunk.cpp
+    ChunkRenderer.h
+    ChunkRenderer.cpp
 )
 
 target_link_libraries("Game"

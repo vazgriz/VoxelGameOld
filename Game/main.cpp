@@ -7,6 +7,7 @@
 #include "FrameRateCounter.h"
 #include "Renderer.h"
 #include "FreeCam.h"
+#include "Chunk.h"
 
 int main() {
     VoxelEngine::Engine engine;
@@ -26,15 +27,21 @@ int main() {
     cameraSystem.setCamera(camera);
     engine.getUpdateGroup().add(cameraSystem);
 
-    Renderer renderer(100, engine, cameraSystem);
+    FreeCam freeCam(10, camera, window.input());
+    engine.getUpdateGroup().add(freeCam);
+
+    freeCam.setPosition({ -4, 20, -4 });
+
+    Chunk chunk({});
+
+    for (auto pos : Chunk::Positions()) {
+        chunk.blocks()[pos].type = (pos.x ^ pos.y ^ pos.z) & 1;
+    }
+
+    Renderer renderer(100, engine, cameraSystem, chunk);
     engine.getUpdateGroup().add(renderer);
 
     cameraSystem.setTransferNode(renderer.transferNode());
-
-    camera.setPosition({ 0, 0, -2 });
-
-    FreeCam freeCam(10, camera, window.input());
-    engine.getUpdateGroup().add(freeCam);
 
     engine.run();
 

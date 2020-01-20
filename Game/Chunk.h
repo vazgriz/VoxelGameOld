@@ -124,6 +124,62 @@ public:
         return Positions();
     }
 
+    static constexpr std::array<glm::ivec3, 6> Neighbors6 = {
+        glm::ivec3(1, 0, 0),    //right
+        glm::ivec3(-1, 0, 0),   //left
+        glm::ivec3(0, 1, 0),    //top
+        glm::ivec3(0, -1, 0),   //bottom
+        glm::ivec3(0, 0, 1),    //front
+        glm::ivec3(0, 0, -1)    //back
+    };
+
+    using FaceArray = const std::array<glm::ivec3, 4>;
+
+    static constexpr std::array<FaceArray, 6> NeighborFaces = {
+        //right
+        FaceArray {
+            glm::ivec3(1, 1, 1),
+            glm::ivec3(1, 1, 0),
+            glm::ivec3(1, 0, 1),
+            glm::ivec3(1, 0, 0),
+        },
+        //left
+        FaceArray {
+            glm::ivec3(0, 1, 0),
+            glm::ivec3(0, 1, 1),
+            glm::ivec3(0, 0, 0),
+            glm::ivec3(0, 0, 1),
+        },
+        //top
+        FaceArray {
+            glm::ivec3(0, 1, 0),
+            glm::ivec3(1, 1, 0),
+            glm::ivec3(0, 1, 1),
+            glm::ivec3(1, 1, 1),
+        },
+        //bottom
+        FaceArray {
+            glm::ivec3(1, 0, 0),
+            glm::ivec3(0, 0, 0),
+            glm::ivec3(1, 0, 1),
+            glm::ivec3(0, 0, 1),
+        },
+        //front
+        FaceArray {
+            glm::ivec3(0, 1, 1),
+            glm::ivec3(1, 1, 1),
+            glm::ivec3(0, 0, 1),
+            glm::ivec3(1, 0, 1),
+        },
+        //back
+        FaceArray {
+            glm::ivec3(1, 1, 0),
+            glm::ivec3(0, 1, 0),
+            glm::ivec3(1, 0, 0),
+            glm::ivec3(0, 0, 0),
+        },
+    };
+
 private:
     static const int32_t mask = chunkSize - 1;
     static const int32_t shiftAmount = 4;

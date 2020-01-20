@@ -5,11 +5,12 @@
 #include <Engine/RenderGraph/PresentNode.h>
 #include <Engine/RenderGraph/TransferNode.h>
 #include <Engine/CameraSystem.h>
-#include "TriangleRenderer.h"
+#include "Chunk.h"
+#include "ChunkRenderer.h"
 
 class Renderer : public VoxelEngine::System {
 public:
-    Renderer(uint32_t priority, VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem);
+    Renderer(uint32_t priority, VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem, Chunk& chunk);
 
     VoxelEngine::TransferNode& transferNode() const { return *m_transferNode; }
 
@@ -24,5 +25,5 @@ private:
     VoxelEngine::AcquireNode* m_acquireNode;
     VoxelEngine::PresentNode* m_presentNode;
     VoxelEngine::TransferNode* m_transferNode;
-    TriangleRenderer* m_triangleRenderer;
+    ChunkRenderer* m_chunkRenderer;
 };
