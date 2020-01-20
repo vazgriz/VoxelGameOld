@@ -37,33 +37,39 @@ void FreeCam::update(VoxelEngine::Clock& clock) {
 
         m_rotation = glm::rotate(glm::identity<glm::quat>(), glm::radians(-m_look.x), glm::vec3{ 0, 1, 0 }) * glm::rotate(glm::identity<glm::quat>(), glm::radians(-m_look.y), glm::vec3{ 1, 0, 0 });
 
-        glm::vec3 velocity = {};
+        glm::vec3 movement = {};
 
         if (m_input->keyHold(Key::W)) {
-            velocity += glm::vec3(0, 0, -1);
+            movement += glm::vec3(0, 0, -1);
         }
 
         if (m_input->keyHold(Key::S)) {
-            velocity += glm::vec3(0, 0, 1);
+            movement += glm::vec3(0, 0, 1);
         }
 
         if (m_input->keyHold(Key::A)) {
-            velocity += glm::vec3(-1, 0, 0);
+            movement += glm::vec3(-1, 0, 0);
         }
 
         if (m_input->keyHold(Key::D)) {
-            velocity += glm::vec3(1, 0, 0);
+            movement += glm::vec3(1, 0, 0);
         }
 
         if (m_input->keyHold(Key::E)) {
-            velocity += glm::vec3(0, 1, 0);
+            movement += glm::vec3(0, 1, 0);
         }
 
         if (m_input->keyHold(Key::Q)) {
-            velocity += glm::vec3(0, -1, 0);
+            movement += glm::vec3(0, -1, 0);
         }
 
-        m_position += m_rotation * (velocity * clock.delta());
+        float speed = 1;
+
+        if (m_input->keyHold(Key::LeftShift)) {
+            speed = 5;
+        }
+
+        m_position += m_rotation * (speed * movement * clock.delta());
     }
 
     m_camera->setPosition(m_position);
