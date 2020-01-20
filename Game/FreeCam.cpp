@@ -15,6 +15,10 @@ FreeCam::FreeCam(uint32_t priority, VoxelEngine::Camera& camera, VoxelEngine::In
     m_rotation = glm::identity<glm::quat>();
 }
 
+void FreeCam::setPosition(glm::vec3 pos) {
+    m_position = pos;
+}
+
 void FreeCam::update(VoxelEngine::Clock& clock) {
     if (!m_locked && m_input->mouseButtonDown(MouseButton::Button1)) {
         m_locked = true;
