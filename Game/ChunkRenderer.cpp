@@ -35,6 +35,8 @@ ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGra
     createPipeline();
     createMesh();
     transferMesh();
+
+    m_graphics->onSwapchainChanged().connect<&ChunkRenderer::onSwapchainChanged>(this);
 }
 
 void ChunkRenderer::preRender(uint32_t currentFrame) {
@@ -55,6 +57,19 @@ void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuff
     commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::Inline);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::Graphics, *m_pipeline);
+
+    vk::Viewport viewport = {};
+    viewport.width = static_cast<float>(m_graphics->swapchain().extent().width);
+    viewport.height = static_cast<float>(m_graphics->swapchain().extent().height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    vk::Rect2D scissor = {};
+    scissor.extent = m_graphics->swapchain().extent();
+
+    commandBuffer.setViewport(0, { viewport });
+    commandBuffer.setScissor(0, { scissor });
+
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::Graphics, *m_pipelineLayout, 0, { m_cameraSystem->descriptorSet() }, nullptr);
 
     m_mesh->draw(commandBuffer);
@@ -134,6 +149,8 @@ void ChunkRenderer::createRenderPass() {
 }
 
 void ChunkRenderer::createFramebuffers() {
+    m_framebuffers.clear();
+
     for (size_t i = 0; i < m_graphics->swapchain().images().size(); i++) {
         vk::FramebufferCreateInfo info = {};
         info.renderPass = m_renderPass.get();
@@ -200,18 +217,9 @@ void ChunkRenderer::createPipeline() {
     vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo = {};
     inputAssemblyInfo.topology = vk::PrimitiveTopology::TriangleList;
 
-    vk::Viewport viewport = {};
-    viewport.width = static_cast<float>(m_graphics->swapchain().extent().width);
-    viewport.height = static_cast<float>(m_graphics->swapchain().extent().height);
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-
-    vk::Rect2D scissor = {};
-    scissor.extent = m_graphics->swapchain().extent();
-
     vk::PipelineViewportStateCreateInfo viewportInfo = {};
-    viewportInfo.viewports = { viewport };
-    viewportInfo.scissors = { scissor };
+    viewportInfo.viewports = { {} };    //still need 1 viewport and scissor here, even though they are dynamic
+    viewportInfo.scissors = { {} };
 
     vk::PipelineRasterizationStateCreateInfo rasterizerInfo = {};
     rasterizerInfo.polygonMode = vk::PolygonMode::Fill;
@@ -238,6 +246,9 @@ void ChunkRenderer::createPipeline() {
     depthInfo.depthWriteEnable = true;
     depthInfo.depthCompareOp = vk::CompareOp::Less;
 
+    vk::PipelineDynamicStateCreateInfo dynamicInfo = {};
+    dynamicInfo.dynamicStates = { vk::DynamicState::Viewport, vk::DynamicState::Scissor };
+
     vk::GraphicsPipelineCreateInfo info = {};
     info.stages = stages;
     info.vertexInputState = &vertexInputInfo;
@@ -247,6 +258,7 @@ void ChunkRenderer::createPipeline() {
     info.multisampleState = &multisampleInfo;
     info.colorBlendState = &colorBlendInfo;
     info.depthStencilState = &depthInfo;
+    info.dynamicState = &dynamicInfo;
     info.layout = m_pipelineLayout.get();
     info.renderPass = m_renderPass.get();
     info.subpass = 0;
@@ -327,4 +339,9 @@ void ChunkRenderer::transferMesh() {
     sync(*vertexBuffer, vertexSize, 0, vk::AccessFlags::TransferRead | vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
     sync(*colorBuffer, colorSize, 0, vk::AccessFlags::TransferRead | vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
     sync(*indexBuffer, indexSize, 0, vk::AccessFlags::TransferRead | vk::AccessFlags::IndexRead, vk::PipelineStageFlags::VertexInput);
+}
+
+void ChunkRenderer::onSwapchainChanged(vk::Swapchain& swapchain) {
+    createDepthBuffer();
+    createFramebuffers();
 }

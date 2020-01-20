@@ -23,7 +23,6 @@ namespace VoxelEngine {
 
         void run();
 
-        void setGraphics(Graphics&& graphics);
         void addWindow(Window& window);
 
     private:

@@ -21,7 +21,7 @@ struct QueueIndices {
     }
 };
 
-Graphics::Graphics() {
+Graphics::Graphics() : m_onSwapchainChangedSignal(), m_onSwapchainChanged(m_onSwapchainChangedSignal) {
     createInstance();
 }
 
@@ -121,6 +121,8 @@ void Graphics::pickPhysicalDevice(Window& window) {
     createSwapchain();
     createImageViews();
     m_memory = std::make_unique<MemoryManager>(*m_device);
+
+    m_window->onFramebufferResized().connect<&Graphics::recreateSwapchain>(this);
 }
 
 void Graphics::createSurface(Window& window) {
@@ -180,7 +182,7 @@ vk::Extent2D chooseSwapExtent(const Window& window, const vk::SurfaceCapabilitie
     if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
         return capabilities.currentExtent;
     } else {
-        VkExtent2D actualExtent = { window.getWidth(), window.getHeight() };
+        VkExtent2D actualExtent = { window.getFramebufferWidth(), window.getFramebufferHeight() };
 
         actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
         actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
@@ -230,6 +232,8 @@ void Graphics::createSwapchain() {
 }
 
 void Graphics::createImageViews() {
+    m_swapchainImageViews.clear();
+
     for (auto& image : m_swapchain->images()) {
         vk::ImageViewCreateInfo info = {};
         info.image = &image;
@@ -247,4 +251,14 @@ void Graphics::createImageViews() {
 
         m_swapchainImageViews.emplace_back(*m_device, info);
     }
+}
+
+void Graphics::recreateSwapchain(uint32_t width, uint32_t height) {
+    m_graphicsQueue->waitIdle();
+    m_presentQueue->waitIdle();
+    m_transferQueue->waitIdle();
+
+    createSwapchain();
+    createImageViews();
+    m_onSwapchainChangedSignal.publish(*m_swapchain);
 }

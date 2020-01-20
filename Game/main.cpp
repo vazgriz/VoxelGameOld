@@ -15,17 +15,18 @@ int main() {
     VoxelEngine::Window window(800, 600, "VoxelGame");
     engine.addWindow(window);
 
-    engine.setGraphics({});
     VoxelEngine::Graphics& graphics = engine.getGraphics();
     graphics.pickPhysicalDevice(window);
 
     FrameRateCounter counter(0, window, "VoxelGame");
     engine.getUpdateGroup().add(counter);
 
-    VoxelEngine::Camera camera(engine, window.getWidth(), window.getHeight(), glm::radians(90.0f), 0.01f, 1000.0f);
+    VoxelEngine::Camera camera(engine, window.getFramebufferWidth(), window.getFramebufferHeight(), glm::radians(90.0f), 0.01f, 1000.0f);
     VoxelEngine::CameraSystem cameraSystem(engine, 90);
     cameraSystem.setCamera(camera);
     engine.getUpdateGroup().add(cameraSystem);
+
+    window.onFramebufferResized().connect<&VoxelEngine::Camera::setSize>(&camera);
 
     FreeCam freeCam(10, camera, window.input());
     engine.getUpdateGroup().add(freeCam);

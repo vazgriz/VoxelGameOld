@@ -19,5 +19,7 @@ namespace VoxelEngine {
         vk::Swapchain* m_swapchain;
         std::unique_ptr<vk::Semaphore> m_semaphore;
         uint32_t m_swapchainIndex;
+
+        void onSwapchainChanged(vk::Swapchain& swapchain);
     };
 }

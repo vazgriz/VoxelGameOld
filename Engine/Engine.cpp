@@ -8,18 +8,16 @@ Engine::Engine() {
     glfwSetErrorCallback([](int errorCode, const char* description) {
         std::cout << "GLFW error: " << description << std::endl;
     });
+
     glfwInit();
 
+    m_graphics = std::make_unique<Graphics>();
     m_updateClock = std::make_unique<Clock>(0.0f);
     m_updateGroup = std::make_unique<SystemGroup>(*m_updateClock);
 }
 
 Engine::~Engine() {
     glfwTerminate();
-}
-
-void Engine::setGraphics(Graphics&& graphics) {
-    m_graphics = std::make_unique<Graphics>(std::move(graphics));
 }
 
 void Engine::addWindow(Window& window) {

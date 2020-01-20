@@ -44,4 +44,6 @@ private:
     void createPipeline();
     void createMesh();
     void transferMesh();
+
+    void onSwapchainChanged(vk::Swapchain& swapchain);
 };

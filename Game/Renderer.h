@@ -7,6 +7,7 @@
 #include <Engine/CameraSystem.h>
 #include "Chunk.h"
 #include "ChunkRenderer.h"
+#include <entt/signal/sigh.hpp>
 
 class Renderer : public VoxelEngine::System {
 public:
