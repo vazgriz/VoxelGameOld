@@ -4,6 +4,7 @@
 #include "Engine/Clock.h"
 #include "Engine/Mesh.h"
 #include "Engine/Graphics.h"
+#include "Engine/Image.h"
 #include "Engine/Input.h"
 #include "Engine/MemoryManager.h"
 #include "Engine/Mesh.h"

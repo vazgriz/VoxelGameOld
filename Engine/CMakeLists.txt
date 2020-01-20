@@ -46,6 +46,8 @@ add_library("Engine"
     CameraSystem.cpp
     include/Engine/Input.h
     Input.cpp
+    include/Engine/Image.h
+    Image.cpp
 )
 
 target_compile_definitions("Engine" PUBLIC
