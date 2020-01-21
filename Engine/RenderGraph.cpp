@@ -34,6 +34,8 @@ RenderGraph::Node::Node(RenderGraph& graph, const vk::Queue& queue, vk::Pipeline
 
     m_submitInfo = {};
     m_submitInfo.commandBuffers = { m_commandBuffers[0] };
+
+    m_syncBuffers.resize(m_graph->framesInFlight());
 }
 
 void RenderGraph::Node::addExternalWait(vk::Semaphore& semaphore, vk::PipelineStageFlags stages) {
@@ -47,7 +49,7 @@ void RenderGraph::Node::addExternalSignal(vk::Semaphore& semaphore) {
 
 void RenderGraph::Node::sync(const Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, vk::AccessFlags accessMask, vk::PipelineStageFlags stages) {
     vk::Buffer* vkBuffer = &buffer.buffer();
-    m_syncBuffers.insert({ vkBuffer, { vkBuffer, size, offset, accessMask, stages } });
+    m_syncBuffers[m_currentFrame].insert({ vkBuffer, { buffer.state(), vkBuffer, size, offset, accessMask, stages } });
 }
 
 void RenderGraph::Node::addOutput(Node& output) {
@@ -144,11 +146,17 @@ void RenderGraph::Node::makeOutputTransfers(vk::CommandBuffer& commandBuffer) {
     }
 }
 
-void RenderGraph::Node::internalRender(uint32_t currentFrame) {
+void RenderGraph::Node::internalPreRender(uint32_t currentFrame) {
     vk::Fence& fence = m_fences[currentFrame];
     fence.wait();
     fence.reset();
 
+    m_currentFrame = currentFrame;
+
+    m_syncBuffers[currentFrame].clear();
+}
+
+void RenderGraph::Node::internalRender(uint32_t currentFrame) {
     vk::CommandBuffer& commandBuffer = m_commandBuffers[currentFrame];
 
     commandBuffer.reset(vk::CommandBufferResetFlags::None);
@@ -173,10 +181,6 @@ void RenderGraph::Node::submit(uint32_t currentFrame) {
 
 void RenderGraph::Node::wait() {
     vk::Fence::wait(m_queue->device(), m_fences, true, -1);
-}
-
-void RenderGraph::Node::clearSync() {
-    m_syncBuffers.clear();
 }
 
 RenderGraph::RenderGraph(vk::Device& device, uint32_t framesInFlight) {
@@ -226,6 +230,10 @@ void RenderGraph::wait() {
 }
 
 void RenderGraph::execute() const {
+    for (auto node : m_nodeList) {
+        node->internalPreRender(m_currentFrame);
+    }
+
     for (auto node : m_nodeList) {
         node->preRender(m_currentFrame);
     }

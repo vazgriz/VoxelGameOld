@@ -3,15 +3,17 @@
 #include <Engine/RenderGraph/AcquireNode.h>
 #include <Engine/RenderGraph/PresentNode.h>
 #include <Engine/CameraSystem.h>
+#include <entt/entt.hpp>
 
 #include "FrameRateCounter.h"
 #include "Renderer.h"
 #include "FreeCam.h"
 #include "Chunk.h"
+#include "ChunkMesh.h"
+#include "ChunkUpdater.h"
 
 int main() {
     VoxelEngine::Engine engine;
-
     VoxelEngine::Window window(800, 600, "VoxelGame");
     engine.addWindow(window);
 
@@ -33,16 +35,28 @@ int main() {
 
     freeCam.setPosition({ -4, 20, -4 });
 
-    Chunk chunk({});
+    entt::registry registry;
+    entt::entity chunkEntity = registry.create();
+
+    registry.assign<Chunk>(chunkEntity, glm::ivec3{});
+    registry.assign<ChunkMesh>(chunkEntity);
+
+    auto view = registry.view<Chunk, ChunkMesh>();
+
+    Chunk& chunk = view.get<Chunk>(chunkEntity);
 
     for (auto pos : Chunk::Positions()) {
         chunk.blocks()[pos].type = (pos.x ^ pos.y ^ pos.z) & 1;
     }
 
-    Renderer renderer(100, engine, cameraSystem, chunk);
+    ChunkUpdater chunkUpdater(20, engine, registry);
+    engine.getUpdateGroup().add(chunkUpdater);
+
+    Renderer renderer(100, engine, cameraSystem, registry);
     engine.getUpdateGroup().add(renderer);
 
     cameraSystem.setTransferNode(renderer.transferNode());
+    chunkUpdater.setTransferNode(renderer.transferNode());
 
     engine.run();
 

@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <fstream>
 #include <iostream>
+#include "ChunkMesh.h"
 
 static std::vector<char> readFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
@@ -19,28 +20,38 @@ static std::vector<char> readFile(const std::string& filename) {
     return buffer;
 }
 
-ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, Chunk& chunk)
+ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, entt::registry& registry)
     : VoxelEngine::RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue(), vk::PipelineStageFlags::ColorAttachmentOutput) {
     m_engine = &engine;
     m_graphics = &engine.getGraphics();
     m_acquireNode = &acquireNode;
     m_transferNode = &transferNode;
     m_cameraSystem = &cameraSystem;
-    m_chunk = &chunk;
+    m_registry = &registry;
 
     createDepthBuffer();
     createRenderPass();
     createFramebuffers();
     createPipelineLayout();
     createPipeline();
-    createMesh();
-    transferMesh();
 
     m_graphics->onSwapchainChanged().connect<&ChunkRenderer::onSwapchainChanged>(this);
 }
 
 void ChunkRenderer::preRender(uint32_t currentFrame) {
     sync(m_cameraSystem->uniformBuffer(), VK_WHOLE_SIZE, 0, vk::AccessFlags::ShaderRead, vk::PipelineStageFlags::VertexShader);
+
+    auto view = m_registry->view<ChunkMesh>();
+    for (auto entity : view) {
+        auto& mesh = view.get<ChunkMesh>(entity);
+
+        if (mesh.dirty()) {
+            mesh.clearDirty();
+            sync(mesh.mesh().getBinding(0), VK_WHOLE_SIZE, 0, vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
+            sync(mesh.mesh().getBinding(1), VK_WHOLE_SIZE, 0, vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
+            sync(*mesh.mesh().indexBuffer(), VK_WHOLE_SIZE, 0, vk::AccessFlags::IndexRead, vk::PipelineStageFlags::VertexInput);
+        }
+    }
 }
 
 void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer) {
@@ -72,7 +83,11 @@ void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuff
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::Graphics, *m_pipelineLayout, 0, { m_cameraSystem->descriptorSet() }, nullptr);
 
-    m_mesh->drawIndexed(commandBuffer);
+    auto view = m_registry->view<ChunkMesh>();
+    for (auto entity : view) {
+        auto& mesh = view.get<ChunkMesh>(entity);
+        if (mesh.mesh().hasIndexBuffer()) mesh.mesh().drawIndexed(commandBuffer);
+    }
 
     commandBuffer.endRenderPass();
 }
@@ -264,82 +279,6 @@ void ChunkRenderer::createPipeline() {
     info.subpass = 0;
 
     m_pipeline = std::make_unique<vk::GraphicsPipeline>(m_graphics->device(), info);
-}
-
-void ChunkRenderer::createMesh() {
-    uint32_t index = 0;
-
-    for (glm::ivec3 pos : Chunk::Positions()) {
-        Block block = m_chunk->blocks()[pos];
-        if (block.type == 0) continue;
-
-        for (size_t i = 0; i < Chunk::Neighbors6.size(); i++) {
-            glm::ivec3 offset = Chunk::Neighbors6[i];
-            glm::ivec3 neighborPos = pos + offset;
-
-            if (((neighborPos.x < 0 || neighborPos.x >= Chunk::chunkSize)
-                || (neighborPos.y < 0 || neighborPos.y >= Chunk::chunkSize)
-                || (neighborPos.z < 0 || neighborPos.z >= Chunk::chunkSize))
-                || m_chunk->blocks()[neighborPos].type == 0)
-            {
-                Chunk::FaceArray& faceArray = Chunk::NeighborFaces[i];
-                for (size_t j = 0; j < faceArray.size(); j++) {
-                    m_vertexData.push_back(pos + faceArray[j]);
-                    m_colorData.push_back(glm::i8vec4(pos.x * 16, pos.y * 16, pos.z * 16, 0));
-                }
-
-                m_indexData.push_back(index + 0);
-                m_indexData.push_back(index + 1);
-                m_indexData.push_back(index + 2);
-                m_indexData.push_back(index + 1);
-                m_indexData.push_back(index + 3);
-                m_indexData.push_back(index + 2);
-                index += 4;
-            }
-        }
-    }
-}
-
-void ChunkRenderer::transferMesh() {
-    m_mesh = std::make_unique<VoxelEngine::Mesh>();
-
-    size_t vertexSize = m_vertexData.size() * sizeof(glm::ivec3);
-    size_t colorSize = m_colorData.size() * sizeof(glm::i8vec4);
-    size_t indexSize = m_indexData.size() * sizeof(uint32_t);
-
-    vk::BufferCreateInfo vertexInfo = {};
-    vertexInfo.size = vertexSize;
-    vertexInfo.usage = vk::BufferUsageFlags::VertexBuffer | vk::BufferUsageFlags::TransferDst;
-    vertexInfo.sharingMode = vk::SharingMode::Exclusive;
-
-    vk::BufferCreateInfo colorInfo = vertexInfo;
-    colorInfo.size = colorSize;
-
-    vk::BufferCreateInfo indexInfo = vertexInfo;
-    indexInfo.size = indexSize;
-    indexInfo.usage = vk::BufferUsageFlags::IndexBuffer | vk::BufferUsageFlags::TransferDst;;
-
-    VmaAllocationCreateInfo allocInfo = {};
-    allocInfo.flags = VMA_MEMORY_USAGE_GPU_ONLY;
-    allocInfo.preferredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-    std::shared_ptr<VoxelEngine::Buffer> vertexBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, vertexInfo, allocInfo);
-    std::shared_ptr<VoxelEngine::Buffer> colorBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, colorInfo, allocInfo);
-    std::shared_ptr<VoxelEngine::Buffer> indexBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, indexInfo, allocInfo);
-
-    m_mesh->addBinding(vertexBuffer);
-    m_mesh->addBinding(colorBuffer);
-
-    m_mesh->setIndexBuffer(indexBuffer, vk::IndexType::Uint32, 0);
-    m_mesh->setIndexCount(m_indexData.size());
-
-    m_transferNode->transfer(*vertexBuffer, vertexSize, 0, m_vertexData.data());
-    m_transferNode->transfer(*colorBuffer, colorSize, 0, m_colorData.data());
-    m_transferNode->transfer(*indexBuffer, indexSize, 0, m_indexData.data());
-
-    sync(*vertexBuffer, vertexSize, 0, vk::AccessFlags::TransferRead | vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
-    sync(*colorBuffer, colorSize, 0, vk::AccessFlags::TransferRead | vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
-    sync(*indexBuffer, indexSize, 0, vk::AccessFlags::TransferRead | vk::AccessFlags::IndexRead, vk::PipelineStageFlags::VertexInput);
 }
 
 void ChunkRenderer::onSwapchainChanged(vk::Swapchain& swapchain) {

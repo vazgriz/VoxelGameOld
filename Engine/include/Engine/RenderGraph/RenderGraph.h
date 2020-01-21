@@ -7,12 +7,16 @@
 #include <iostream>
 
 namespace VoxelEngine {
+    struct BufferState;
+    class Buffer;
+
     class RenderGraph {
     public:
         class Node;
         class Edge;
 
         struct BufferSegment {
+            std::shared_ptr<BufferState> bufferPtr;
             vk::Buffer* buffer;
             vk::DeviceSize size;
             vk::DeviceSize offset;
@@ -52,7 +56,7 @@ namespace VoxelEngine {
 
         protected:
             vk::CommandPool& commandPool() const { return *m_commandPool; }
-            const std::unordered_map<vk::Buffer*, BufferSegment>& getSyncBuffers() { return m_syncBuffers; }
+            const std::unordered_map<vk::Buffer*, BufferSegment>& getSyncBuffers() { return m_syncBuffers[m_currentFrame]; }
 
             void sync(const Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, vk::AccessFlags accessMask, vk::PipelineStageFlags stages);
 
@@ -70,16 +74,17 @@ namespace VoxelEngine {
             std::vector<vk::CommandBuffer> m_commandBuffers;
             vk::SubmitInfo m_submitInfo;
 
-            std::unordered_map<vk::Buffer*, BufferSegment> m_syncBuffers;
+            uint32_t m_currentFrame = 0;
+            std::vector<std::unordered_map<vk::Buffer*, BufferSegment>> m_syncBuffers;
 
             void addOutput(Node& output);
 
             void makeInputTransfers(vk::CommandBuffer& commandBuffer);
             void makeOutputTransfers(vk::CommandBuffer& commandBuffer);
+            void internalPreRender(uint32_t currentFrame);
             void internalRender(uint32_t currentFrame);
             void submit(uint32_t currentFrame);
             void wait();
-            void clearSync();
         };
 
         RenderGraph(vk::Device& device, uint32_t framesInFlight);

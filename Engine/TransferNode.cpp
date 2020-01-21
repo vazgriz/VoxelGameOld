@@ -41,7 +41,7 @@ void TransferNode::createStaging() {
     }
 }
 
-void TransferNode::transfer(const VoxelEngine::Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, void* data) {
+void TransferNode::transfer(VoxelEngine::Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, void* data) {
     uint32_t currentFrame = m_renderGraph->currentFrame();
     m_ptr = align(m_ptr, 4);
     char* ptr = static_cast<char*>(m_stagingBufferPtrs[currentFrame]) + m_ptr;

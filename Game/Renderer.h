@@ -11,7 +11,7 @@
 
 class Renderer : public VoxelEngine::System {
 public:
-    Renderer(uint32_t priority, VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem, Chunk& chunk);
+    Renderer(uint32_t priority, VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem, entt::registry& registry);
 
     VoxelEngine::TransferNode& transferNode() const { return *m_transferNode; }
 

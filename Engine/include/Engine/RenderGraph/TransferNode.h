@@ -11,7 +11,7 @@ namespace VoxelEngine {
         void render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer);
         void postRender(uint32_t currentFrame) {}
 
-        void transfer(const VoxelEngine::Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, void* data);
+        void transfer(VoxelEngine::Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, void* data);
 
     private:
         struct BufferInfo {
