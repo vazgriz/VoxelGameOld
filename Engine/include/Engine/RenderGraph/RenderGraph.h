@@ -16,7 +16,7 @@ namespace VoxelEngine {
         class Edge;
 
         struct BufferSegment {
-            std::shared_ptr<BufferState> bufferPtr;
+            std::shared_ptr<Buffer> bufferPtr;
             vk::Buffer* buffer;
             vk::DeviceSize size;
             vk::DeviceSize offset;
@@ -58,7 +58,7 @@ namespace VoxelEngine {
             vk::CommandPool& commandPool() const { return *m_commandPool; }
             const std::unordered_map<vk::Buffer*, BufferSegment>& getSyncBuffers() { return m_syncBuffers[m_currentFrame]; }
 
-            void sync(const Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, vk::AccessFlags accessMask, vk::PipelineStageFlags stages);
+            void sync(std::shared_ptr<Buffer> buffer, vk::DeviceSize size, vk::DeviceSize offset, vk::AccessFlags accessMask, vk::PipelineStageFlags stages);
 
         private:
             const vk::Queue* m_queue;
@@ -81,7 +81,8 @@ namespace VoxelEngine {
 
             void makeInputTransfers(vk::CommandBuffer& commandBuffer);
             void makeOutputTransfers(vk::CommandBuffer& commandBuffer);
-            void internalPreRender(uint32_t currentFrame);
+            void wait(uint32_t currentFrame);
+            void clearSync(uint32_t currentFrame);
             void internalRender(uint32_t currentFrame);
             void submit(uint32_t currentFrame);
             void wait();

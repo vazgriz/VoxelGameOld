@@ -2,16 +2,6 @@
 
 using namespace VoxelEngine;
 
-BufferState::BufferState(Engine* engine, vk::Buffer&& buffer, VmaAllocation allocation, VmaAllocationInfo info) : buffer(std::move(buffer)) {
-    this->engine = engine;
-    this->allocation = allocation;
-    this->allocationInfo = info;
-}
-
-BufferState::~BufferState() {
-    vmaFreeMemory(engine->getGraphics().memory().allocator(), allocation);
-}
-
 Buffer::Buffer(Engine& engine, const vk::BufferCreateInfo& info, const VmaAllocationCreateInfo& allocInfo) {
     m_engine = &engine;
 
@@ -19,13 +9,15 @@ Buffer::Buffer(Engine& engine, const vk::BufferCreateInfo& info, const VmaAlloca
     info.marshal();
 
    VkBuffer buffer;
-   VmaAllocation allocation;
-   VmaAllocationInfo allocationInfo;
-   vmaCreateBuffer(allocator, info.getInfo(), &allocInfo, &buffer, &allocation, &allocationInfo);
+   vmaCreateBuffer(allocator, info.getInfo(), &allocInfo, &buffer, &m_allocation, &m_allocationInfo);
    
-   m_state = std::make_shared<BufferState>(m_engine, vk::Buffer(engine.getGraphics().device(), buffer, true, &info), allocation, allocationInfo);
+   m_buffer = std::make_unique<vk::Buffer>(engine.getGraphics().device(), buffer, true, &info);
+}
+
+Buffer::~Buffer() {
+    vmaFreeMemory(m_engine->getGraphics().memory().allocator(), m_allocation);
 }
 
 void* Buffer::getMapping() const {
-    return m_state->allocationInfo.pMappedData;
+    return m_allocationInfo.pMappedData;
 }

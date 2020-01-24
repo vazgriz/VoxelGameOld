@@ -19,7 +19,7 @@ namespace VoxelEngine {
         const std::shared_ptr<Buffer>& indexBuffer() const { return m_indexBuffer; }
 
         void addBinding(std::shared_ptr<Buffer> buffer, vk::DeviceSize offset = 0);
-        Buffer& getBinding(size_t index) const { return *m_bindings[index]; }
+        std::shared_ptr<Buffer> getBinding(size_t index) const { return m_bindings[index]; }
         size_t bindingCount() const { return m_bindings.size(); }
 
         void setIndexBuffer(std::shared_ptr<Buffer> buffer, vk::IndexType type, vk::DeviceSize offset);

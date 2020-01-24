@@ -43,12 +43,6 @@ int main() {
 
     auto view = registry.view<Chunk, ChunkMesh>();
 
-    Chunk& chunk = view.get<Chunk>(chunkEntity);
-
-    for (auto pos : Chunk::Positions()) {
-        chunk.blocks()[pos].type = (pos.x ^ pos.y ^ pos.z) & 1;
-    }
-
     ChunkUpdater chunkUpdater(20, engine, registry);
     engine.getUpdateGroup().add(chunkUpdater);
 

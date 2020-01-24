@@ -27,7 +27,7 @@ void CameraSystem::updateUniform() {
     uniform.view = m_camera->viewMatrix();
     uniform.projection = m_camera->projectionMatrix();
 
-    m_transferNode->transfer(*m_uniformBuffer, sizeof(CameraUniform), 0, &uniform);
+    m_transferNode->transfer(m_uniformBuffer, sizeof(CameraUniform), 0, &uniform);
 }
 
 void CameraSystem::createDescriptorPool() {
@@ -68,7 +68,7 @@ void CameraSystem::createUniformBuffer() {
     allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
     allocInfo.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-    m_uniformBuffer = std::make_unique<Buffer>(*m_engine, info, allocInfo);
+    m_uniformBuffer = std::make_shared<Buffer>(*m_engine, info, allocInfo);
 }
 
 void CameraSystem::writeDescriptorSet() {

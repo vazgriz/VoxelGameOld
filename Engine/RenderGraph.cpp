@@ -47,9 +47,9 @@ void RenderGraph::Node::addExternalSignal(vk::Semaphore& semaphore) {
     m_submitInfo.signalSemaphores.push_back(semaphore);
 }
 
-void RenderGraph::Node::sync(const Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, vk::AccessFlags accessMask, vk::PipelineStageFlags stages) {
-    vk::Buffer* vkBuffer = &buffer.buffer();
-    m_syncBuffers[m_currentFrame].insert({ vkBuffer, { buffer.state(), vkBuffer, size, offset, accessMask, stages } });
+void RenderGraph::Node::sync(std::shared_ptr<Buffer> buffer, vk::DeviceSize size, vk::DeviceSize offset, vk::AccessFlags accessMask, vk::PipelineStageFlags stages) {
+    vk::Buffer* vkBuffer = &buffer->buffer();
+    m_syncBuffers[m_currentFrame].insert({ vkBuffer, { buffer, vkBuffer, size, offset, accessMask, stages } });
 }
 
 void RenderGraph::Node::addOutput(Node& output) {
@@ -146,13 +146,15 @@ void RenderGraph::Node::makeOutputTransfers(vk::CommandBuffer& commandBuffer) {
     }
 }
 
-void RenderGraph::Node::internalPreRender(uint32_t currentFrame) {
+void RenderGraph::Node::wait(uint32_t currentFrame) {
     vk::Fence& fence = m_fences[currentFrame];
     fence.wait();
     fence.reset();
 
     m_currentFrame = currentFrame;
+}
 
+void RenderGraph::Node::clearSync(uint32_t currentFrame) {
     m_syncBuffers[currentFrame].clear();
 }
 
@@ -231,7 +233,10 @@ void RenderGraph::wait() {
 
 void RenderGraph::execute() const {
     for (auto node : m_nodeList) {
-        node->internalPreRender(m_currentFrame);
+        node->wait(m_currentFrame);
+    }
+    for (auto node : m_nodeList) {
+        node->clearSync(m_currentFrame);
     }
 
     for (auto node : m_nodeList) {

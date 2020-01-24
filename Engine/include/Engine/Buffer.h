@@ -7,28 +7,19 @@
 namespace VoxelEngine {
     class Engine;
 
-    struct BufferState {
-        Engine* engine;
-        vk::Buffer buffer;
-        VmaAllocation allocation;
-        VmaAllocationInfo allocationInfo;
-
-        BufferState(Engine* engine, vk::Buffer&& buffer, VmaAllocation allocation, VmaAllocationInfo info);
-        ~BufferState();
-    };
-
     class Buffer {
     public:
         Buffer(Engine& engine, const vk::BufferCreateInfo& info, const VmaAllocationCreateInfo& allocInfo);
+        ~Buffer();
 
-        vk::Buffer& buffer() const { return m_state->buffer; }
+        vk::Buffer& buffer() const { return *m_buffer; }
         void* getMapping() const;
-        size_t size() const { return m_state->buffer.size(); }
-
-        std::shared_ptr<BufferState> state() const { return m_state; }
+        size_t size() const { return m_buffer->size(); }
 
     private:
         Engine* m_engine;
-        std::shared_ptr<BufferState> m_state;
+        std::unique_ptr<vk::Buffer> m_buffer;
+        VmaAllocation m_allocation;
+        VmaAllocationInfo m_allocationInfo;
     };
 }

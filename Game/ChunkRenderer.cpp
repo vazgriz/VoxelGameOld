@@ -47,9 +47,12 @@ void ChunkRenderer::preRender(uint32_t currentFrame) {
 
         if (mesh.dirty()) {
             mesh.clearDirty();
-            sync(mesh.mesh().getBinding(0), VK_WHOLE_SIZE, 0, vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
-            sync(mesh.mesh().getBinding(1), VK_WHOLE_SIZE, 0, vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
-            sync(*mesh.mesh().indexBuffer(), VK_WHOLE_SIZE, 0, vk::AccessFlags::IndexRead, vk::PipelineStageFlags::VertexInput);
+
+            if (mesh.mesh().vertexCount() > 0) {
+                sync(mesh.mesh().getBinding(0), VK_WHOLE_SIZE, 0, vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
+                sync(mesh.mesh().getBinding(1), VK_WHOLE_SIZE, 0, vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
+                sync(mesh.mesh().indexBuffer(), VK_WHOLE_SIZE, 0, vk::AccessFlags::IndexRead, vk::PipelineStageFlags::VertexInput);
+            }
         }
     }
 }

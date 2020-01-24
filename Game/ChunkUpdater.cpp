@@ -12,8 +12,20 @@ void ChunkUpdater::setTransferNode(VoxelEngine::TransferNode& transferNode) {
 void ChunkUpdater::update(VoxelEngine::Clock& clock) {
     auto view = m_registry->view<Chunk, ChunkMesh>();
 
+    const float interval = 0.00306f;
+    const float totalTime = 4096 * interval;
+    float fraction = clock.time() / totalTime;
+    size_t max = static_cast<size_t>(ceil(4096 * fraction));
+
     for (auto entity : view) {
         Chunk& chunk = view.get<Chunk>(entity);
+        size_t i = 0;
+        for (auto pos : Chunk::Positions()) {
+            if (i >= max) break;
+            i++;
+            chunk.blocks()[pos].type = (pos.x ^ pos.y ^ pos.z) & 1;
+        }
+
         ChunkMesh& chunkMesh = view.get<ChunkMesh>(entity);
         makeMesh(chunk, chunkMesh);
         transferMesh(chunkMesh);
@@ -59,11 +71,12 @@ void ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
 }
 
 void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh) {
+    if (m_vertexData.size() == 0) return;
     size_t vertexSize = m_vertexData.size() * sizeof(glm::ivec3);
     size_t colorSize = m_colorData.size() * sizeof(glm::i8vec4);
     size_t indexSize = m_indexData.size() * sizeof(uint32_t);
 
-    if (chunkMesh.mesh().bindingCount() == 0 || chunkMesh.mesh().getBinding(0).size() < vertexSize) {
+    if (chunkMesh.mesh().bindingCount() == 0 || chunkMesh.mesh().getBinding(0)->size() < vertexSize) {
         vk::BufferCreateInfo vertexInfo = {};
         vertexInfo.size = vertexSize;
         vertexInfo.usage = vk::BufferUsageFlags::VertexBuffer | vk::BufferUsageFlags::TransferDst;
@@ -94,7 +107,7 @@ void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh) {
 
     m_transferNode->transfer(chunkMesh.mesh().getBinding(0), vertexSize, 0, m_vertexData.data());
     m_transferNode->transfer(chunkMesh.mesh().getBinding(1), colorSize, 0, m_colorData.data());
-    m_transferNode->transfer(*chunkMesh.mesh().indexBuffer(), indexSize, 0, m_indexData.data());
+    m_transferNode->transfer(chunkMesh.mesh().indexBuffer(), indexSize, 0, m_indexData.data());
 
     chunkMesh.setDirty();
 }

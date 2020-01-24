@@ -13,6 +13,16 @@ TransferNode::TransferNode(Engine& engine, RenderGraph& graph)
 
 void TransferNode::preRender(uint32_t currentFrame) {
     m_ptr = 0;
+
+    while (m_syncQueue.size() > 0) {
+        auto item = m_syncQueue.front();
+        m_syncQueue.pop();
+
+        sync(item.buffer, item.size, item.offset, vk::AccessFlags::TransferWrite, vk::PipelineStageFlags::Transfer);
+        m_ptr = align(m_ptr + item.size, 4);
+    }
+
+    m_preRenderDone = true;
 }
 
 void TransferNode::render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer) {
@@ -21,6 +31,7 @@ void TransferNode::render(uint32_t currentFrame, vk::CommandBuffer& commandBuffe
     }
 
     m_bufferCopies.clear();
+    m_preRenderDone = false;
 }
 
 void TransferNode::createStaging() {
@@ -41,7 +52,8 @@ void TransferNode::createStaging() {
     }
 }
 
-void TransferNode::transfer(VoxelEngine::Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, void* data) {
+void TransferNode::transfer(std::shared_ptr<VoxelEngine::Buffer> buffer, vk::DeviceSize size, vk::DeviceSize offset, void* data) {
+    if (size == 0) return;
     uint32_t currentFrame = m_renderGraph->currentFrame();
     m_ptr = align(m_ptr, 4);
     char* ptr = static_cast<char*>(m_stagingBufferPtrs[currentFrame]) + m_ptr;
@@ -53,9 +65,13 @@ void TransferNode::transfer(VoxelEngine::Buffer& buffer, vk::DeviceSize size, vk
     copy.dstOffset = offset;
     copy.size = size;
 
-    m_bufferCopies.push_back({ &buffer.buffer(), copy });
+    m_bufferCopies.push_back({ &buffer->buffer(), copy });
 
     m_ptr += size;
 
-    sync(buffer, size, offset, vk::AccessFlags::TransferWrite, vk::PipelineStageFlags::Transfer);
+    if (m_preRenderDone) {
+        sync(buffer, size, offset, vk::AccessFlags::TransferWrite, vk::PipelineStageFlags::Transfer);
+    } else {
+        m_syncQueue.push({ buffer, size, offset });
+    }
 }

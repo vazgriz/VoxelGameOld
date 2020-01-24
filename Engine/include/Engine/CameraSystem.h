@@ -12,7 +12,7 @@ namespace VoxelEngine {
 
         const vk::DescriptorSetLayout& descriptorLayout() const { return *m_descriptorSetLayout; }
         const vk::DescriptorSet& descriptorSet() const { return *m_descriptorSet; }
-        const Buffer& uniformBuffer() const { return *m_uniformBuffer; }
+        std::shared_ptr<Buffer> uniformBuffer() const { return m_uniformBuffer; }
 
         void setCamera(Camera& camera) { m_camera = &camera; }
         void setTransferNode(TransferNode& transferNode) { m_transferNode = &transferNode; }
@@ -27,7 +27,7 @@ namespace VoxelEngine {
         std::unique_ptr<vk::DescriptorPool> m_descriptorPool;
         std::unique_ptr<vk::DescriptorSetLayout> m_descriptorSetLayout;
         std::unique_ptr<vk::DescriptorSet> m_descriptorSet;
-        std::unique_ptr<VoxelEngine::Buffer> m_uniformBuffer;
+        std::shared_ptr<VoxelEngine::Buffer> m_uniformBuffer;
 
         void createDescriptorPool();
         void createDescriptorSetLayout();
