@@ -33,7 +33,7 @@ private:
 
 class Chunk {
 public:
-    static const uint32_t chunkSize = 16;
+    static const int32_t chunkSize = 16;
 
     struct Positions;
 

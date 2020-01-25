@@ -91,5 +91,5 @@ glm::ivec3 Chunk::worldToChunk(glm::ivec3 worldPos) {
 }
 
 glm::ivec3 Chunk::chunkToWorld(glm::ivec3 chunkPos, glm::ivec3 worldChunkPos) {
-    return chunkPos + (worldChunkPos * static_cast<int32_t>(chunkSize));
+    return chunkPos + (worldChunkPos * chunkSize);
 }
