@@ -14,7 +14,6 @@ namespace VoxelEngine {
         void setPriority(int32_t priority);
         int32_t getPriority() const;
 
-        virtual void preUpdate(Clock& clock) {};
         virtual void update(Clock& clock) = 0;
 
     private:
