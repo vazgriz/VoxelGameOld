@@ -6,6 +6,7 @@ class FreeCam : public VoxelEngine::System {
 public:
     FreeCam(VoxelEngine::Camera& camera, VoxelEngine::Input& input);
 
+    glm::vec3 position() { return m_position; }
     void setPosition(glm::vec3 pos);
 
     void update(VoxelEngine::Clock& clock);
