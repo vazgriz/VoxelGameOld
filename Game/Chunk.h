@@ -72,15 +72,18 @@ public:
 
     Chunk(glm::ivec3 pos);
 
+    glm::ivec3 worldChunkPosition() const { return m_worldChunkPosition; }
+
     static size_t index(glm::ivec3 pos);
     static glm::ivec3 position(size_t index);
 
+    static glm::ivec2 divide(int32_t dividend, int32_t divisor);
+    static glm::ivec3 worldToWorldChunk(glm::ivec3 worldPos);
+    static glm::ivec3 worldToChunk(glm::ivec3 worldPos);
+    static glm::ivec3 chunkToWorld(glm::ivec3 chunkPos, glm::ivec3 worldChunkPos);
+
     ChunkData<Block, chunkSize>& blocks() { return m_blocks; }
     const ChunkData<Block, chunkSize>& blocks() const { return m_blocks; }
-
-    Positions positions() {
-        return Positions();
-    }
 
     static constexpr std::array<glm::ivec3, 6> Neighbors6 = {
         glm::ivec3(1, 0, 0),    //right
@@ -141,6 +144,6 @@ public:
 private:
     static const int32_t mask = chunkSize - 1;
     static const int32_t shiftAmount = 4;
-    glm::ivec3 m_chunkPosition;
+    glm::ivec3 m_worldChunkPosition;
     ChunkData<Block, chunkSize> m_blocks;
 };
