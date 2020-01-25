@@ -14,7 +14,7 @@ class ChunkData {
 public:
     using Array = std::array<T, Size * Size * Size>;
 
-    ChunkData() : m_data(){
+    ChunkData() : m_data() {
 
     }
 
@@ -46,76 +46,34 @@ public:
         typedef typename const glm::ivec3* pointer;
         typedef std::forward_iterator_tag iterator_category;
 
-        PositionIterator() {
-            state = {};
-        }
+        PositionIterator();
+        PositionIterator(const Chunk::PositionIterator& other);
+        PositionIterator& operator=(const Chunk::PositionIterator& other);
 
-        PositionIterator(const PositionIterator& other) {
-            state = other.state;
-        }
+        bool operator==(const PositionIterator& other) const;
+        bool operator!=(const PositionIterator& other) const;
 
-        PositionIterator& operator=(const PositionIterator& other) {
-            state = other.state;
-            return *this;
-        }
-
-        bool operator==(const PositionIterator& other) const {
-            return state == other.state;
-        }
-
-        bool operator!=(const PositionIterator& other) const {
-            return state != other.state;
-        }
-
-        PositionIterator& operator++() {
-            int32_t carry = increment(state.y, increment(state.x, 1));
-            state.z += carry;
-            return *this;
-        }
-
-        reference operator*() const {
-            return state;
-        }
-
-        pointer operator->() const {
-            return &state;
-        }
+        PositionIterator& PositionIterator::operator++();
+        reference operator*() const;
+        pointer operator->() const;
 
     private:
         glm::ivec3 state;
 
-        int32_t increment(int32_t& dest, int32_t value) {
-            int32_t temp = dest + value;
-            dest = temp & mask;
-            return temp >> shiftAmount;
-        }
+        int32_t increment(int32_t& dest, int32_t value);
 
-        PositionIterator(glm::ivec3 state) {
-            this->state = state;
-        }
+        PositionIterator(glm::ivec3 state);
     };
 
     struct Positions {
         PositionIterator begin() const { return PositionIterator(); }
-        PositionIterator end() const { return PositionIterator({ 0, 0, 16 }); }
+        PositionIterator end() const { return PositionIterator({ 0, 0, chunkSize }); }
     };
 
     Chunk(glm::ivec3 pos);
 
-    static size_t index(glm::ivec3 pos) {
-        return pos.x + (pos.y * chunkSize) + (pos.z * chunkSize * chunkSize);
-    }
-
-    static glm::ivec3 position(size_t index) {
-        glm::ivec3 result = {};
-        result.x = static_cast<int32_t>(index & mask);
-        index = index >> shiftAmount;
-        result.y = static_cast<int32_t>(index & mask);
-        index = index >> shiftAmount;
-        result.z = static_cast<int32_t>(index & mask);
-
-        return result;
-    }
+    static size_t index(glm::ivec3 pos);
+    static glm::ivec3 position(size_t index);
 
     ChunkData<Block, chunkSize>& blocks() { return m_blocks; }
     const ChunkData<Block, chunkSize>& blocks() const { return m_blocks; }
