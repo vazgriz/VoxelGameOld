@@ -11,7 +11,11 @@ layout(set = 0, binding = 0) uniform UniformBufferObject {
     mat4 proj;
 } ubo;
 
+layout(push_constant) uniform Transform {
+	ivec4 pos;
+} transform;
+
 void main() {
-    gl_Position = ubo.proj * ubo.view * vec4(vPosition, 1.0);
+    gl_Position = ubo.proj * ubo.view * vec4(vPosition + transform.pos.xyz, 1.0);
     fragColor = vColor.xyz;
 }

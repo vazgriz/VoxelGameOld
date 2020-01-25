@@ -18,6 +18,8 @@ add_executable("Game"
     ChunkMesh.cpp
     ChunkUpdater.h
     ChunkUpdater.cpp
+    ChunkManager.h
+    ChunkManager.cpp
 )
 
 target_link_libraries("Game"

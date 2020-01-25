@@ -37,15 +37,12 @@ int main() {
     freeCam.setPosition({ -4, 20, -4 });
 
     entt::registry registry;
-    entt::entity chunkEntity = registry.create();
 
-    registry.assign<Chunk>(chunkEntity, glm::ivec3{});
-    registry.assign<ChunkMesh>(chunkEntity);
-
-    auto view = registry.view<Chunk, ChunkMesh>();
+    ChunkManager chunkManager(registry, freeCam);
+    engine.getUpdateGroup().add(chunkManager, 20);
 
     ChunkUpdater chunkUpdater(engine, registry);
-    engine.getUpdateGroup().add(chunkUpdater, 20);
+    engine.getUpdateGroup().add(chunkUpdater, 30);
 
     Renderer renderer(engine, cameraSystem, registry);
     engine.getUpdateGroup().add(renderer, 100);

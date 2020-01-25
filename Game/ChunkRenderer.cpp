@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <fstream>
 #include <iostream>
+#include "Chunk.h"
 #include "ChunkMesh.h"
 
 static std::vector<char> readFile(const std::string& filename) {
@@ -86,10 +87,16 @@ void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuff
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::Graphics, *m_pipelineLayout, 0, { m_cameraSystem->descriptorSet() }, nullptr);
 
-    auto view = m_registry->view<ChunkMesh>();
+    auto view = m_registry->view<Chunk, ChunkMesh>();
     for (auto entity : view) {
+        auto& chunk = view.get<Chunk>(entity);
         auto& mesh = view.get<ChunkMesh>(entity);
-        if (mesh.mesh().hasIndexBuffer()) mesh.mesh().drawIndexed(commandBuffer);
+
+        if (mesh.mesh().hasIndexBuffer()) {
+            glm::ivec4 transform = glm::ivec4(chunk.worldChunkPosition(), 0) * Chunk::chunkSize;
+            commandBuffer.pushConstants(*m_pipelineLayout, vk::ShaderStageFlags::Vertex, 0, sizeof(glm::ivec4), &transform);
+            mesh.mesh().drawIndexed(commandBuffer);
+        }
     }
 
     commandBuffer.endRenderPass();
@@ -184,6 +191,13 @@ void ChunkRenderer::createFramebuffers() {
 void ChunkRenderer::createPipelineLayout() {
     vk::PipelineLayoutCreateInfo info = {};
     info.setLayouts = { m_cameraSystem->descriptorLayout() };
+    info.pushConstantRanges = {
+        {
+            vk::ShaderStageFlags::Vertex,
+            0,
+            sizeof(glm::ivec4)
+        }
+    };
 
     m_pipelineLayout = std::make_unique<vk::PipelineLayout>(m_graphics->device(), info);
 }
