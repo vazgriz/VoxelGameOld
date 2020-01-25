@@ -9,7 +9,7 @@ namespace VoxelEngine {
 
     class System {
     public:
-        System(int32_t priority);
+        System();
 
         void setPriority(int32_t priority);
         int32_t getPriority() const;
@@ -26,7 +26,7 @@ namespace VoxelEngine {
     public:
         SystemGroup(Clock& clock);
 
-        void add(System& system);
+        void add(System& system, uint32_t priority);
         void remove(System& remove);
         void update();
 

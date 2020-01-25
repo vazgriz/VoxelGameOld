@@ -3,9 +3,8 @@
 
 using namespace VoxelEngine;
 
-System::System(int32_t priority) {
+System::System() {
     m_group = nullptr;
-    setPriority(priority);
 }
 
 void System::setPriority(int32_t priority) {
@@ -23,7 +22,8 @@ SystemGroup::SystemGroup(Clock& clock) {
     m_clock = &clock;
 }
 
-void SystemGroup::add(System& system) {
+void SystemGroup::add(System& system, uint32_t priority) {
+    system.setPriority(priority);
     m_systems.push_back(&system);
     setDirty();
 }

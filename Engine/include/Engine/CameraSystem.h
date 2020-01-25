@@ -8,7 +8,7 @@
 namespace VoxelEngine {
     class CameraSystem : public VoxelEngine::System {
     public:
-        CameraSystem(Engine& engine, uint32_t priority);
+        CameraSystem(Engine& engine);
 
         const vk::DescriptorSetLayout& descriptorLayout() const { return *m_descriptorSetLayout; }
         const vk::DescriptorSet& descriptorSet() const { return *m_descriptorSet; }

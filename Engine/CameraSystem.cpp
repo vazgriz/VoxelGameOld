@@ -8,7 +8,7 @@ struct CameraUniform {
     glm::mat4 projection;
 };
 
-CameraSystem::CameraSystem(Engine& engine, uint32_t priority) : System(priority) {
+CameraSystem::CameraSystem(Engine& engine) {
     m_engine = &engine;
 
     createDescriptorPool();

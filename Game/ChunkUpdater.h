@@ -9,7 +9,7 @@ class ChunkUpdaterNode;
 
 class ChunkUpdater : public VoxelEngine::System {
 public:
-    ChunkUpdater(uint32_t priority, VoxelEngine::Engine& engine, entt::registry& registry);
+    ChunkUpdater(VoxelEngine::Engine& engine, entt::registry& registry);
 
     void setTransferNode(VoxelEngine::TransferNode& transferNode);
 

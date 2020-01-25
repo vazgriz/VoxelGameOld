@@ -2,7 +2,7 @@
 #include <sstream>
 #include <iomanip>
 
-FrameRateCounter::FrameRateCounter(int32_t priority, VoxelEngine::Window& window, std::string titlePrefix) : System(priority) {
+FrameRateCounter::FrameRateCounter(VoxelEngine::Window& window, std::string titlePrefix) {
     m_window = &window;
     m_titlePrefix = titlePrefix;
     m_frameCount = 0;

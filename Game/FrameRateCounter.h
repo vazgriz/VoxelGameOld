@@ -5,7 +5,7 @@
 
 class FrameRateCounter : public VoxelEngine::System {
 public:
-    FrameRateCounter(int32_t priority, VoxelEngine::Window& window, std::string titlePrefix);
+    FrameRateCounter(VoxelEngine::Window& window, std::string titlePrefix);
 
     void update(VoxelEngine::Clock& clock);
 

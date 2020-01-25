@@ -6,7 +6,7 @@
 using Key = VoxelEngine::Key;
 using MouseButton = VoxelEngine::MouseButton;
 
-FreeCam::FreeCam(uint32_t priority, VoxelEngine::Camera& camera, VoxelEngine::Input& input) : System(priority) {
+FreeCam::FreeCam(VoxelEngine::Camera& camera, VoxelEngine::Input& input) {
     m_camera = &camera;
     m_input = &input;
 

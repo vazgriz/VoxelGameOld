@@ -2,7 +2,7 @@
 #include <memory>
 #include <entt/entt.hpp>
 
-Renderer::Renderer(uint32_t priority, VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem, entt::registry& registry) : VoxelEngine::System(priority) {
+Renderer::Renderer(VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem, entt::registry& registry) {
     m_engine = &engine;
     m_graphics = &m_engine->getGraphics();
     m_renderGraph = std::make_unique<VoxelEngine::RenderGraph>(engine.getGraphics().device(), 2);

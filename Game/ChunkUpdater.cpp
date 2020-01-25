@@ -1,6 +1,6 @@
 #include "ChunkUpdater.h"
 
-ChunkUpdater::ChunkUpdater(uint32_t priority, VoxelEngine::Engine& engine, entt::registry& registry) : VoxelEngine::System(priority) {
+ChunkUpdater::ChunkUpdater(VoxelEngine::Engine& engine, entt::registry& registry) {
     m_engine = &engine;
     m_registry = &registry;
 }
