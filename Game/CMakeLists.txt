@@ -47,6 +47,31 @@ add_custom_target(
     DEPENDS ${SPIRV_BINARY_FILES}
 )
 
+set(TEXTURES
+    "resources/dirt.png";
+    "resources/grass_side.png";
+    "resources/grass_top.png";
+    "resources/stone.png";
+)
+set(RESOURCES_TEXTURES)
+
+foreach(TEXTURE ${TEXTURES})
+    get_filename_component(FILE_NAME ${TEXTURE} NAME)
+    set(TEXTURE_OUT "${PROJECT_BINARY_DIR}/resources/${FILE_NAME}")
+    add_custom_command(
+        OUTPUT ${TEXTURE_OUT}
+        COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/${TEXTURE}" ${TEXTURE_OUT}
+        MAIN_DEPENDENCY "${PROJECT_SOURCE_DIR}/${TEXTURE}"
+    )
+    list(APPEND RESOURCES_TEXTURES ${TEXTURE_OUT})
+endforeach(TEXTURE)
+
+add_custom_target(
+    CopyTextures
+    DEPENDS ${RESOURCES_TEXTURES}
+)
+
 add_dependencies("Game" CompileShaders)
+add_dependencies("Game" CopyTextures)
 
 set_property(TARGET "Game" PROPERTY CXX_STANDARD 17)
