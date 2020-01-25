@@ -12,20 +12,8 @@ void ChunkUpdater::setTransferNode(VoxelEngine::TransferNode& transferNode) {
 void ChunkUpdater::update(VoxelEngine::Clock& clock) {
     auto view = m_registry->view<Chunk, ChunkMesh>();
 
-    const float interval = 0.00306f;
-    const float totalTime = 4096 * interval;
-    float fraction = clock.time() / totalTime;
-    size_t max = static_cast<size_t>(ceil(4096 * fraction));
-
     for (auto entity : view) {
         Chunk& chunk = view.get<Chunk>(entity);
-        size_t i = 0;
-        for (auto pos : Chunk::Positions()) {
-            if (i >= max) break;
-            i++;
-            chunk.blocks()[pos].type = (pos.x ^ pos.y ^ pos.z) & 1;
-        }
-
         ChunkMesh& chunkMesh = view.get<ChunkMesh>(entity);
         makeMesh(chunk, chunkMesh);
         transferMesh(chunkMesh);
