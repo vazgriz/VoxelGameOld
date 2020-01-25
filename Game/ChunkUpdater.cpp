@@ -90,7 +90,7 @@ void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh) {
         chunkMesh.mesh().addBinding(colorBuffer);
 
         chunkMesh.mesh().setIndexBuffer(indexBuffer, vk::IndexType::Uint32, 0);
-        chunkMesh.mesh().setIndexCount(m_indexData.size());
+        chunkMesh.mesh().setIndexCount(static_cast<uint32_t>(m_indexData.size()));
     }
 
     m_transferNode->transfer(chunkMesh.mesh().getBinding(0), vertexSize, 0, m_vertexData.data());
