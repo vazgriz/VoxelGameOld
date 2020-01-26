@@ -3,9 +3,9 @@
 
 std::vector<std::string> textureNames = {
     "resources/dirt.png",
-    //"resources/grass_side.png",
-    //"resources/grass_top.png",
-    //"resources/stone.png",
+    "resources/grass_side.png",
+    "resources/grass_top.png",
+    "resources/stone.png",
 };
 
 const uint32_t textureSize = 16;

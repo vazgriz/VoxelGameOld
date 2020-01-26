@@ -20,14 +20,12 @@ namespace VoxelEngine {
 
         struct BufferSegment {
             std::shared_ptr<Buffer> bufferPtr;
-            vk::Buffer* buffer;
             vk::DeviceSize size;
             vk::DeviceSize offset;
         };
 
         struct ImageSegment {
             std::shared_ptr<Image> imagePtr;
-            vk::Image* image;
             vk::ImageSubresourceRange subresource;
         };
 
@@ -47,9 +45,9 @@ namespace VoxelEngine {
             Node* m_node;
             vk::AccessFlags m_accessMask;
             vk::PipelineStageFlags m_stageFlags;
-            std::vector<std::unordered_map<vk::Buffer*, BufferSegment>> m_buffers;
+            std::vector<std::unordered_map<vk::Buffer*, std::vector<BufferSegment>>> m_buffers;
 
-            std::unordered_map<vk::Buffer*, BufferSegment>& getSyncs(uint32_t currentFrame) { return m_buffers[currentFrame]; }
+            std::unordered_map<vk::Buffer*, std::vector<BufferSegment>>& getSyncs(uint32_t currentFrame) { return m_buffers[currentFrame]; }
 
             void clear(uint32_t currentFrame);
         };
@@ -72,9 +70,9 @@ namespace VoxelEngine {
             vk::ImageLayout m_imageLayout;
             vk::AccessFlags m_accessMask;
             vk::PipelineStageFlags m_stageFlags;
-            std::vector<std::unordered_map<vk::Image*, ImageSegment>> m_images;
+            std::vector<std::unordered_map<vk::Image*, std::vector<ImageSegment>>> m_images;
 
-            std::unordered_map<vk::Image*, ImageSegment>& getSyncs(uint32_t currentFrame) { return m_images[currentFrame]; }
+            std::unordered_map<vk::Image*, std::vector<ImageSegment>>& getSyncs(uint32_t currentFrame) { return m_images[currentFrame]; }
 
             void clear(uint32_t currentFrame);
         };

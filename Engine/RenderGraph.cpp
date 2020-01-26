@@ -13,7 +13,15 @@ RenderGraph::BufferUsage::BufferUsage(Node& node, vk::AccessFlags accessMask, vk
 
 void RenderGraph::BufferUsage::sync(std::shared_ptr<Buffer> buffer, vk::DeviceSize size, vk::DeviceSize offset) {
     vk::Buffer* vkBuffer = &buffer->buffer();
-    m_buffers[m_node->currentFrame()].insert({ vkBuffer, { buffer, vkBuffer, size, offset } });
+
+    auto& buffers = getSyncs(m_node->currentFrame());
+    auto it = buffers.find(vkBuffer);
+
+    if (it == buffers.end()) {
+        buffers.insert({ vkBuffer, { { buffer, size, offset } } });
+    } else {
+        buffers[vkBuffer].push_back({ buffer, size, offset });
+    }
 }
 
 void RenderGraph::BufferUsage::clear(uint32_t currentFrame) {
@@ -31,7 +39,15 @@ RenderGraph::ImageUsage::ImageUsage(Node& node, vk::ImageLayout imageLayout, vk:
 
 void RenderGraph::ImageUsage::sync(std::shared_ptr<Image> image, vk::ImageSubresourceRange subresource) {
     vk::Image* vkImage = &image->image();
-    m_images[m_node->currentFrame()].insert({ vkImage, { image, vkImage, subresource } });
+
+    auto& images = getSyncs(m_node->currentFrame());
+    auto it = images.find(vkImage);
+
+    if (it == images.end()) {
+        images.insert({ vkImage, { { image, subresource } } });
+    } else {
+        images[vkImage].push_back({ image, subresource });
+    }
 }
 
 void RenderGraph::ImageUsage::clear(uint32_t currentFrame) {
@@ -62,23 +78,24 @@ void RenderGraph::BufferEdge::recordSourceBarriers(uint32_t currentFrame, vk::Co
         auto it = destSyncs.find(sourcePair.first);
 
         if (it != destSyncs.end()) {
-            auto& sourceSegment = sourcePair.second;
-            auto& destSegment = it->second;
+            for (auto& sourceSegment : sourcePair.second) {
+                auto& destSegment = it->second;
 
-            vk::BufferMemoryBarrier barrier = {};
-            barrier.buffer = sourcePair.first;
-            barrier.offset = sourceSegment.offset;
-            barrier.size = sourceSegment.size;
-            barrier.srcAccessMask = m_sourceUsage->accessMask();
+                vk::BufferMemoryBarrier barrier = {};
+                barrier.buffer = sourcePair.first;
+                barrier.offset = sourceSegment.offset;
+                barrier.size = sourceSegment.size;
+                barrier.srcAccessMask = m_sourceUsage->accessMask();
 
-            if (source().queue().familyIndex() == dest().queue().familyIndex()) {
-                barrier.dstAccessMask = m_destUsage->accessMask();
+                if (source().queue().familyIndex() == dest().queue().familyIndex()) {
+                    barrier.dstAccessMask = m_destUsage->accessMask();
+                }
+
+                barrier.srcQueueFamilyIndex = source().queue().familyIndex();
+                barrier.dstQueueFamilyIndex = dest().queue().familyIndex();
+
+                m_barriers.push_back(barrier);
             }
-
-            barrier.srcQueueFamilyIndex = source().queue().familyIndex();
-            barrier.dstQueueFamilyIndex = dest().queue().familyIndex();
-
-            m_barriers.push_back(barrier);
         }
     }
 
@@ -106,23 +123,24 @@ void RenderGraph::BufferEdge::recordDestBarriers(uint32_t currentFrame, vk::Comm
         auto it = destSyncs.find(sourcePair.first);
 
         if (it != destSyncs.end()) {
-            auto& sourceSegment = sourcePair.second;
-            auto& destSegment = it->second;
+            for (auto& sourceSegment : sourcePair.second) {
+                auto& destSegment = it->second;
 
-            vk::BufferMemoryBarrier barrier = {};
-            barrier.buffer = sourcePair.first;
-            barrier.offset = sourceSegment.offset;
-            barrier.size = sourceSegment.size;
+                vk::BufferMemoryBarrier barrier = {};
+                barrier.buffer = sourcePair.first;
+                barrier.offset = sourceSegment.offset;
+                barrier.size = sourceSegment.size;
 
-            if (source().queue().familyIndex() == dest().queue().familyIndex()) {
-                barrier.srcAccessMask = m_sourceUsage->accessMask();
+                if (source().queue().familyIndex() == dest().queue().familyIndex()) {
+                    barrier.srcAccessMask = m_sourceUsage->accessMask();
+                }
+
+                barrier.dstAccessMask = m_destUsage->accessMask();
+                barrier.srcQueueFamilyIndex = source().queue().familyIndex();
+                barrier.dstQueueFamilyIndex = dest().queue().familyIndex();
+
+                m_barriers.push_back(barrier);
             }
-
-            barrier.dstAccessMask = m_destUsage->accessMask();
-            barrier.srcQueueFamilyIndex = source().queue().familyIndex();
-            barrier.dstQueueFamilyIndex = dest().queue().familyIndex();
-
-            m_barriers.push_back(barrier);
         }
     }
 
@@ -154,24 +172,25 @@ void RenderGraph::ImageEdge::recordSourceBarriers(uint32_t currentFrame, vk::Com
         auto it = destSyncs.find(sourcePair.first);
 
         if (it != destSyncs.end()) {
-            auto& sourceSegment = sourcePair.second;
-            auto& destSegment = it->second;
+            for (auto& sourceSegment : sourcePair.second) {
+                auto& destSegment = it->second;
 
-            vk::ImageMemoryBarrier barrier = {};
-            barrier.image = sourcePair.first;
-            barrier.oldLayout = m_sourceUsage->imageLayout();
-            barrier.newLayout = m_destUsage->imageLayout();
-            barrier.subresourceRange = sourceSegment.subresource;
-            barrier.srcAccessMask = m_sourceUsage->accessMask();
+                vk::ImageMemoryBarrier barrier = {};
+                barrier.image = sourcePair.first;
+                barrier.oldLayout = m_sourceUsage->imageLayout();
+                barrier.newLayout = m_destUsage->imageLayout();
+                barrier.subresourceRange = sourceSegment.subresource;
+                barrier.srcAccessMask = m_sourceUsage->accessMask();
 
-            if (source().queue().familyIndex() == dest().queue().familyIndex()) {
-                barrier.dstAccessMask = m_destUsage->accessMask();
+                if (source().queue().familyIndex() == dest().queue().familyIndex()) {
+                    barrier.dstAccessMask = m_destUsage->accessMask();
+                }
+
+                barrier.srcQueueFamilyIndex = source().queue().familyIndex();
+                barrier.dstQueueFamilyIndex = dest().queue().familyIndex();
+
+                m_barriers.push_back(barrier);
             }
-
-            barrier.srcQueueFamilyIndex = source().queue().familyIndex();
-            barrier.dstQueueFamilyIndex = dest().queue().familyIndex();
-
-            m_barriers.push_back(barrier);
         }
     }
 
@@ -199,24 +218,25 @@ void RenderGraph::ImageEdge::recordDestBarriers(uint32_t currentFrame, vk::Comma
         auto it = destSyncs.find(sourcePair.first);
 
         if (it != destSyncs.end()) {
-            auto& sourceSegment = sourcePair.second;
-            auto& destSegment = it->second;
+            for (auto& sourceSegment : sourcePair.second) {
+                auto& destSegment = it->second;
 
-            vk::ImageMemoryBarrier barrier = {};
-            barrier.image = sourcePair.first;
-            barrier.oldLayout = m_sourceUsage->imageLayout();
-            barrier.newLayout = m_destUsage->imageLayout();
-            barrier.subresourceRange = sourceSegment.subresource;
+                vk::ImageMemoryBarrier barrier = {};
+                barrier.image = sourcePair.first;
+                barrier.oldLayout = m_sourceUsage->imageLayout();
+                barrier.newLayout = m_destUsage->imageLayout();
+                barrier.subresourceRange = sourceSegment.subresource;
 
-            if (source().queue().familyIndex() == dest().queue().familyIndex()) {
-                barrier.srcAccessMask = m_sourceUsage->accessMask();
+                if (source().queue().familyIndex() == dest().queue().familyIndex()) {
+                    barrier.srcAccessMask = m_sourceUsage->accessMask();
+                }
+
+                barrier.dstAccessMask = m_destUsage->accessMask();
+                barrier.srcQueueFamilyIndex = source().queue().familyIndex();
+                barrier.dstQueueFamilyIndex = dest().queue().familyIndex();
+
+                m_barriers.push_back(barrier);
             }
-
-            barrier.dstAccessMask = m_destUsage->accessMask();
-            barrier.srcQueueFamilyIndex = source().queue().familyIndex();
-            barrier.dstQueueFamilyIndex = dest().queue().familyIndex();
-
-            m_barriers.push_back(barrier);
         }
     }
 
