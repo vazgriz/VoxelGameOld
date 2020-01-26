@@ -2,6 +2,7 @@
 #include <VulkanWrapper/VulkanWrapper.h>
 #include <Engine/Engine.h>
 #include <Engine/RenderGraph/TransferNode.h>
+#include "MipmapGenerator.h"
 
 class TextureManager {
 public:
@@ -12,7 +13,7 @@ public:
     std::shared_ptr<VoxelEngine::Image> image() const { return m_image; }
     uint32_t count() const;
 
-    void transfer(VoxelEngine::TransferNode& transferNode);
+    void createTexture(VoxelEngine::TransferNode& transferNode, MipmapGenerator& mipmapGenerator);
 
 private:
     VoxelEngine::Engine* m_engine;

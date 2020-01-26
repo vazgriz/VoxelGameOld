@@ -52,7 +52,7 @@ int main() {
 
     cameraSystem.setTransferNode(renderer.transferNode());
     chunkUpdater.setTransferNode(renderer.transferNode());
-    textureManager.transfer(renderer.transferNode());
+    textureManager.createTexture(renderer.transferNode(), renderer.mipmapGenerator());
 
     engine.run();
 

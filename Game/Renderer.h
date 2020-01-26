@@ -5,16 +5,18 @@
 #include <Engine/RenderGraph/PresentNode.h>
 #include <Engine/RenderGraph/TransferNode.h>
 #include <Engine/CameraSystem.h>
+#include <entt/signal/sigh.hpp>
 #include "Chunk.h"
 #include "ChunkRenderer.h"
 #include "TextureManager.h"
-#include <entt/signal/sigh.hpp>
+#include "MipmapGenerator.h"
 
 class Renderer : public VoxelEngine::System {
 public:
     Renderer(VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem, entt::registry& registry, TextureManager& textureManager);
 
     VoxelEngine::TransferNode& transferNode() const { return *m_transferNode; }
+    MipmapGenerator& mipmapGenerator() const { return *m_mipmapGenerator; }
 
     void wait();
 
@@ -28,4 +30,5 @@ private:
     VoxelEngine::PresentNode* m_presentNode;
     VoxelEngine::TransferNode* m_transferNode;
     ChunkRenderer* m_chunkRenderer;
+    MipmapGenerator* m_mipmapGenerator;
 };

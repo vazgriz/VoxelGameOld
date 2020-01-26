@@ -13,11 +13,13 @@ Renderer::Renderer(VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& camer
     );
     m_transferNode = &m_renderGraph->addNode<VoxelEngine::TransferNode>(*m_engine, *m_renderGraph);
     m_chunkRenderer = &m_renderGraph->addNode<ChunkRenderer>(*m_engine, *m_renderGraph, *m_acquireNode, *m_transferNode, cameraSystem, registry, textureManager);
+    m_mipmapGenerator = &m_renderGraph->addNode<MipmapGenerator>(*m_engine, *m_renderGraph);
 
     m_renderGraph->addEdge(VoxelEngine::RenderGraph::BufferEdge(m_transferNode->bufferUsage(), m_chunkRenderer->vertexBufferUsage()));
     m_renderGraph->addEdge(VoxelEngine::RenderGraph::BufferEdge(m_transferNode->bufferUsage(), m_chunkRenderer->indexBufferUsage()));
     m_renderGraph->addEdge(VoxelEngine::RenderGraph::ImageEdge(m_acquireNode->imageUsage(), m_chunkRenderer->imageUsage()));
-    m_renderGraph->addEdge(VoxelEngine::RenderGraph::ImageEdge(m_transferNode->imageUsage(), m_chunkRenderer->textureUsage()));
+    m_renderGraph->addEdge(VoxelEngine::RenderGraph::ImageEdge(m_transferNode->imageUsage(), m_mipmapGenerator->inputUsage()));
+    m_renderGraph->addEdge(VoxelEngine::RenderGraph::ImageEdge(m_mipmapGenerator->outputUsage(), m_chunkRenderer->textureUsage()));
     m_renderGraph->addEdge(VoxelEngine::RenderGraph::ImageEdge(m_chunkRenderer->imageUsage(), m_presentNode->imageUsage()));
 
     m_renderGraph->bake();

@@ -9,7 +9,7 @@ std::vector<std::string> textureNames = {
 };
 
 const uint32_t textureSize = 16;
-const uint32_t mipLevels = 1;
+const uint32_t mipLevels = 5;
 
 TextureManager::TextureManager(VoxelEngine::Engine& engine) {
     m_engine = &engine;
@@ -27,7 +27,7 @@ uint32_t TextureManager::count() const {
     return static_cast<uint32_t>(textureNames.size());
 }
 
-void TextureManager::transfer(VoxelEngine::TransferNode& transferNode) {
+void TextureManager::createTexture(VoxelEngine::TransferNode& transferNode, MipmapGenerator& mipmapGenerator) {
     for (uint32_t i = 0; i < textureNames.size(); i++) {
         auto& fileName = textureNames[i];
         int width;
@@ -46,11 +46,13 @@ void TextureManager::transfer(VoxelEngine::TransferNode& transferNode) {
 
         stbi_image_free(data);
     }
+
+    mipmapGenerator.generate(m_image);
 }
 
 void TextureManager::createImage() {
     vk::ImageCreateInfo info = {};
-    info.usage = vk::ImageUsageFlags::TransferDst | vk::ImageUsageFlags::Sampled;
+    info.usage = vk::ImageUsageFlags::TransferSrc | vk::ImageUsageFlags::TransferDst | vk::ImageUsageFlags::Sampled;
     info.format = vk::Format::R8G8B8A8_Unorm;
     info.arrayLayers = static_cast<uint32_t>(textureNames.size());
     info.extent = { textureSize, textureSize, 1 };
@@ -87,7 +89,7 @@ void TextureManager::createSampler() {
     //info.anisotropyEnable = true;
     info.maxAnisotropy = 16.0f;
     info.minLod = 0;
-    //info.maxLod = static_cast<float>(mipLevels);
+    info.maxLod = static_cast<float>(mipLevels);
 
     m_sampler = std::make_unique<vk::Sampler>(m_engine->getGraphics().device(), info);
 }

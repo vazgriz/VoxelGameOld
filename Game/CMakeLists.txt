@@ -23,6 +23,8 @@ add_executable("Game"
     ChunkManager.cpp
     TextureManager.h
     TextureManager.cpp
+    MipmapGenerator.h
+    MipmapGenerator.cpp
 )
 
 target_link_libraries("Game"
