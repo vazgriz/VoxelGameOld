@@ -23,6 +23,7 @@ void ChunkUpdater::update(VoxelEngine::Clock& clock) {
 void ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
     m_vertexData.clear();
     m_colorData.clear();
+    m_uvData.clear();
     m_indexData.clear();
 
     uint32_t index = 0;
@@ -44,6 +45,7 @@ void ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
                 for (size_t j = 0; j < faceArray.size(); j++) {
                     m_vertexData.push_back(pos + faceArray[j]);
                     m_colorData.push_back(glm::i8vec4(pos.x * 16, pos.y * 16, pos.z * 16, 0));
+                    m_uvData.push_back(glm::ivec3(Chunk::uvFaces[j], 0));
                 }
 
                 m_indexData.push_back(index + 0);
@@ -62,6 +64,7 @@ void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh) {
     if (m_vertexData.size() == 0) return;
     size_t vertexSize = m_vertexData.size() * sizeof(glm::ivec3);
     size_t colorSize = m_colorData.size() * sizeof(glm::i8vec4);
+    size_t uvSize = m_uvData.size() * sizeof(glm::ivec3);
     size_t indexSize = m_indexData.size() * sizeof(uint32_t);
 
     if (chunkMesh.mesh().bindingCount() == 0 || chunkMesh.mesh().getBinding(0)->size() < vertexSize) {
@@ -73,6 +76,8 @@ void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh) {
         vk::BufferCreateInfo colorInfo = vertexInfo;
         colorInfo.size = colorSize;
 
+        vk::BufferCreateInfo uvInfo = vertexInfo;
+
         vk::BufferCreateInfo indexInfo = vertexInfo;
         indexInfo.size = indexSize;
         indexInfo.usage = vk::BufferUsageFlags::IndexBuffer | vk::BufferUsageFlags::TransferDst;;
@@ -83,11 +88,13 @@ void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh) {
 
         std::shared_ptr<VoxelEngine::Buffer> vertexBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, vertexInfo, allocInfo);
         std::shared_ptr<VoxelEngine::Buffer> colorBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, colorInfo, allocInfo);
+        std::shared_ptr<VoxelEngine::Buffer> uvBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, uvInfo, allocInfo);
         std::shared_ptr<VoxelEngine::Buffer> indexBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, indexInfo, allocInfo);
 
         chunkMesh.mesh().clearBindings();
         chunkMesh.mesh().addBinding(vertexBuffer);
         chunkMesh.mesh().addBinding(colorBuffer);
+        chunkMesh.mesh().addBinding(uvBuffer);
 
         chunkMesh.mesh().setIndexBuffer(indexBuffer, vk::IndexType::Uint32, 0);
         chunkMesh.mesh().setIndexCount(static_cast<uint32_t>(m_indexData.size()));
@@ -95,6 +102,7 @@ void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh) {
 
     m_transferNode->transfer(chunkMesh.mesh().getBinding(0), vertexSize, 0, m_vertexData.data());
     m_transferNode->transfer(chunkMesh.mesh().getBinding(1), colorSize, 0, m_colorData.data());
+    m_transferNode->transfer(chunkMesh.mesh().getBinding(2), uvSize, 0, m_uvData.data());
     m_transferNode->transfer(chunkMesh.mesh().indexBuffer(), indexSize, 0, m_indexData.data());
 
     chunkMesh.setDirty();

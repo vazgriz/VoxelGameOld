@@ -21,6 +21,7 @@ private:
     entt::registry* m_registry;
     std::vector<glm::ivec3> m_vertexData;
     std::vector<glm::i8vec4> m_colorData;
+    std::vector<glm::ivec3> m_uvData;
     std::vector<uint32_t> m_indexData;
 
     void makeMesh(Chunk& chunk, ChunkMesh& chunkMesh);

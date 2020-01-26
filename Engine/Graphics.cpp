@@ -46,7 +46,7 @@ void Graphics::createInstance() {
     }
 
     info.enabledLayerNames = {
-        "VK_LAYER_LUNARG_standard_validation"
+        "VK_LAYER_LUNARG_standard_validation",
     };
 
     m_instance = std::make_unique<vk::Instance>(info);

@@ -141,6 +141,13 @@ public:
         },
     };
 
+    static constexpr std::array<glm::ivec2, 4> uvFaces = {
+        glm::ivec2(0, 0),
+        glm::ivec2(1, 0),
+        glm::ivec2(0, 1),
+        glm::ivec2(1, 1)
+    };
+
 private:
     static const int32_t mask = chunkSize - 1;
     static const int32_t shiftAmount = 4;

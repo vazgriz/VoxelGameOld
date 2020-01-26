@@ -3,8 +3,10 @@
 
 layout(location = 0) in ivec3 vPosition;
 layout(location = 1) in vec4 vColor;
+layout(location = 2) in ivec3 vUV;
 
 layout(location = 0) out vec3 fragColor;
+layout(location = 1) out vec3 fragUV;
 
 layout(set = 0, binding = 0) uniform UniformBufferObject {
     mat4 view;
@@ -18,4 +20,5 @@ layout(push_constant) uniform Transform {
 void main() {
     gl_Position = ubo.proj * ubo.view * vec4(vPosition + transform.pos.xyz, 1.0);
     fragColor = vColor.xyz;
+    fragUV = vUV;
 }

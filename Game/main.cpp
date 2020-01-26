@@ -12,6 +12,7 @@
 #include "ChunkMesh.h"
 #include "ChunkUpdater.h"
 #include "ChunkManager.h"
+#include "TextureManager.h"
 
 int main() {
     VoxelEngine::Engine engine;
@@ -36,6 +37,8 @@ int main() {
 
     freeCam.setPosition({ -4, 20, -4 });
 
+    TextureManager textureManager(engine);
+
     entt::registry registry;
 
     ChunkManager chunkManager(registry, freeCam);
@@ -44,11 +47,12 @@ int main() {
     ChunkUpdater chunkUpdater(engine, registry);
     engine.getUpdateGroup().add(chunkUpdater, 30);
 
-    Renderer renderer(engine, cameraSystem, registry);
+    Renderer renderer(engine, cameraSystem, registry, textureManager);
     engine.getUpdateGroup().add(renderer, 100);
 
     cameraSystem.setTransferNode(renderer.transferNode());
     chunkUpdater.setTransferNode(renderer.transferNode());
+    textureManager.transfer(renderer.transferNode());
 
     engine.run();
 

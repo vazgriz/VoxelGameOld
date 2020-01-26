@@ -3,6 +3,7 @@ cmake_minimum_required (VERSION 3.8)
 project ("Game")
 
 add_executable("Game"
+    stb.cpp
     main.cpp
     FrameRateCounter.h
     FrameRateCounter.cpp
@@ -20,10 +21,16 @@ add_executable("Game"
     ChunkUpdater.cpp
     ChunkManager.h
     ChunkManager.cpp
+    TextureManager.h
+    TextureManager.cpp
 )
 
 target_link_libraries("Game"
     "Engine"
+)
+
+target_include_directories("Game"
+    PRIVATE ${STB_INCLUDE}
 )
 
 set(SHADER_SOURCES

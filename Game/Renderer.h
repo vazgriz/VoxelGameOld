@@ -7,11 +7,12 @@
 #include <Engine/CameraSystem.h>
 #include "Chunk.h"
 #include "ChunkRenderer.h"
+#include "TextureManager.h"
 #include <entt/signal/sigh.hpp>
 
 class Renderer : public VoxelEngine::System {
 public:
-    Renderer(VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem, entt::registry& registry);
+    Renderer(VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem, entt::registry& registry, TextureManager& textureManager);
 
     VoxelEngine::TransferNode& transferNode() const { return *m_transferNode; }
 

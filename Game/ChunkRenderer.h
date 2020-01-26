@@ -7,9 +7,17 @@
 #include <Engine/CameraSystem.h>
 #include <entt/entt.hpp>
 
+#include "TextureManager.h"
+
 class ChunkRenderer :public VoxelEngine::RenderGraph::Node {
 public:
-    ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, entt::registry& registry);
+    ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, entt::registry& registry, TextureManager& textureManager);
+
+    VoxelEngine::RenderGraph::BufferUsage& uniformBufferUsage() const { return *m_uniformBufferUsage; }
+    VoxelEngine::RenderGraph::BufferUsage& vertexBufferUsage() const { return *m_vertexBufferUsage; }
+    VoxelEngine::RenderGraph::BufferUsage& indexBufferUsage() const { return *m_indexBufferUsage; }
+    VoxelEngine::RenderGraph::ImageUsage& textureUsage() const { return *m_textureUsage; }
+    VoxelEngine::RenderGraph::ImageUsage& imageUsage() const { return *m_imageUsage; }
 
     void preRender(uint32_t currentFrame);
     void render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer);
@@ -22,6 +30,7 @@ private:
     VoxelEngine::TransferNode* m_transferNode;
     VoxelEngine::CameraSystem* m_cameraSystem;
     entt::registry* m_registry;
+    TextureManager* m_textureManager;
 
     std::unique_ptr<VoxelEngine::Image> m_depthBuffer;
     std::unique_ptr<vk::ImageView> m_depthBufferView;
@@ -29,6 +38,12 @@ private:
     std::vector<vk::Framebuffer> m_framebuffers;
     std::unique_ptr<vk::PipelineLayout> m_pipelineLayout;
     std::unique_ptr<vk::Pipeline> m_pipeline;
+
+    std::unique_ptr<VoxelEngine::RenderGraph::BufferUsage> m_uniformBufferUsage;
+    std::unique_ptr<VoxelEngine::RenderGraph::BufferUsage> m_vertexBufferUsage;
+    std::unique_ptr<VoxelEngine::RenderGraph::BufferUsage> m_indexBufferUsage;
+    std::unique_ptr<VoxelEngine::RenderGraph::ImageUsage> m_textureUsage;
+    std::unique_ptr<VoxelEngine::RenderGraph::ImageUsage> m_imageUsage;
 
     void createDepthBuffer();
     void createRenderPass();

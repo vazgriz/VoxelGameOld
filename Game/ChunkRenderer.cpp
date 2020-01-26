@@ -21,7 +21,7 @@ static std::vector<char> readFile(const std::string& filename) {
     return buffer;
 }
 
-ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, entt::registry& registry)
+ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, entt::registry& registry, TextureManager& textureManager)
     : VoxelEngine::RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue(), vk::PipelineStageFlags::ColorAttachmentOutput) {
     m_engine = &engine;
     m_graphics = &engine.getGraphics();
@@ -29,6 +29,7 @@ ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGra
     m_transferNode = &transferNode;
     m_cameraSystem = &cameraSystem;
     m_registry = &registry;
+    m_textureManager = &textureManager;
 
     createDepthBuffer();
     createRenderPass();
@@ -36,11 +37,17 @@ ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGra
     createPipelineLayout();
     createPipeline();
 
+    m_uniformBufferUsage = std::make_unique<VoxelEngine::RenderGraph::BufferUsage>(*this, vk::AccessFlags::ShaderRead, vk::PipelineStageFlags::VertexShader);
+    m_vertexBufferUsage = std::make_unique<VoxelEngine::RenderGraph::BufferUsage>(*this, vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
+    m_indexBufferUsage = std::make_unique<VoxelEngine::RenderGraph::BufferUsage>(*this, vk::AccessFlags::IndexRead, vk::PipelineStageFlags::VertexInput);
+    m_textureUsage = std::make_unique<VoxelEngine::RenderGraph::ImageUsage>(*this, vk::ImageLayout::ShaderReadOnlyOptimal, vk::AccessFlags::ShaderRead, vk::PipelineStageFlags::FragmentShader);
+    m_imageUsage = std::make_unique<VoxelEngine::RenderGraph::ImageUsage>(*this, vk::ImageLayout::ColorAttachmentOptimal, vk::AccessFlags::ColorAttachmentWrite, vk::PipelineStageFlags::ColorAttachmentOutput);
+
     m_graphics->onSwapchainChanged().connect<&ChunkRenderer::onSwapchainChanged>(this);
 }
 
 void ChunkRenderer::preRender(uint32_t currentFrame) {
-    sync(m_cameraSystem->uniformBuffer(), VK_WHOLE_SIZE, 0, vk::AccessFlags::ShaderRead, vk::PipelineStageFlags::VertexShader);
+    m_uniformBufferUsage->sync(m_cameraSystem->uniformBuffer(), VK_WHOLE_SIZE, 0);
 
     auto view = m_registry->view<ChunkMesh>();
     for (auto entity : view) {
@@ -50,12 +57,21 @@ void ChunkRenderer::preRender(uint32_t currentFrame) {
             mesh.clearDirty();
 
             if (mesh.mesh().vertexCount() > 0) {
-                sync(mesh.mesh().getBinding(0), VK_WHOLE_SIZE, 0, vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
-                sync(mesh.mesh().getBinding(1), VK_WHOLE_SIZE, 0, vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
-                sync(mesh.mesh().indexBuffer(), VK_WHOLE_SIZE, 0, vk::AccessFlags::IndexRead, vk::PipelineStageFlags::VertexInput);
+                m_vertexBufferUsage->sync(mesh.mesh().getBinding(0), VK_WHOLE_SIZE, 0);
+                m_vertexBufferUsage->sync(mesh.mesh().getBinding(1), VK_WHOLE_SIZE, 0);
+                m_indexBufferUsage->sync(mesh.mesh().indexBuffer(), VK_WHOLE_SIZE, 0);
             }
         }
     }
+
+    vk::ImageSubresourceRange subresource = {};
+    subresource.aspectMask = vk::ImageAspectFlags::Color;
+    subresource.baseArrayLayer = 0;
+    subresource.layerCount = m_textureManager->count();
+    subresource.baseMipLevel = 0;
+    subresource.levelCount = 1;
+
+    m_textureUsage->sync(m_textureManager->image(), subresource);
 }
 
 void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer) {
@@ -85,7 +101,7 @@ void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuff
     commandBuffer.setViewport(0, { viewport });
     commandBuffer.setScissor(0, { scissor });
 
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::Graphics, *m_pipelineLayout, 0, { m_cameraSystem->descriptorSet() }, nullptr);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::Graphics, *m_pipelineLayout, 0, { m_cameraSystem->descriptorSet(), m_textureManager->descriptorSet() }, nullptr);
 
     auto view = m_registry->view<Chunk, ChunkMesh>();
     for (auto entity : view) {
@@ -190,7 +206,10 @@ void ChunkRenderer::createFramebuffers() {
 
 void ChunkRenderer::createPipelineLayout() {
     vk::PipelineLayoutCreateInfo info = {};
-    info.setLayouts = { m_cameraSystem->descriptorLayout() };
+    info.setLayouts = {
+        m_cameraSystem->descriptorLayout(),
+        m_textureManager->descriptorSetLayout()
+    };
     info.pushConstantRanges = {
         {
             vk::ShaderStageFlags::Vertex,
@@ -231,10 +250,13 @@ void ChunkRenderer::createPipeline() {
     vk::PipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.vertexBindingDescriptions = {
         {
-            0, sizeof(glm::vec3)
+            0, sizeof(glm::ivec3)
         },
         {
             1, sizeof(glm::i8vec4)
+        },
+        {
+            2, sizeof(glm::ivec3)
         }
     };
     vertexInputInfo.vertexAttributeDescriptions = {
@@ -243,7 +265,10 @@ void ChunkRenderer::createPipeline() {
         },
         {
             1, 1, vk::Format::R8G8B8A8_Unorm
-        }
+        },
+        {
+            2, 2, vk::Format::R32G32B32_Sint
+        },
     };
 
     vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo = {};
