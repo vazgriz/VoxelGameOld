@@ -35,13 +35,13 @@ int main() {
     FreeCam freeCam(camera, window.input());
     engine.getUpdateGroup().add(freeCam, 10);
 
-    freeCam.setPosition({ -4, 20, -4 });
+    freeCam.setPosition({ 0, 265, 0 });
 
     TextureManager textureManager(engine);
 
     entt::registry registry;
 
-    ChunkManager chunkManager(registry, freeCam);
+    ChunkManager chunkManager(registry, freeCam, 4);
     engine.getUpdateGroup().add(chunkManager, 20);
 
     ChunkUpdater chunkUpdater(engine, registry);

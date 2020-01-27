@@ -19,6 +19,8 @@ void ChunkUpdater::update(VoxelEngine::Clock& clock) {
 
     for (auto entity : view) {
         Chunk& chunk = view.get<Chunk>(entity);
+        if (chunk.activeState() != ChunkActiveState::Active) continue;
+
         ChunkMesh& chunkMesh = view.get<ChunkMesh>(entity);
 
         if (chunkMesh.mesh().bindingCount() == 0) {

@@ -49,8 +49,11 @@ ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGra
 void ChunkRenderer::preRender(uint32_t currentFrame) {
     m_uniformBufferUsage->sync(m_cameraSystem->uniformBuffer(), VK_WHOLE_SIZE, 0);
 
-    auto view = m_registry->view<ChunkMesh>();
+    auto view = m_registry->view<Chunk, ChunkMesh>();
     for (auto entity : view) {
+        auto& chunk = view.get<Chunk>(entity);
+        if (chunk.activeState() != ChunkActiveState::Active) continue;
+
         auto& mesh = view.get<ChunkMesh>(entity);
 
         if (mesh.dirty()) {
@@ -106,6 +109,8 @@ void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuff
     auto view = m_registry->view<Chunk, ChunkMesh>();
     for (auto entity : view) {
         auto& chunk = view.get<Chunk>(entity);
+        if (chunk.activeState() != ChunkActiveState::Active) continue;
+
         auto& mesh = view.get<ChunkMesh>(entity);
 
         if (mesh.mesh().hasIndexBuffer()) {
