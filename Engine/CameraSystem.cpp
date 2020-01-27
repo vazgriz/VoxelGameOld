@@ -65,7 +65,7 @@ void CameraSystem::createUniformBuffer() {
     info.usage = vk::BufferUsageFlags::UniformBuffer | vk::BufferUsageFlags::TransferDst;
 
     VmaAllocationCreateInfo allocInfo = {};
-    allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
     allocInfo.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
     m_uniformBuffer = std::make_shared<Buffer>(*m_engine, info, allocInfo);

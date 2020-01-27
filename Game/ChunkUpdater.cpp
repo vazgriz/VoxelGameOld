@@ -50,7 +50,7 @@ void ChunkUpdater::createIndexBuffer() {
     info.sharingMode = vk::SharingMode::Exclusive;
 
     VmaAllocationCreateInfo allocInfo = {};
-    allocInfo.flags = VMA_MEMORY_USAGE_GPU_ONLY;
+    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
     allocInfo.preferredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
     m_indexBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, info, allocInfo);
@@ -109,7 +109,7 @@ void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh, uint32_t indexCount) {
         vk::BufferCreateInfo uvInfo = vertexInfo;
 
         VmaAllocationCreateInfo allocInfo = {};
-        allocInfo.flags = VMA_MEMORY_USAGE_GPU_ONLY;
+        allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
         allocInfo.preferredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
         std::shared_ptr<VoxelEngine::Buffer> vertexBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, vertexInfo, allocInfo);
