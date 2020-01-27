@@ -123,6 +123,35 @@ public:
         glm::ivec3(0, 0, -1)    //back
     };
 
+    static constexpr std::array<glm::ivec3, 4> Neighbors4 = {
+        glm::ivec3(1, 0, 0),    //right
+        glm::ivec3(-1, 0, 0),   //left
+        glm::ivec3(0, 0, 1),    //front
+        glm::ivec3(0, 0, -1)    //back
+    };
+
+    static constexpr std::array<glm::ivec3, 8> Neighbors8 = {
+        glm::ivec3(1, 0, 0),
+        glm::ivec3(1, 0, 1),
+        glm::ivec3(0, 0, 1),
+        glm::ivec3(-1, 0, 1),
+        glm::ivec3(-1, 0, 0),
+        glm::ivec3(-1, 0, -1),
+        glm::ivec3(0, 0, -1),
+        glm::ivec3(1, 0, -1),
+    };
+
+    static constexpr std::array<glm::ivec2, 8> Neighbors8_2D = {
+        glm::ivec2(1, 0),
+        glm::ivec2(1, 1),
+        glm::ivec2(0, 1),
+        glm::ivec2(-1, 1),
+        glm::ivec2(-1, 0),
+        glm::ivec2(-1, -1),
+        glm::ivec2(0, -1),
+        glm::ivec2(1, -1),
+    };
+
     using FaceArray = const std::array<glm::ivec3, 4>;
 
     static constexpr std::array<FaceArray, 6> NeighborFaces = {
