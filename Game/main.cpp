@@ -13,6 +13,7 @@
 #include "ChunkUpdater.h"
 #include "ChunkManager.h"
 #include "TextureManager.h"
+#include "BlockManager.h"
 
 int main() {
     VoxelEngine::Engine engine;
@@ -38,13 +39,14 @@ int main() {
     freeCam.setPosition({ 0, 265, 0 });
 
     TextureManager textureManager(engine);
+    BlockManager blockManager;
 
     entt::registry registry;
 
     ChunkManager chunkManager(registry, freeCam, 4);
     engine.getUpdateGroup().add(chunkManager, 20);
 
-    ChunkUpdater chunkUpdater(engine, registry);
+    ChunkUpdater chunkUpdater(engine, registry, blockManager);
     engine.getUpdateGroup().add(chunkUpdater, 30);
 
     Renderer renderer(engine, cameraSystem, registry, textureManager);

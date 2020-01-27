@@ -25,6 +25,8 @@ add_executable("Game"
     TextureManager.cpp
     MipmapGenerator.h
     MipmapGenerator.cpp
+    BlockManager.h
+    BlockManager.cpp
 )
 
 target_link_libraries("Game"

@@ -4,12 +4,13 @@
 #include <entt/entt.hpp>
 #include "Chunk.h"
 #include "ChunkMesh.h"
+#include "BlockManager.h"
 
 class ChunkUpdaterNode;
 
 class ChunkUpdater : public VoxelEngine::System {
 public:
-    ChunkUpdater(VoxelEngine::Engine& engine, entt::registry& registry);
+    ChunkUpdater(VoxelEngine::Engine& engine, entt::registry& registry, BlockManager& blockManager);
 
     void setTransferNode(VoxelEngine::TransferNode& transferNode);
 
@@ -18,6 +19,7 @@ public:
 private:
     VoxelEngine::Engine* m_engine;
     VoxelEngine::TransferNode* m_transferNode;
+    BlockManager* m_blockManager;
     entt::registry* m_registry;
     std::vector<glm::i8vec4> m_vertexData;
     std::vector<glm::i8vec4> m_colorData;

@@ -14,7 +14,7 @@ ChunkGroup::ChunkGroup(glm::ivec2 coord, entt::registry& registry) : m_neighbors
 
         for (auto pos : Chunk::Positions()) {
             auto& block = chunk.blocks()[pos];
-            block.type = 1;
+            block.type = 3;
         }
 
         m_chunks.push_back(chunkEntity);

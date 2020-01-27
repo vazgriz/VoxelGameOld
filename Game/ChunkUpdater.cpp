@@ -1,8 +1,9 @@
 #include "ChunkUpdater.h"
 
-ChunkUpdater::ChunkUpdater(VoxelEngine::Engine& engine, entt::registry& registry) {
+ChunkUpdater::ChunkUpdater(VoxelEngine::Engine& engine, entt::registry& registry, BlockManager& blockManager) {
     m_engine = &engine;
     m_registry = &registry;
+    m_blockManager = &blockManager;
 
     createIndexBuffer();
 }
@@ -68,21 +69,26 @@ uint32_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
     for (glm::ivec3 pos : Chunk::Positions()) {
         Block block = chunk.blocks()[pos];
         if (block.type == 0) continue;
+        if (block.type == 1) continue;
 
         for (size_t i = 0; i < Chunk::Neighbors6.size(); i++) {
             glm::ivec3 offset = Chunk::Neighbors6[i];
             glm::ivec3 neighborPos = pos + offset;
+            BlockType& blockType = m_blockManager->getType(block.type);
 
             if (((neighborPos.x < 0 || neighborPos.x >= Chunk::chunkSize)
                 || (neighborPos.y < 0 || neighborPos.y >= Chunk::chunkSize)
                 || (neighborPos.z < 0 || neighborPos.z >= Chunk::chunkSize))
-                || chunk.blocks()[neighborPos].type == 0)
+                || chunk.blocks()[neighborPos].type == 1)
             {
                 Chunk::FaceArray& faceArray = Chunk::NeighborFaces[i];
+                size_t faceIndex = blockType.getFaceIndex(i);
+
                 for (size_t j = 0; j < faceArray.size(); j++) {
                     m_vertexData.push_back(glm::i8vec4(pos + faceArray[j], 0));
                     m_colorData.push_back(glm::i8vec4(pos.x * 16, pos.y * 16, pos.z * 16, 0));
-                    m_uvData.push_back(glm::i8vec4(Chunk::uvFaces[j], 0, 0));
+
+                    m_uvData.push_back(glm::i8vec4(Chunk::uvFaces[j], static_cast<uint8_t>(faceIndex), 0));
                 }
 
                 indexCount++;
