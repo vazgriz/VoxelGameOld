@@ -250,24 +250,24 @@ void ChunkRenderer::createPipeline() {
     vk::PipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.vertexBindingDescriptions = {
         {
-            0, sizeof(glm::ivec3)
+            0, sizeof(glm::i8vec4)
         },
         {
             1, sizeof(glm::i8vec4)
         },
         {
-            2, sizeof(glm::ivec3)
+            2, sizeof(glm::i8vec4)
         }
     };
     vertexInputInfo.vertexAttributeDescriptions = {
         {
-            0, 0, vk::Format::R32G32B32_Sint
+            0, 0, vk::Format::R8G8B8A8_Sint
         },
         {
             1, 1, vk::Format::R8G8B8A8_Unorm
         },
         {
-            2, 2, vk::Format::R32G32B32_Sint
+            2, 2, vk::Format::R8G8B8A8_Sint
         },
     };
 

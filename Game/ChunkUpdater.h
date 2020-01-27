@@ -19,9 +19,9 @@ private:
     VoxelEngine::Engine* m_engine;
     VoxelEngine::TransferNode* m_transferNode;
     entt::registry* m_registry;
-    std::vector<glm::ivec3> m_vertexData;
+    std::vector<glm::i8vec4> m_vertexData;
     std::vector<glm::i8vec4> m_colorData;
-    std::vector<glm::ivec3> m_uvData;
+    std::vector<glm::i8vec4> m_uvData;
     std::vector<uint32_t> m_indexData;
 
     void makeMesh(Chunk& chunk, ChunkMesh& chunkMesh);

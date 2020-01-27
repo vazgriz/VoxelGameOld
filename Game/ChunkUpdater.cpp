@@ -43,9 +43,9 @@ void ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
             {
                 Chunk::FaceArray& faceArray = Chunk::NeighborFaces[i];
                 for (size_t j = 0; j < faceArray.size(); j++) {
-                    m_vertexData.push_back(pos + faceArray[j]);
+                    m_vertexData.push_back(glm::i8vec4(pos + faceArray[j], 0));
                     m_colorData.push_back(glm::i8vec4(pos.x * 16, pos.y * 16, pos.z * 16, 0));
-                    m_uvData.push_back(glm::ivec3(Chunk::uvFaces[j], 0));
+                    m_uvData.push_back(glm::i8vec4(Chunk::uvFaces[j], 0, 0));
                 }
 
                 m_indexData.push_back(index + 0);
