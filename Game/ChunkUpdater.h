@@ -23,7 +23,12 @@ private:
     std::vector<glm::i8vec4> m_colorData;
     std::vector<glm::i8vec4> m_uvData;
     std::vector<uint32_t> m_indexData;
+    size_t m_indexBufferSize;
+    uint32_t m_indexCount;
 
-    void makeMesh(Chunk& chunk, ChunkMesh& chunkMesh);
-    void transferMesh(ChunkMesh& chunkMesh);
+    std::shared_ptr<VoxelEngine::Buffer> m_indexBuffer;
+
+    void createIndexBuffer();
+    uint32_t makeMesh(Chunk& chunk, ChunkMesh& chunkMesh);
+    void transferMesh(ChunkMesh& chunkMesh, uint32_t indexCount);
 };
