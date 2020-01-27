@@ -3,6 +3,29 @@
 #include <Engine/math.h>
 #include <array>
 
+enum class ChunkLoadState {
+    Unloaded,
+    Loading,
+    Loaded,
+    Unloading
+};
+
+enum class ChunkActiveState {
+    Inactive,
+    Active
+};
+
+enum class ChunkDirection {
+    North = 0,
+    NorthEast,
+    East,
+    SouthEast,
+    South,
+    SouthWest,
+    West,
+    NorthWest
+};
+
 struct Block {
     uint8_t type;
 
@@ -73,6 +96,12 @@ public:
     Chunk(glm::ivec3 pos);
 
     glm::ivec3 worldChunkPosition() const { return m_worldChunkPosition; }
+
+    ChunkLoadState loadState() const { return m_loadState; }
+    void setLoadState(ChunkLoadState loadState) { m_loadState = loadState; }
+
+    ChunkActiveState activeState() const { return m_activeState; }
+    void setActiveState(ChunkActiveState activeState) { m_activeState = activeState; }
 
     static size_t index(glm::ivec3 pos);
     static glm::ivec3 position(size_t index);
@@ -151,6 +180,9 @@ public:
 private:
     static const int32_t mask = chunkSize - 1;
     static const int32_t shiftAmount = 4;
+
     glm::ivec3 m_worldChunkPosition;
     ChunkData<Block, chunkSize> m_blocks;
+    ChunkLoadState m_loadState;
+    ChunkActiveState m_activeState;
 };
