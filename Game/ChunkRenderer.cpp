@@ -53,7 +53,7 @@ void ChunkRenderer::preRender(uint32_t currentFrame) {
     for (auto entity : view) {
         auto& mesh = view.get<ChunkMesh>(entity);
 
-        if (mesh.mesh().vertexCount() > 0) {
+        if (mesh.mesh().bindingCount() > 0) {
             m_vertexBufferUsage->sync(mesh.mesh().getBinding(0), VK_WHOLE_SIZE, 0);
             m_vertexBufferUsage->sync(mesh.mesh().getBinding(1), VK_WHOLE_SIZE, 0);
             m_vertexBufferUsage->sync(mesh.mesh().getBinding(2), VK_WHOLE_SIZE, 0);
