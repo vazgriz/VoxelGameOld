@@ -132,7 +132,7 @@ namespace VoxelEngine {
 
             RenderGraph& graph() const { return *m_graph; }
             const vk::Queue& queue() const { return *m_queue; }
-            uint32_t currentFrame() const { return m_currentFrame; }
+            uint32_t currentFrame() const { return m_graph->currentFrame(); }
 
             void addExternalWait(vk::Semaphore& semaphore, vk::PipelineStageFlags stages);
             void addExternalSignal(vk::Semaphore& semaphore);
@@ -158,8 +158,6 @@ namespace VoxelEngine {
             std::unique_ptr<vk::CommandPool> m_commandPool;
             std::vector<vk::CommandBuffer> m_commandBuffers;
             vk::SubmitInfo m_submitInfo;
-
-            uint32_t m_currentFrame = 0;
 
             void addOutput(Node& output, Edge& edge);
             void addUsage(BufferUsage& usage);

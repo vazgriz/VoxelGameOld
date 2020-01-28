@@ -316,8 +316,6 @@ void RenderGraph::Node::wait(uint32_t currentFrame) {
     vk::Fence& fence = m_fences[currentFrame];
     fence.wait();
     fence.reset();
-
-    m_currentFrame = currentFrame;
 }
 
 void RenderGraph::Node::clearSync(uint32_t currentFrame) {
