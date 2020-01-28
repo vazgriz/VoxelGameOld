@@ -104,9 +104,9 @@ uint32_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
 
 void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh, uint32_t indexCount) {
     if (m_vertexData.size() == 0) return;
-    size_t vertexSize = m_vertexData.size() * sizeof(glm::ivec3);
+    size_t vertexSize = m_vertexData.size() * sizeof(glm::i8vec4);
     size_t colorSize = m_colorData.size() * sizeof(glm::i8vec4);
-    size_t uvSize = m_uvData.size() * sizeof(glm::ivec3);
+    size_t uvSize = m_uvData.size() * sizeof(glm::i8vec4);
 
     if (chunkMesh.mesh().bindingCount() == 0 || chunkMesh.mesh().getBinding(0)->size() < vertexSize) {
         vk::BufferCreateInfo vertexInfo = {};
