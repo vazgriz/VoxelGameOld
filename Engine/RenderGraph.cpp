@@ -413,6 +413,7 @@ void RenderGraph::execute() const {
     for (auto node : m_nodeList) {
         node->wait(m_currentFrame);
     }
+
     for (auto node : m_nodeList) {
         node->clearSync(m_currentFrame);
     }
@@ -421,10 +422,8 @@ void RenderGraph::execute() const {
         node->preRender(m_currentFrame);
     }
 
-    size_t i = 0;
     for (auto node : m_nodeList) {
         node->internalRender(m_currentFrame);
-        i++;
     }
 
     for (auto node : m_nodeList) {
