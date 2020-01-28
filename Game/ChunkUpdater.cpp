@@ -17,16 +17,19 @@ void ChunkUpdater::setTransferNode(VoxelEngine::TransferNode& transferNode) {
 
 void ChunkUpdater::update(VoxelEngine::Clock& clock) {
     auto view = m_registry->view<Chunk, ChunkMesh>();
+    size_t updates = 16;
 
     for (auto entity : view) {
         Chunk& chunk = view.get<Chunk>(entity);
-        if (chunk.activeState() != ChunkActiveState::Active) continue;
+        if (chunk.loadState() != ChunkLoadState::Loaded) continue;
 
         ChunkMesh& chunkMesh = view.get<ChunkMesh>(entity);
 
         if (chunkMesh.mesh().bindingCount() == 0) {
             uint32_t indexCount = makeMesh(chunk, chunkMesh);
             transferMesh(chunkMesh, indexCount);
+            updates--;
+            if (updates == 0) return;
         }
     }
 }

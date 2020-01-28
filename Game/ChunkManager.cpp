@@ -17,7 +17,15 @@ ChunkGroup::ChunkGroup(glm::ivec2 coord, entt::registry& registry) : m_neighbors
             block.type = 3;
         }
 
+        chunk.setLoadState(ChunkLoadState::Loaded);
+
         m_chunks.push_back(chunkEntity);
+    }
+}
+
+ChunkGroup::~ChunkGroup() {
+    for (auto entity : m_chunks) {
+        m_registry->destroy(entity);
     }
 }
 
@@ -28,16 +36,6 @@ void ChunkGroup::setLoadState(ChunkLoadState loadState) {
     for (auto entity : m_chunks) {
         auto& chunk = view.get<Chunk>(entity);
         chunk.setLoadState(loadState);
-    }
-}
-
-void ChunkGroup::setActiveState(ChunkActiveState activeState) {
-    m_activeState = activeState;
-
-    auto view = m_registry->view<Chunk>();
-    for (auto entity : m_chunks) {
-        auto& chunk = view.get<Chunk>(entity);
-        chunk.setActiveState(activeState);
     }
 }
 
@@ -93,20 +91,40 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
     worldChunk.y = 0;
     glm::ivec2 coord = glm::ivec2(worldChunk.x, worldChunk.z);
 
-    auto it = m_chunkMap.find(coord);
-    if (it == m_chunkMap.end()) {
-        makeChunkGroup(coord, ChunkActiveState::Active);
-    } else {
-        it->second->setActiveState(ChunkActiveState::Active);
+    {
+        auto it = m_chunkMap.find(coord);
+        if (it == m_chunkMap.end()) {
+            makeChunkGroup(coord);
+        }
     }
 
-    updateChunks(coord);
+    {
+        auto it = m_chunkMap.begin();
+        while (it != m_chunkMap.end()) {
+            if (distance2(it->first, coord) > m_viewDistance2) {
+                it = destroyChunkGroup(it, it->first);
+            } else {
+                it++;
+            }
+        }
+    }
+
+    for (int32_t x = -m_viewDistance; x <= m_viewDistance; x++) {
+        for (int32_t y = -m_viewDistance; y <= m_viewDistance; y++) {
+            glm::ivec2 neighbor = glm::ivec2(x, y) + coord;
+            if (distance2(neighbor, coord) > m_viewDistance2) continue;
+
+            auto it = m_chunkMap.find(neighbor);
+            if (it == m_chunkMap.end()) {
+                makeChunkGroup(neighbor);
+            }
+        }
+    }
 }
 
-ChunkGroup& ChunkManager::makeChunkGroup(glm::ivec2 coord, ChunkActiveState activeState) {
+ChunkGroup& ChunkManager::makeChunkGroup(glm::ivec2 coord) {
     auto result = m_chunkMap.emplace(coord, std::make_unique<ChunkGroup>(coord, *m_registry));
     ChunkGroup& group = *result.first->second;
-    group.setActiveState(activeState);
 
     for (auto offset : Chunk::Neighbors8_2D) {
         ChunkDirection dir = ChunkGroup::getDirection(offset);
@@ -122,39 +140,20 @@ ChunkGroup& ChunkManager::makeChunkGroup(glm::ivec2 coord, ChunkActiveState acti
     return group;
 }
 
-void ChunkManager::loadNeighbors(glm::ivec2 coord) {
+ChunkManager::ChunkMap::iterator ChunkManager::destroyChunkGroup(ChunkMap::iterator it, glm::ivec2 coord) {
+    ChunkGroup& group = *it->second;
+
     for (auto offset : Chunk::Neighbors8_2D) {
-        auto it = m_chunkMap.find(coord + offset);
-        if (it == m_chunkMap.end()) {
-            makeChunkGroup(coord + offset, ChunkActiveState::Inactive);
-            m_inactiveSet.insert(coord + offset);
+        ChunkDirection dir = ChunkGroup::getDirection(offset);
+
+        auto neighborIt = m_chunkMap.find(coord + offset);
+        if (neighborIt != m_chunkMap.end()) {
+            auto& neighbor = *neighborIt->second;
+            neighbor.setNeighbor(ChunkGroup::getOpposite(dir), nullptr);
         }
     }
-}
 
-void ChunkManager::updateChunks(glm::ivec2 coord) {
-    auto& center = m_chunkMap[coord];
-
-    loadNeighbors(coord);
-
-    for (auto item : m_inactiveSet) {
-        m_chunkLoadQueue.push(item);
-    }
-
-    while (m_chunkLoadQueue.size() > 0) {
-        glm::ivec2 pos = m_chunkLoadQueue.front();
-        m_chunkLoadQueue.pop();
-
-        auto& chunkGroup = m_chunkMap[pos];
-        int32_t distance = distance2(coord, pos);
-
-        if (distance <= m_viewDistance2) {
-            chunkGroup->setActiveState(ChunkActiveState::Active);
-            m_inactiveSet.erase(pos);
-
-            loadNeighbors(pos);
-        }
-    }
+    return m_chunkMap.erase(it);
 }
 
 int32_t ChunkManager::distance2(glm::ivec2 a, glm::ivec2 b) {

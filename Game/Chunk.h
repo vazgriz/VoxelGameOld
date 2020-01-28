@@ -10,11 +10,6 @@ enum class ChunkLoadState {
     Unloading
 };
 
-enum class ChunkActiveState {
-    Inactive,
-    Active
-};
-
 enum class ChunkDirection {
     North = 0,
     NorthEast,
@@ -99,9 +94,6 @@ public:
 
     ChunkLoadState loadState() const { return m_loadState; }
     void setLoadState(ChunkLoadState loadState) { m_loadState = loadState; }
-
-    ChunkActiveState activeState() const { return m_activeState; }
-    void setActiveState(ChunkActiveState activeState) { m_activeState = activeState; }
 
     static size_t index(glm::ivec3 pos);
     static glm::ivec3 position(size_t index);
@@ -213,5 +205,4 @@ private:
     glm::ivec3 m_worldChunkPosition;
     ChunkData<Block, chunkSize> m_blocks;
     ChunkLoadState m_loadState;
-    ChunkActiveState m_activeState;
 };

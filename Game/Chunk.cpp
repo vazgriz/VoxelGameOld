@@ -47,6 +47,7 @@ Chunk::PositionIterator::PositionIterator(glm::ivec3 state) {
 
 Chunk::Chunk(glm::ivec3 pos) {
     m_worldChunkPosition = pos;
+    m_loadState = ChunkLoadState::Loading;
 }
 
 size_t Chunk::index(glm::ivec3 pos) {

@@ -51,19 +51,13 @@ void ChunkRenderer::preRender(uint32_t currentFrame) {
 
     auto view = m_registry->view<Chunk, ChunkMesh>();
     for (auto entity : view) {
-        auto& chunk = view.get<Chunk>(entity);
-        if (chunk.activeState() != ChunkActiveState::Active) continue;
-
         auto& mesh = view.get<ChunkMesh>(entity);
 
-        if (mesh.dirty()) {
-            mesh.clearDirty();
-
-            if (mesh.mesh().vertexCount() > 0) {
-                m_vertexBufferUsage->sync(mesh.mesh().getBinding(0), VK_WHOLE_SIZE, 0);
-                m_vertexBufferUsage->sync(mesh.mesh().getBinding(1), VK_WHOLE_SIZE, 0);
-                m_indexBufferUsage->sync(mesh.mesh().indexBuffer(), VK_WHOLE_SIZE, 0);
-            }
+        if (mesh.mesh().vertexCount() > 0) {
+            m_vertexBufferUsage->sync(mesh.mesh().getBinding(0), VK_WHOLE_SIZE, 0);
+            m_vertexBufferUsage->sync(mesh.mesh().getBinding(1), VK_WHOLE_SIZE, 0);
+            m_vertexBufferUsage->sync(mesh.mesh().getBinding(2), VK_WHOLE_SIZE, 0);
+            m_indexBufferUsage->sync(mesh.mesh().indexBuffer(), VK_WHOLE_SIZE, 0);
         }
     }
 
@@ -109,7 +103,7 @@ void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuff
     auto view = m_registry->view<Chunk, ChunkMesh>();
     for (auto entity : view) {
         auto& chunk = view.get<Chunk>(entity);
-        if (chunk.activeState() != ChunkActiveState::Active) continue;
+        if (chunk.loadState() != ChunkLoadState::Loaded) continue;
 
         auto& mesh = view.get<ChunkMesh>(entity);
 
