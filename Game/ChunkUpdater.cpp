@@ -136,6 +136,7 @@ void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh, size_t index) {
     if (update.indexCount == 0) {
         chunkMesh.mesh().setIndexCount(0);
         chunkMesh.mesh().setIndexBuffer(nullptr, vk::IndexType::Uint32, 0);
+        return;
     }
 
     size_t vertexSize = update.vertexData.size() * sizeof(glm::i8vec4);
