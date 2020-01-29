@@ -40,16 +40,15 @@ int main() {
 
     TextureManager textureManager(engine);
     BlockManager blockManager;
+    World world(4);
 
-    entt::registry registry;
-
-    ChunkManager chunkManager(registry, freeCam, 4);
+    ChunkManager chunkManager(world, freeCam);
     engine.getUpdateGroup().add(chunkManager, 20);
 
-    ChunkUpdater chunkUpdater(engine, registry, blockManager);
+    ChunkUpdater chunkUpdater(engine, world, blockManager);
     engine.getUpdateGroup().add(chunkUpdater, 30);
 
-    Renderer renderer(engine, cameraSystem, registry, textureManager);
+    Renderer renderer(engine, cameraSystem, world, textureManager);
     engine.getUpdateGroup().add(renderer, 100);
 
     cameraSystem.setTransferNode(renderer.transferNode());

@@ -1,8 +1,8 @@
 #include "ChunkUpdater.h"
 
-ChunkUpdater::ChunkUpdater(VoxelEngine::Engine& engine, entt::registry& registry, BlockManager& blockManager) {
+ChunkUpdater::ChunkUpdater(VoxelEngine::Engine& engine, World& world, BlockManager& blockManager) {
     m_engine = &engine;
-    m_registry = &registry;
+    m_world = &world;
     m_blockManager = &blockManager;
 
     createIndexBuffer();
@@ -16,7 +16,7 @@ void ChunkUpdater::setTransferNode(VoxelEngine::TransferNode& transferNode) {
 }
 
 void ChunkUpdater::update(VoxelEngine::Clock& clock) {
-    auto view = m_registry->view<Chunk, ChunkMesh>();
+    auto view = m_world->registry().view<Chunk, ChunkMesh>();
     size_t updates = 16;
 
     for (auto entity : view) {

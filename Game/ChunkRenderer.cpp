@@ -21,14 +21,14 @@ static std::vector<char> readFile(const std::string& filename) {
     return buffer;
 }
 
-ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, entt::registry& registry, TextureManager& textureManager)
+ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager)
     : VoxelEngine::RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue(), vk::PipelineStageFlags::ColorAttachmentOutput) {
     m_engine = &engine;
     m_graphics = &engine.getGraphics();
     m_acquireNode = &acquireNode;
     m_transferNode = &transferNode;
     m_cameraSystem = &cameraSystem;
-    m_registry = &registry;
+    m_world = &world;
     m_textureManager = &textureManager;
 
     createDepthBuffer();
@@ -49,7 +49,7 @@ ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGra
 void ChunkRenderer::preRender(uint32_t currentFrame) {
     m_uniformBufferUsage->sync(m_cameraSystem->uniformBuffer(), VK_WHOLE_SIZE, 0);
 
-    auto view = m_registry->view<Chunk, ChunkMesh>();
+    auto view = m_world->registry().view<Chunk, ChunkMesh>();
     for (auto entity : view) {
         auto& mesh = view.get<ChunkMesh>(entity);
 
@@ -100,7 +100,7 @@ void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuff
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::Graphics, *m_pipelineLayout, 0, { m_cameraSystem->descriptorSet(), m_textureManager->descriptorSet() }, nullptr);
 
-    auto view = m_registry->view<Chunk, ChunkMesh>();
+    auto view = m_world->registry().view<Chunk, ChunkMesh>();
     for (auto entity : view) {
         auto& chunk = view.get<Chunk>(entity);
         if (chunk.loadState() != ChunkLoadState::Loaded) continue;

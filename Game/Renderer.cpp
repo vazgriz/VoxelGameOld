@@ -2,7 +2,7 @@
 #include <memory>
 #include <entt/entt.hpp>
 
-Renderer::Renderer(VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem, entt::registry& registry, TextureManager& textureManager) {
+Renderer::Renderer(VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager) {
     m_engine = &engine;
     m_graphics = &m_engine->getGraphics();
     m_renderGraph = std::make_unique<VoxelEngine::RenderGraph>(engine.getGraphics().device(), 2);
@@ -12,7 +12,7 @@ Renderer::Renderer(VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& camer
         *m_engine, *m_renderGraph, vk::PipelineStageFlags::BottomOfPipe, *m_acquireNode
     );
     m_transferNode = &m_renderGraph->addNode<VoxelEngine::TransferNode>(*m_engine, *m_renderGraph);
-    m_chunkRenderer = &m_renderGraph->addNode<ChunkRenderer>(*m_engine, *m_renderGraph, *m_acquireNode, *m_transferNode, cameraSystem, registry, textureManager);
+    m_chunkRenderer = &m_renderGraph->addNode<ChunkRenderer>(*m_engine, *m_renderGraph, *m_acquireNode, *m_transferNode, cameraSystem, world, textureManager);
     m_mipmapGenerator = &m_renderGraph->addNode<MipmapGenerator>(*m_engine, *m_renderGraph);
 
     m_renderGraph->addEdge(VoxelEngine::RenderGraph::BufferEdge(m_transferNode->bufferUsage(), m_chunkRenderer->vertexBufferUsage()));

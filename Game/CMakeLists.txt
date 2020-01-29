@@ -27,6 +27,8 @@ add_executable("Game"
     MipmapGenerator.cpp
     BlockManager.h
     BlockManager.cpp
+    World.h
+    World.cpp
 )
 
 target_link_libraries("Game"

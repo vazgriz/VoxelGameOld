@@ -8,10 +8,11 @@
 #include <entt/entt.hpp>
 
 #include "TextureManager.h"
+#include "World.h"
 
 class ChunkRenderer :public VoxelEngine::RenderGraph::Node {
 public:
-    ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, entt::registry& registry, TextureManager& textureManager);
+    ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager);
 
     VoxelEngine::RenderGraph::BufferUsage& uniformBufferUsage() const { return *m_uniformBufferUsage; }
     VoxelEngine::RenderGraph::BufferUsage& vertexBufferUsage() const { return *m_vertexBufferUsage; }
@@ -29,7 +30,7 @@ private:
     VoxelEngine::AcquireNode* m_acquireNode;
     VoxelEngine::TransferNode* m_transferNode;
     VoxelEngine::CameraSystem* m_cameraSystem;
-    entt::registry* m_registry;
+    World* m_world;
     TextureManager* m_textureManager;
 
     std::unique_ptr<VoxelEngine::Image> m_depthBuffer;

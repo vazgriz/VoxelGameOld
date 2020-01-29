@@ -10,10 +10,11 @@
 #include "ChunkRenderer.h"
 #include "TextureManager.h"
 #include "MipmapGenerator.h"
+#include "World.h"
 
 class Renderer : public VoxelEngine::System {
 public:
-    Renderer(VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem, entt::registry& registry, TextureManager& textureManager);
+    Renderer(VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager);
 
     VoxelEngine::TransferNode& transferNode() const { return *m_transferNode; }
     MipmapGenerator& mipmapGenerator() const { return *m_mipmapGenerator; }
