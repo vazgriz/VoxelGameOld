@@ -46,7 +46,7 @@ ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGra
 }
 
 void ChunkRenderer::preRender(uint32_t currentFrame) {
-    m_uniformBufferUsage->sync(m_cameraSystem->uniformBuffer(), VK_WHOLE_SIZE, 0);
+    m_uniformBufferUsage->sync(*m_cameraSystem->uniformBuffer(), VK_WHOLE_SIZE, 0);
 
     auto view = m_world->registry().view<Chunk, ChunkMesh>();
     for (auto entity : view) {
@@ -55,9 +55,9 @@ void ChunkRenderer::preRender(uint32_t currentFrame) {
         if (mesh.dirty()) {
             mesh.clearDirty();
 
-            m_vertexBufferUsage->sync(mesh.mesh().getBinding(0), VK_WHOLE_SIZE, 0);
-            m_vertexBufferUsage->sync(mesh.mesh().getBinding(1), VK_WHOLE_SIZE, 0);
-            m_vertexBufferUsage->sync(mesh.mesh().getBinding(2), VK_WHOLE_SIZE, 0);
+            m_vertexBufferUsage->sync(*mesh.mesh().getBinding(0), VK_WHOLE_SIZE, 0);
+            m_vertexBufferUsage->sync(*mesh.mesh().getBinding(1), VK_WHOLE_SIZE, 0);
+            m_vertexBufferUsage->sync(*mesh.mesh().getBinding(2), VK_WHOLE_SIZE, 0);
         }
     }
 
@@ -68,7 +68,7 @@ void ChunkRenderer::preRender(uint32_t currentFrame) {
     subresource.baseMipLevel = 0;
     subresource.levelCount = 1;
 
-    m_textureUsage->sync(m_textureManager->image(), subresource);
+    m_textureUsage->sync(*m_textureManager->image(), subresource);
 }
 
 void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer) {

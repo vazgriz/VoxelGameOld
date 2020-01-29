@@ -9,7 +9,7 @@ MipmapGenerator::MipmapGenerator(VoxelEngine::Engine& engine, VoxelEngine::Rende
     m_outputImageUsage = std::make_unique<VoxelEngine::RenderGraph::ImageUsage>(*this, vk::ImageLayout::TransferSrcOptimal, vk::AccessFlags::TransferWrite, vk::PipelineStageFlags::Transfer);
 }
 
-void MipmapGenerator::generate(std::shared_ptr<VoxelEngine::Image> image) {
+void MipmapGenerator::generate(const std::shared_ptr<VoxelEngine::Image>& image) {
     m_images.push_back(image);
 }
 
@@ -23,11 +23,11 @@ void MipmapGenerator::preRender(uint32_t currentFrame) {
         subresource.levelCount = 1;
 
         //sync mip level 0 of all array layers
-        m_inputImageUsage->sync(image, subresource);
+        m_inputImageUsage->sync(*image, subresource);
 
         //sync all mip levels of all array layers
         subresource.levelCount = image->image().mipLevels();
-        m_outputImageUsage->sync(image, subresource);
+        m_outputImageUsage->sync(*image, subresource);
     }
 }
 

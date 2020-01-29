@@ -8,7 +8,7 @@ public:
     VoxelEngine::RenderGraph::ImageUsage& inputUsage() const { return *m_inputImageUsage; }
     VoxelEngine::RenderGraph::ImageUsage& outputUsage() const { return *m_outputImageUsage; }
 
-    void generate(std::shared_ptr<VoxelEngine::Image> image);
+    void generate(const std::shared_ptr<VoxelEngine::Image>& image);
 
     void preRender(uint32_t currentFrame);
     void render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer);

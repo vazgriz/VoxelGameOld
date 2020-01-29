@@ -27,7 +27,7 @@ void CameraSystem::updateUniform() {
     uniform.view = m_camera->viewMatrix();
     uniform.projection = m_camera->projectionMatrix();
 
-    m_transferNode->transfer(m_uniformBuffer, sizeof(CameraUniform), 0, &uniform);
+    m_transferNode->transfer(*m_uniformBuffer, sizeof(CameraUniform), 0, &uniform);
 }
 
 void CameraSystem::createDescriptorPool() {

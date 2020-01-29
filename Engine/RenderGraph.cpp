@@ -11,8 +11,8 @@ RenderGraph::BufferUsage::BufferUsage(Node& node, vk::AccessFlags accessMask, vk
     m_buffers.resize(node.graph().framesInFlight());
 }
 
-void RenderGraph::BufferUsage::sync(const std::shared_ptr<Buffer>& buffer, vk::DeviceSize size, vk::DeviceSize offset) {
-    vk::Buffer* vkBuffer = &buffer->buffer();
+void RenderGraph::BufferUsage::sync(Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset) {
+    vk::Buffer* vkBuffer = &buffer.buffer();
 
     auto& buffers = getSyncs(m_node->currentFrame());
     auto it = buffers.find(vkBuffer);
@@ -37,8 +37,8 @@ RenderGraph::ImageUsage::ImageUsage(Node& node, vk::ImageLayout imageLayout, vk:
     m_images.resize(node.graph().framesInFlight());
 }
 
-void RenderGraph::ImageUsage::sync(const std::shared_ptr<Image>& image, vk::ImageSubresourceRange subresource) {
-    vk::Image* vkImage = &image->image();
+void RenderGraph::ImageUsage::sync(Image& image, vk::ImageSubresourceRange subresource) {
+    vk::Image* vkImage = &image.image();
 
     auto& images = getSyncs(m_node->currentFrame());
     auto it = images.find(vkImage);

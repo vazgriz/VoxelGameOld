@@ -20,7 +20,7 @@ void TransferNode::preRender(uint32_t currentFrame) {
     while (m_syncBufferQueue.size() > 0) {
         auto& item = m_syncBufferQueue.front();
 
-        m_bufferUsage->sync(item.buffer, item.size, item.offset);
+        m_bufferUsage->sync(*item.buffer, item.size, item.offset);
         m_ptr = align(m_ptr + item.size, 4);
 
         m_syncBufferQueue.pop();
@@ -36,7 +36,7 @@ void TransferNode::preRender(uint32_t currentFrame) {
         subresource.baseMipLevel = item.subresourceLayers.mipLevel;
         subresource.levelCount = 1;
 
-        m_imageUsage->sync(item.image, subresource);
+        m_imageUsage->sync(*item.image, subresource);
         m_ptr = align(m_ptr + item.size, 4);
 
         m_syncImageQueue.pop();
@@ -97,7 +97,7 @@ void TransferNode::createStaging() {
     }
 }
 
-void TransferNode::transfer(std::shared_ptr<VoxelEngine::Buffer> buffer, vk::DeviceSize size, vk::DeviceSize offset, void* data) {
+void TransferNode::transfer(Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, void* data) {
     if (size == 0) return;
     uint32_t currentFrame = m_renderGraph->currentFrame();
     m_ptr = align(m_ptr, 4);
@@ -110,19 +110,19 @@ void TransferNode::transfer(std::shared_ptr<VoxelEngine::Buffer> buffer, vk::Dev
     copy.dstOffset = offset;
     copy.size = size;
 
-    m_bufferCopies.push_back({ &buffer->buffer(), copy });
+    m_bufferCopies.push_back({ &buffer.buffer(), copy });
 
     m_ptr += size;
 
     if (m_preRenderDone) {
         m_bufferUsage->sync(buffer, size, offset);
     } else {
-        m_syncBufferQueue.push({ buffer, size, offset });
+        m_syncBufferQueue.push({ &buffer, size, offset });
     }
 }
 
-void TransferNode::transfer(std::shared_ptr<VoxelEngine::Image> image, vk::Offset3D offset, vk::Extent3D extent, vk::ImageSubresourceLayers subresourceLayers, void* data) {
-    size_t size = extent.width * extent.height * extent.depth * vk::getFormatSize(image->image().format());
+void TransferNode::transfer(Image& image, vk::Offset3D offset, vk::Extent3D extent, vk::ImageSubresourceLayers subresourceLayers, void* data) {
+    size_t size = extent.width * extent.height * extent.depth * vk::getFormatSize(image.image().format());
     if (size == 0) return;
     uint32_t currentFrame = m_renderGraph->currentFrame();
     m_ptr = align(m_ptr, 4);
@@ -136,7 +136,7 @@ void TransferNode::transfer(std::shared_ptr<VoxelEngine::Image> image, vk::Offse
     copy.imageExtent = extent;
     copy.imageSubresource = subresourceLayers;
 
-    m_imageCopies.push_back({ &image->image(), copy });
+    m_imageCopies.push_back({ &image.image(), copy });
 
     m_ptr += size;
 
@@ -150,6 +150,6 @@ void TransferNode::transfer(std::shared_ptr<VoxelEngine::Image> image, vk::Offse
 
         m_imageUsage->sync(image, subresource);
     } else {
-        m_syncImageQueue.push({ image, size, subresourceLayers });
+        m_syncImageQueue.push({ &image, size, subresourceLayers });
     }
 }

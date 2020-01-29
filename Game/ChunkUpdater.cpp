@@ -11,7 +11,7 @@ ChunkUpdater::ChunkUpdater(VoxelEngine::Engine& engine, World& world, BlockManag
 void ChunkUpdater::setTransferNode(VoxelEngine::TransferNode& transferNode) {
     m_transferNode = &transferNode;
 
-    m_transferNode->transfer(m_indexBuffer, m_indexBufferSize, 0, m_indexData.data());
+    m_transferNode->transfer(*m_indexBuffer, m_indexBufferSize, 0, m_indexData.data());
     m_indexData = {};
 }
 
@@ -171,9 +171,9 @@ void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh, size_t index) {
         chunkMesh.mesh().setIndexCount(update.indexCount);
     }
 
-    m_transferNode->transfer(chunkMesh.mesh().getBinding(0), vertexSize, 0, update.vertexData.data());
-    m_transferNode->transfer(chunkMesh.mesh().getBinding(1), colorSize, 0, update.colorData.data());
-    m_transferNode->transfer(chunkMesh.mesh().getBinding(2), uvSize, 0, update.uvData.data());
+    m_transferNode->transfer(*chunkMesh.mesh().getBinding(0), vertexSize, 0, update.vertexData.data());
+    m_transferNode->transfer(*chunkMesh.mesh().getBinding(1), colorSize, 0, update.colorData.data());
+    m_transferNode->transfer(*chunkMesh.mesh().getBinding(2), uvSize, 0, update.uvData.data());
 
     chunkMesh.setDirty();
 }

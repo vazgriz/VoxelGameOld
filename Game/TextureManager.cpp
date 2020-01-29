@@ -42,7 +42,7 @@ void TextureManager::createTexture(VoxelEngine::TransferNode& transferNode, Mipm
         subresource.layerCount = 1;
         subresource.mipLevel = 0;
 
-        transferNode.transfer(m_image, {}, { textureSize, textureSize, 1 }, subresource, data);
+        transferNode.transfer(*m_image, {}, { textureSize, textureSize, 1 }, subresource, data);
 
         stbi_image_free(data);
     }

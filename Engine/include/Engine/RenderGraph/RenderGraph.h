@@ -39,7 +39,7 @@ namespace VoxelEngine {
             vk::AccessFlags accessMask() const { return m_accessMask; }
             vk::PipelineStageFlags stageFlags() const { return m_stageFlags; }
 
-            void sync(const std::shared_ptr<Buffer>& buffer, vk::DeviceSize size, vk::DeviceSize offset);
+            void sync(Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset);
 
         private:
             Node* m_node;
@@ -63,7 +63,7 @@ namespace VoxelEngine {
             vk::AccessFlags accessMask() const { return m_accessMask; }
             vk::PipelineStageFlags stageFlags() const { return m_stageFlags; }
 
-            void sync(const std::shared_ptr<Image>& image, vk::ImageSubresourceRange subresource);
+            void sync(Image& image, vk::ImageSubresourceRange subresource);
 
         private:
             Node* m_node;

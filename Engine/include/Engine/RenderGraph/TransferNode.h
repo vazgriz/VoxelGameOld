@@ -15,8 +15,8 @@ namespace VoxelEngine {
         void render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer);
         void postRender(uint32_t currentFrame) {}
 
-        void transfer(std::shared_ptr<VoxelEngine::Buffer> buffer, vk::DeviceSize size, vk::DeviceSize offset, void* data);
-        void transfer(std::shared_ptr<VoxelEngine::Image> image, vk::Offset3D offset, vk::Extent3D extent, vk::ImageSubresourceLayers subresourceLayers, void* data);
+        void transfer(Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, void* data);
+        void transfer(Image& image, vk::Offset3D offset, vk::Extent3D extent, vk::ImageSubresourceLayers subresourceLayers, void* data);
 
     private:
         struct BufferInfo {
@@ -25,7 +25,7 @@ namespace VoxelEngine {
         };
 
         struct SyncBuffer {
-            std::shared_ptr<Buffer> buffer;
+            Buffer* buffer;
             vk::DeviceSize size;
             vk::DeviceSize offset;
         };
@@ -36,7 +36,7 @@ namespace VoxelEngine {
         };
 
         struct SyncImage {
-            std::shared_ptr<Image> image;
+            Image* image;
             vk::DeviceSize size;
             vk::ImageSubresourceLayers subresourceLayers;
         };
