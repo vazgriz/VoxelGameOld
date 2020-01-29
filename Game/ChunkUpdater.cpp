@@ -1,6 +1,6 @@
 #include "ChunkUpdater.h"
 
-ChunkUpdater::ChunkUpdater(VoxelEngine::Engine& engine, World& world, BlockManager& blockManager) {
+ChunkUpdater::ChunkUpdater(VoxelEngine::Engine& engine, World& world, BlockManager& blockManager) : m_requestQueue(queueSize) {
     m_engine = &engine;
     m_world = &world;
     m_blockManager = &blockManager;
@@ -16,21 +16,44 @@ void ChunkUpdater::setTransferNode(VoxelEngine::TransferNode& transferNode) {
 }
 
 void ChunkUpdater::update(VoxelEngine::Clock& clock) {
-    auto view = m_world->registry().view<Chunk, ChunkMesh>();
-    size_t updates = 16;
+    std::queue<MeshUpdate2>& queue = m_resultQueue.swapDequeue();
+    auto view = m_world->registry().view<ChunkMesh>();
 
-    for (auto entity : view) {
+    while (queue.size() > 0) {
+        auto& update = queue.front();
+        transferMesh(view.get(update.entity), update.index);
+        queue.pop();
+    }
+}
+
+void ChunkUpdater::run() {
+    m_running = true;
+    m_thread = std::thread([this] { loop(); });
+}
+
+void ChunkUpdater::stop() {
+    m_running = false;
+    m_requestQueue.cancel();
+    m_thread.join();
+}
+
+bool ChunkUpdater::queue(entt::entity entity) {
+    return m_requestQueue.tryEnqueue(entity);
+}
+
+void ChunkUpdater::loop() {
+    while (m_running) {
+        entt::entity entity;
+        bool valid = m_requestQueue.dequeue(entity);
+        if (!valid) return;
+
+        auto lock = m_world->getReadLock();
+        auto view = m_world->registry().view<Chunk, ChunkMesh>();
         Chunk& chunk = view.get<Chunk>(entity);
-        if (chunk.loadState() != ChunkLoadState::Loaded) continue;
-
         ChunkMesh& chunkMesh = view.get<ChunkMesh>(entity);
 
-        if (chunkMesh.mesh().bindingCount() == 0) {
-            uint32_t indexCount = makeMesh(chunk, chunkMesh);
-            transferMesh(chunkMesh, indexCount);
-            updates--;
-            if (updates == 0) return;
-        }
+        size_t updateIndex = makeMesh(chunk, chunkMesh);
+        m_resultQueue.enqueue({ updateIndex, entity });
     }
 }
 
@@ -62,10 +85,14 @@ void ChunkUpdater::createIndexBuffer() {
     m_indexBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, info, allocInfo);
 }
 
-uint32_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
-    m_vertexData.clear();
-    m_colorData.clear();
-    m_uvData.clear();
+size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
+    size_t index = m_updateIndex;
+    m_updateIndex = (m_updateIndex + 1) % (queueSize * 2);
+
+    MeshUpdate& update = m_updates[index];
+    update.vertexData.clear();
+    update.colorData.clear();
+    update.uvData.clear();
 
     uint32_t indexCount = 0;
 
@@ -88,10 +115,9 @@ uint32_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
                 size_t faceIndex = blockType.getFaceIndex(i);
 
                 for (size_t j = 0; j < faceArray.size(); j++) {
-                    m_vertexData.push_back(glm::i8vec4(pos + faceArray[j], 0));
-                    m_colorData.push_back(glm::i8vec4(pos.x * 16, pos.y * 16, pos.z * 16, 0));
-
-                    m_uvData.push_back(glm::i8vec4(Chunk::uvFaces[j], static_cast<uint8_t>(faceIndex), 0));
+                    update.vertexData.push_back(glm::i8vec4(pos + faceArray[j], 0));
+                    update.colorData.push_back(glm::i8vec4(pos.x * 16, pos.y * 16, pos.z * 16, 0));
+                    update.uvData.push_back(glm::i8vec4(Chunk::uvFaces[j], static_cast<uint8_t>(faceIndex), 0));
                 }
 
                 indexCount++;
@@ -99,14 +125,18 @@ uint32_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
         }
     }
 
-    return indexCount * 6;
+    update.indexCount = indexCount * 6;
+
+    return index;
 }
 
-void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh, uint32_t indexCount) {
-    if (m_vertexData.size() == 0) return;
-    size_t vertexSize = m_vertexData.size() * sizeof(glm::i8vec4);
-    size_t colorSize = m_colorData.size() * sizeof(glm::i8vec4);
-    size_t uvSize = m_uvData.size() * sizeof(glm::i8vec4);
+void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh, size_t index) {
+    MeshUpdate& update = m_updates[index];
+
+    if (update.vertexData.size() == 0) return;
+    size_t vertexSize = update.vertexData.size() * sizeof(glm::i8vec4);
+    size_t colorSize = update.colorData.size() * sizeof(glm::i8vec4);
+    size_t uvSize = update.uvData.size() * sizeof(glm::i8vec4);
 
     if (chunkMesh.mesh().bindingCount() == 0 || chunkMesh.mesh().getBinding(0)->size() < vertexSize) {
         vk::BufferCreateInfo vertexInfo = {};
@@ -133,12 +163,12 @@ void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh, uint32_t indexCount) {
         chunkMesh.mesh().addBinding(uvBuffer);
 
         chunkMesh.mesh().setIndexBuffer(m_indexBuffer, vk::IndexType::Uint32, 0);
-        chunkMesh.mesh().setIndexCount(indexCount);
+        chunkMesh.mesh().setIndexCount(update.indexCount);
     }
 
-    m_transferNode->transfer(chunkMesh.mesh().getBinding(0), vertexSize, 0, m_vertexData.data());
-    m_transferNode->transfer(chunkMesh.mesh().getBinding(1), colorSize, 0, m_colorData.data());
-    m_transferNode->transfer(chunkMesh.mesh().getBinding(2), uvSize, 0, m_uvData.data());
+    m_transferNode->transfer(chunkMesh.mesh().getBinding(0), vertexSize, 0, update.vertexData.data());
+    m_transferNode->transfer(chunkMesh.mesh().getBinding(1), colorSize, 0, update.colorData.data());
+    m_transferNode->transfer(chunkMesh.mesh().getBinding(2), uvSize, 0, update.uvData.data());
 
     chunkMesh.setDirty();
 }

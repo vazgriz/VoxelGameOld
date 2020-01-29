@@ -47,6 +47,9 @@ int main() {
 
     ChunkUpdater chunkUpdater(engine, world, blockManager);
     engine.getUpdateGroup().add(chunkUpdater, 30);
+    chunkUpdater.run();
+
+    world.setChunkUpdater(chunkUpdater);
 
     Renderer renderer(engine, cameraSystem, world, textureManager);
     engine.getUpdateGroup().add(renderer, 100);
@@ -57,6 +60,7 @@ int main() {
 
     engine.run();
 
+    chunkUpdater.stop();
     renderer.wait();
 
     return 0;

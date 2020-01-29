@@ -1,6 +1,7 @@
 #include "World.h"
 #include "Chunk.h"
 #include "ChunkMesh.h"
+#include "ChunkUpdater.h"
 
 ChunkGroup::ChunkGroup(glm::ivec2 coord, entt::registry& registry) : m_neighbors() {
     m_coord = coord;
@@ -84,6 +85,10 @@ World::World(int32_t viewDistance) {
     m_viewDistance2 = viewDistance * viewDistance;
 }
 
+void World::setChunkUpdater(ChunkUpdater& chunkUpdater) {
+    m_chunkUpdater = &chunkUpdater;
+}
+
 std::shared_lock<std::shared_mutex> World::getReadLock() {
     return std::shared_lock<std::shared_mutex>(m_mutex);
 }
@@ -120,6 +125,12 @@ void World::update(glm::ivec2 coord) {
             }
         }
     }
+
+    while (m_updateQueue.size() > 0) {
+        auto entity = m_updateQueue.front();
+        if (!m_chunkUpdater->queue(entity)) break;
+        m_updateQueue.pop();
+    }
 }
 
 ChunkGroup& World::makeChunkGroup(glm::ivec2 coord) {
@@ -135,6 +146,10 @@ ChunkGroup& World::makeChunkGroup(glm::ivec2 coord) {
             group.setNeighbor(dir, &neighbor);
             neighbor.setNeighbor(ChunkGroup::getOpposite(dir), &group);
         }
+    }
+
+    for (auto& chunk : group.chunks()) {
+        m_updateQueue.push(chunk);
     }
 
     return group;

@@ -8,6 +8,7 @@
 #include "ChunkMesh.h"
 
 class World;
+class ChunkUpdater;
 
 class ChunkGroup {
 public:
@@ -17,6 +18,8 @@ public:
     ChunkGroup(ChunkGroup&& other) = default;
     ChunkGroup& operator = (ChunkGroup&& other) = default;
     ~ChunkGroup();
+
+    const std::vector<entt::entity>& chunks() const { return m_chunks; }
 
     ChunkLoadState loadState() const { return m_loadState; }
     void setLoadState(ChunkLoadState loadState);
@@ -43,10 +46,13 @@ public:
     static const size_t worldHeight = 16;
     using ChunkMap = std::unordered_map<glm::ivec2, ChunkGroup>;
 
+    World(int32_t viewDistance);
+
+    void setChunkUpdater(ChunkUpdater& chunkUpdater);
+
     std::shared_lock<std::shared_mutex> getReadLock();
     entt::registry& registry() { return m_registry; }
 
-    World(int32_t viewDistance);
     void update(glm::ivec2 coord);
 
 private:
@@ -55,6 +61,9 @@ private:
     ChunkMap m_chunkMap;
     int32_t m_viewDistance;
     int32_t m_viewDistance2;
+    ChunkUpdater* m_chunkUpdater;
+
+    std::queue<entt::entity> m_updateQueue;
 
     ChunkGroup& makeChunkGroup(glm::ivec2 coord);
     ChunkMap::iterator destroyChunkGroup(ChunkMap::iterator it, glm::ivec2 coord);
