@@ -24,6 +24,10 @@ void Engine::addWindow(Window& window) {
     m_window = &window;
 }
 
+void Engine::setRenderGraph(RenderGraph& renderGraph) {
+    m_renderGraph = &renderGraph;
+}
+
 void Engine::run() {
     while (!m_window->shouldClose()) {
         m_window->update();

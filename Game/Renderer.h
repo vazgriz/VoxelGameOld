@@ -14,7 +14,7 @@
 
 class Renderer : public VoxelEngine::System {
 public:
-    Renderer(VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager);
+    Renderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& renderGraph, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager);
 
     VoxelEngine::TransferNode& transferNode() const { return *m_transferNode; }
     MipmapGenerator& mipmapGenerator() const { return *m_mipmapGenerator; }
@@ -26,7 +26,7 @@ public:
 private:
     VoxelEngine::Engine* m_engine;
     VoxelEngine::Graphics* m_graphics;
-    std::unique_ptr<VoxelEngine::RenderGraph> m_renderGraph;
+    VoxelEngine::RenderGraph* m_renderGraph;
     VoxelEngine::AcquireNode* m_acquireNode;
     VoxelEngine::PresentNode* m_presentNode;
     VoxelEngine::TransferNode* m_transferNode;

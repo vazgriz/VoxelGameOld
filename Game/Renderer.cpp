@@ -2,10 +2,10 @@
 #include <memory>
 #include <entt/entt.hpp>
 
-Renderer::Renderer(VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager) {
+Renderer::Renderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& renderGraph, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager) {
     m_engine = &engine;
     m_graphics = &m_engine->getGraphics();
-    m_renderGraph = std::make_unique<VoxelEngine::RenderGraph>(engine.getGraphics().device(), 2);
+    m_renderGraph = &renderGraph;
 
     m_acquireNode = &m_renderGraph->addNode<VoxelEngine::AcquireNode>(*m_engine, *m_renderGraph);
     m_presentNode = &m_renderGraph->addNode<VoxelEngine::PresentNode>(

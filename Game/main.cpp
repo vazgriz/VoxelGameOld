@@ -23,6 +23,9 @@ int main() {
     VoxelEngine::Graphics& graphics = engine.getGraphics();
     graphics.pickPhysicalDevice(window);
 
+    VoxelEngine::RenderGraph renderGraph(graphics.device(), 2);
+    engine.setRenderGraph(renderGraph);
+
     FrameRateCounter counter(window, "VoxelGame");
     engine.getUpdateGroup().add(counter, 0);
 
@@ -51,7 +54,7 @@ int main() {
 
     world.setChunkUpdater(chunkUpdater);
 
-    Renderer renderer(engine, cameraSystem, world, textureManager);
+    Renderer renderer(engine, renderGraph, cameraSystem, world, textureManager);
     engine.getUpdateGroup().add(renderer, 100);
 
     cameraSystem.setTransferNode(renderer.transferNode());
