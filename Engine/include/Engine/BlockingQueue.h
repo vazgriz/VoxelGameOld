@@ -9,20 +9,16 @@ namespace VoxelEngine {
     public:
         BlockingQueue(size_t count) {
             m_maxCount = count;
+            m_cancel = false;
         }
 
         bool tryEnqueue(T item) {
             std::unique_lock<std::mutex> lock(m_mutex);
             if (m_queue.size() == m_maxCount) return false;
 
-            bool empty = m_queue.empty();
             m_queue.push(item);
-
             lock.unlock();
-
-            if (empty) {
-                m_condition.notify_one();
-            }
+            m_condition.notify_one();
 
             return true;
         }
@@ -34,7 +30,9 @@ namespace VoxelEngine {
                 if (m_cancel) return false;
 
                 if (m_queue.empty()) {
-                    m_condition.wait(m_mutex);
+                    m_condition.wait(lock);
+                } else {
+                    break;
                 }
             }
 

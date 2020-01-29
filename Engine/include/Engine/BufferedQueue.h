@@ -7,7 +7,7 @@ namespace VoxelEngine {
     template <typename T>
     class BufferedQueue {
     public:
-        BufferedQueue() {
+        BufferedQueue() : m_queues(2) {
             m_index = 0;
         }
 
