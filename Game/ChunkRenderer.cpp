@@ -1,7 +1,6 @@
 #include "ChunkRenderer.h"
 #include <glm/glm.hpp>
 #include <fstream>
-#include <iostream>
 #include "Chunk.h"
 #include "ChunkMesh.h"
 
@@ -100,10 +99,13 @@ void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuff
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::Graphics, *m_pipelineLayout, 0, { m_cameraSystem->descriptorSet(), m_textureManager->descriptorSet() }, nullptr);
 
+    VoxelEngine::Frustum frustum = m_cameraSystem->camera().frustum();
+
     auto view = m_world->registry().view<Chunk, ChunkMesh>();
     for (auto entity : view) {
         auto& chunk = view.get<Chunk>(entity);
         if (chunk.loadState() != ChunkLoadState::Loaded) continue;
+        if (!frustum.testAABB(chunk.worldChunkPosition() * 16, glm::vec3(16, 16, 16))) continue;
 
         auto& mesh = view.get<ChunkMesh>(entity);
 

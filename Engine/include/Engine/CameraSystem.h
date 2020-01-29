@@ -10,6 +10,8 @@ namespace VoxelEngine {
     public:
         CameraSystem(Engine& engine);
 
+        Camera& camera() const { return *m_camera; }
+
         const vk::DescriptorSetLayout& descriptorLayout() const { return *m_descriptorSetLayout; }
         const vk::DescriptorSet& descriptorSet() const { return *m_descriptorSet; }
         std::shared_ptr<Buffer> uniformBuffer() const { return m_uniformBuffer; }
