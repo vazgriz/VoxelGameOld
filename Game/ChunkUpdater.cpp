@@ -133,7 +133,11 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
 void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh, size_t index) {
     MeshUpdate& update = m_updates[index];
 
-    if (update.vertexData.size() == 0) return;
+    if (update.indexCount == 0) {
+        chunkMesh.mesh().setIndexCount(0);
+        chunkMesh.mesh().setIndexBuffer(nullptr, vk::IndexType::Uint32, 0);
+    }
+
     size_t vertexSize = update.vertexData.size() * sizeof(glm::i8vec4);
     size_t colorSize = update.colorData.size() * sizeof(glm::i8vec4);
     size_t uvSize = update.uvData.size() * sizeof(glm::i8vec4);
