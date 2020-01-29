@@ -428,10 +428,6 @@ void RenderGraph::wait() {
 }
 
 void RenderGraph::execute() {
-    for (auto node : m_nodeList) {
-        node->wait(m_currentFrame);
-    }
-
     m_bufferDestroyQueue.pop();
     m_bufferDestroyQueue.push({});
 
@@ -447,6 +443,7 @@ void RenderGraph::execute() {
     }
 
     for (auto node : m_nodeList) {
+        node->wait(m_currentFrame);
         node->internalRender(m_currentFrame);
     }
 
