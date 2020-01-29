@@ -6,18 +6,30 @@
 namespace VoxelEngine {
     class Engine;
 
+    struct ImageState {
+        Engine* engine;
+        vk::Image image;
+        VmaAllocation allocation;
+
+        ImageState(Engine* engine, vk::Image&& image, VmaAllocation allocation);
+        ImageState(const ImageState& other) = delete;
+        ImageState& operator = (const ImageState& other) = delete;
+        ImageState(ImageState&& other);
+        ImageState& operator = (ImageState&& other);
+        ~ImageState();
+    };
+
     class Image {
     public:
         Image(Engine& engine, const vk::ImageCreateInfo& info, const VmaAllocationCreateInfo& allocInfo);
         ~Image();
 
-        vk::Image& image() const { return *m_image; }
-        vk::Extent3D extent() const { return m_image->extent(); }
+        vk::Image& image() const { return m_imageState->image; }
+        vk::Extent3D extent() const { return m_imageState->image.extent(); }
 
     private:
         Engine* m_engine;
-        std::unique_ptr<vk::Image> m_image;
-        VmaAllocation m_allocation;
+        std::unique_ptr<ImageState> m_imageState;
         VmaAllocationInfo m_allocationInfo;
     };
 }

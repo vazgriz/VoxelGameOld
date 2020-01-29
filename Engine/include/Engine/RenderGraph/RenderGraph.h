@@ -4,11 +4,13 @@
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <queue>
 #include <iostream>
 
 namespace VoxelEngine {
     struct BufferState;
     class Buffer;
+    struct ImageState;
     class Image;
 
     class RenderGraph {
@@ -19,13 +21,11 @@ namespace VoxelEngine {
         class ImageEdge;
 
         struct BufferSegment {
-            std::shared_ptr<Buffer> bufferPtr;
             vk::DeviceSize size;
             vk::DeviceSize offset;
         };
 
         struct ImageSegment {
-            std::shared_ptr<Image> imagePtr;
             vk::ImageSubresourceRange subresource;
         };
 
@@ -39,7 +39,7 @@ namespace VoxelEngine {
             vk::AccessFlags accessMask() const { return m_accessMask; }
             vk::PipelineStageFlags stageFlags() const { return m_stageFlags; }
 
-            void sync(std::shared_ptr<Buffer> buffer, vk::DeviceSize size, vk::DeviceSize offset);
+            void sync(const std::shared_ptr<Buffer>& buffer, vk::DeviceSize size, vk::DeviceSize offset);
 
         private:
             Node* m_node;
@@ -63,7 +63,7 @@ namespace VoxelEngine {
             vk::AccessFlags accessMask() const { return m_accessMask; }
             vk::PipelineStageFlags stageFlags() const { return m_stageFlags; }
 
-            void sync(std::shared_ptr<Image> image, vk::ImageSubresourceRange subresource);
+            void sync(const std::shared_ptr<Image>& image, vk::ImageSubresourceRange subresource);
 
         private:
             Node* m_node;
@@ -173,6 +173,7 @@ namespace VoxelEngine {
         };
 
         RenderGraph(vk::Device& device, uint32_t framesInFlight);
+        ~RenderGraph();
 
         vk::Device& device() const { return *m_device; }
         uint32_t framesInFlight() const { return m_framesInFlight; }
@@ -189,7 +190,10 @@ namespace VoxelEngine {
         void bake();
         void wait();
 
-        void execute() const;
+        void execute();
+
+        void queueDestroy(BufferState&& state);
+        void queueDestroy(ImageState&& state);
 
     private:
         vk::Device* m_device;
@@ -199,6 +203,9 @@ namespace VoxelEngine {
         std::vector<std::unique_ptr<Edge>> m_edges;
         std::vector<Node*> m_nodeList;
         std::vector<std::unique_ptr<vk::Semaphore>> m_semaphores;
+
+        std::queue<std::vector<BufferState>> m_bufferDestroyQueue;
+        std::queue<std::vector<ImageState>> m_imageDestroyQueue;
 
         void makeSemaphores();
     };

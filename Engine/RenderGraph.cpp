@@ -11,16 +11,16 @@ RenderGraph::BufferUsage::BufferUsage(Node& node, vk::AccessFlags accessMask, vk
     m_buffers.resize(node.graph().framesInFlight());
 }
 
-void RenderGraph::BufferUsage::sync(std::shared_ptr<Buffer> buffer, vk::DeviceSize size, vk::DeviceSize offset) {
+void RenderGraph::BufferUsage::sync(const std::shared_ptr<Buffer>& buffer, vk::DeviceSize size, vk::DeviceSize offset) {
     vk::Buffer* vkBuffer = &buffer->buffer();
 
     auto& buffers = getSyncs(m_node->currentFrame());
     auto it = buffers.find(vkBuffer);
 
     if (it == buffers.end()) {
-        buffers.insert({ vkBuffer, { { buffer, size, offset } } });
+        buffers.insert({ vkBuffer, { { size, offset } } });
     } else {
-        buffers[vkBuffer].push_back({ buffer, size, offset });
+        buffers[vkBuffer].push_back({ size, offset });
     }
 }
 
@@ -37,16 +37,16 @@ RenderGraph::ImageUsage::ImageUsage(Node& node, vk::ImageLayout imageLayout, vk:
     m_images.resize(node.graph().framesInFlight());
 }
 
-void RenderGraph::ImageUsage::sync(std::shared_ptr<Image> image, vk::ImageSubresourceRange subresource) {
+void RenderGraph::ImageUsage::sync(const std::shared_ptr<Image>& image, vk::ImageSubresourceRange subresource) {
     vk::Image* vkImage = &image->image();
 
     auto& images = getSyncs(m_node->currentFrame());
     auto it = images.find(vkImage);
 
     if (it == images.end()) {
-        images.insert({ vkImage, { { image, subresource } } });
+        images.insert({ vkImage, { { subresource } } });
     } else {
-        images[vkImage].push_back({ image, subresource });
+        images[vkImage].push_back({ subresource });
     }
 }
 
@@ -359,6 +359,26 @@ RenderGraph::RenderGraph(vk::Device& device, uint32_t framesInFlight) {
     m_device = &device;
     m_framesInFlight = framesInFlight;
     m_currentFrame = 0;
+
+    for (uint32_t i = 0; i < framesInFlight; i++) {
+        m_bufferDestroyQueue.push({});
+    }
+
+    for (uint32_t i = 0; i < framesInFlight; i++) {
+        m_imageDestroyQueue.push({});
+    }
+}
+
+RenderGraph::~RenderGraph() {
+    m_nodes.clear();
+
+    while (m_bufferDestroyQueue.size() > 0) {
+        m_bufferDestroyQueue.pop();
+    }
+
+    while (m_imageDestroyQueue.size() > 0) {
+        m_imageDestroyQueue.pop();
+    }
 }
 
 void RenderGraph::addEdge(BufferEdge&& edge) {
@@ -407,10 +427,16 @@ void RenderGraph::wait() {
     }
 }
 
-void RenderGraph::execute() const {
+void RenderGraph::execute() {
     for (auto node : m_nodeList) {
         node->wait(m_currentFrame);
     }
+
+    m_bufferDestroyQueue.pop();
+    m_bufferDestroyQueue.push({});
+
+    m_imageDestroyQueue.pop();
+    m_imageDestroyQueue.push({});
 
     for (auto node : m_nodeList) {
         node->clearSync(m_currentFrame);
@@ -433,4 +459,12 @@ void RenderGraph::execute() const {
     }
 
     m_currentFrame = (m_currentFrame + 1) % m_framesInFlight;
+}
+
+void RenderGraph::queueDestroy(BufferState&& state) {
+    m_bufferDestroyQueue.back().emplace_back(std::move(state));
+}
+
+void RenderGraph::queueDestroy(ImageState&& state) {
+    m_imageDestroyQueue.back().emplace_back(std::move(state));
 }
