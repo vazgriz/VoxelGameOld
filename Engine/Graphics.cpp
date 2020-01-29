@@ -55,7 +55,7 @@ void Graphics::createInstance() {
 QueueIndices getIndices(const vk::PhysicalDevice& physicalDevice, const vk::Surface& surface) {
     QueueIndices indices;
 
-    //earch for dedicated transfer queue
+    //search for dedicated transfer queue
     //ie no graphics or compute
     for (uint32_t i = 0; i < physicalDevice.queueFamilies().size(); i++) {
         auto& queueFamily = physicalDevice.queueFamilies()[i];
