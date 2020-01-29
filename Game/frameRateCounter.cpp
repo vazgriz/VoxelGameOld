@@ -16,7 +16,7 @@ void FrameRateCounter::update(VoxelEngine::Clock& clock) {
     if (m_timer > 0.25f) {
         float frameRate = m_frameCount / m_timer;
         std::stringstream stream;
-        stream << m_titlePrefix << " (" << std::setprecision(0) << frameRate << " fps)";
+        stream << m_titlePrefix << " (" << std::fixed << std::setprecision(0) << frameRate << " fps)";
         m_window->setTitle(stream.str());
 
         m_timer = 0;
