@@ -48,6 +48,8 @@ add_library("Engine"
     Input.cpp
     include/Engine/Image.h
     Image.cpp
+    include/Engine/BlockingQueue.h
+    include/Engine/BufferedQueue.h
 )
 
 target_compile_definitions("Engine" PUBLIC
