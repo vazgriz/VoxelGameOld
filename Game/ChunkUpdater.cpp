@@ -1,4 +1,6 @@
 #include "ChunkUpdater.h"
+#include "Chunk.h"
+#include "ChunkMesh.h"
 
 ChunkUpdater::ChunkUpdater(VoxelEngine::Engine& engine, World& world, BlockManager& blockManager) : m_requestQueue(queueSize) {
     m_engine = &engine;

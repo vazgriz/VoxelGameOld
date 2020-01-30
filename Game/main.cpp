@@ -43,16 +43,16 @@ int main() {
 
     TextureManager textureManager(engine);
     BlockManager blockManager;
-    World world(4);
+    World world;
 
-    ChunkManager chunkManager(world, freeCam);
+    ChunkManager chunkManager(world, freeCam, 4);
     engine.getUpdateGroup().add(chunkManager, 20);
 
     ChunkUpdater chunkUpdater(engine, world, blockManager);
     engine.getUpdateGroup().add(chunkUpdater, 30);
     chunkUpdater.run();
 
-    world.setChunkUpdater(chunkUpdater);
+    chunkManager.setChunkUpdater(chunkUpdater);
 
     Renderer renderer(engine, renderGraph, cameraSystem, world, textureManager);
     engine.getUpdateGroup().add(renderer, 100);
