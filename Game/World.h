@@ -3,9 +3,11 @@
 #include <unordered_map>
 #include <Engine/math.h>
 #include <shared_mutex>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 #include "Chunk.h"
 #include "ChunkMesh.h"
+#include "PriorityQueue.h"
 
 class World;
 class ChunkUpdater;
@@ -53,7 +55,7 @@ public:
     std::shared_lock<std::shared_mutex> getReadLock();
     entt::registry& registry() { return m_registry; }
 
-    void update(glm::ivec2 coord);
+    void update(glm::ivec3 playerPos);
 
 private:
     std::shared_mutex m_mutex;
@@ -63,7 +65,7 @@ private:
     int32_t m_viewDistance2;
     ChunkUpdater* m_chunkUpdater;
 
-    std::queue<entt::entity> m_updateQueue;
+    PriorityQueue m_updateQueue;
 
     ChunkGroup& makeChunkGroup(glm::ivec2 coord);
     ChunkMap::iterator destroyChunkGroup(ChunkMap::iterator it, glm::ivec2 coord);

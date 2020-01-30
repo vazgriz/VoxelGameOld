@@ -93,7 +93,8 @@ std::shared_lock<std::shared_mutex> World::getReadLock() {
     return std::shared_lock<std::shared_mutex>(m_mutex);
 }
 
-void World::update(glm::ivec2 coord) {
+void World::update(glm::ivec3 playerPos) {
+    glm::ivec2 coord = { playerPos.x, playerPos.z };
     std::unique_lock<std::shared_mutex> lock(m_mutex);
 
     {
@@ -126,10 +127,12 @@ void World::update(glm::ivec2 coord) {
         }
     }
 
-    while (m_updateQueue.size() > 0) {
-        auto entity = m_updateQueue.front();
-        if (!m_chunkUpdater->queue(entity)) break;
-        m_updateQueue.pop();
+    m_updateQueue.update(playerPos);
+
+    while (m_updateQueue.count() > 0) {
+        auto item = m_updateQueue.peek();
+        if (!m_chunkUpdater->queue(item.entity)) break;
+        m_updateQueue.dequeue();
     }
 }
 
@@ -148,8 +151,9 @@ ChunkGroup& World::makeChunkGroup(glm::ivec2 coord) {
         }
     }
 
-    for (auto& chunk : group.chunks()) {
-        m_updateQueue.push(chunk);
+    for (int32_t i = 0; i < worldHeight; i++) {
+        entt::entity chunk = group.chunks()[i];
+        m_updateQueue.enqueue({ coord.x, i, coord.y }, chunk);
     }
 
     return group;
@@ -166,6 +170,10 @@ World::ChunkMap::iterator World::destroyChunkGroup(ChunkMap::iterator it, glm::i
             auto& neighbor = neighborIt->second;
             neighbor.setNeighbor(ChunkGroup::getOpposite(dir), nullptr);
         }
+    }
+
+    for (int32_t i = 0; i < worldHeight; i++) {
+        m_updateQueue.remove({ coord.x, i, coord.y });
     }
 
     return m_chunkMap.erase(it);

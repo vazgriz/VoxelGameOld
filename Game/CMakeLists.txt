@@ -29,6 +29,8 @@ add_executable("Game"
     BlockManager.cpp
     World.h
     World.cpp
+    PriorityQueue.h
+    PriorityQueue.cpp
 )
 
 target_link_libraries("Game"

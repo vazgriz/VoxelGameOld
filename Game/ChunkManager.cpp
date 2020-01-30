@@ -9,8 +9,5 @@ ChunkManager::ChunkManager(World& world, FreeCam& freeCam) {
 
 void ChunkManager::update(VoxelEngine::Clock& clock) {
     glm::ivec3 worldChunk = Chunk::worldToWorldChunk(m_freeCam->position());
-    worldChunk.y = 0;
-    glm::ivec2 coord = glm::ivec2(worldChunk.x, worldChunk.z);
-
-    m_world->update(coord);
+    m_world->update(worldChunk);
 }
