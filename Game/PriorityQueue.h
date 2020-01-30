@@ -43,7 +43,6 @@ public:
             if (it == m_set.end()) {
                 std::pop_heap(m_items.begin(), m_items.end());
                 m_items.pop_back();
-                m_set.erase(it);
             } else {
                 return item;
             }
