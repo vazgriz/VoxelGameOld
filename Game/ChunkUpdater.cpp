@@ -62,7 +62,7 @@ void ChunkUpdater::loop() {
 void ChunkUpdater::createIndexBuffer() {
     uint32_t index = 0;
 
-    for (uint32_t i = 0; i < 2048; i++) {
+    for (uint32_t i = 0; i < 2048 * 6; i++) {
         m_indexData.push_back(index + 0);
         m_indexData.push_back(index + 1);
         m_indexData.push_back(index + 2);
