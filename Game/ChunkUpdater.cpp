@@ -108,11 +108,21 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
             glm::ivec3 neighborPos = pos + offset;
             BlockType& blockType = m_blockManager->getType(block.type);
 
-            if (((neighborPos.x < 0 || neighborPos.x >= Chunk::chunkSize)
-                || (neighborPos.y < 0 || neighborPos.y >= Chunk::chunkSize)
-                || (neighborPos.z < 0 || neighborPos.z >= Chunk::chunkSize))
-                || chunk.blocks()[neighborPos].type == 1)
+            bool visible = true;
+
+            if (neighborPos.x < 0 || neighborPos.x >= Chunk::chunkSize
+                || neighborPos.y < 0 || neighborPos.y >= Chunk::chunkSize
+                || neighborPos.z < 0 || neighborPos.z >= Chunk::chunkSize)
             {
+                glm::ivec3 neighborWorldPos = Chunk::chunkToWorld(pos, chunk.worldChunkPosition()) + offset;
+                Chunk* neighborChunk = m_world->getChunk(Chunk::worldToWorldChunk(neighborWorldPos));
+                Block& block = m_world->getBlock(neighborWorldPos);
+                visible = block.type == 1;
+            } else {
+                visible = chunk.blocks()[neighborPos].type == 1;
+            }
+
+            if (visible) {
                 Chunk::FaceArray& faceArray = Chunk::NeighborFaces[i];
                 size_t faceIndex = blockType.getFaceIndex(i);
 

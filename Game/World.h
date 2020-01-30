@@ -5,8 +5,8 @@
 #include <shared_mutex>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
+#include "Chunk.h"
 
-class Chunk;
 class ChunkMesh;
 
 class World {
@@ -26,7 +26,11 @@ public:
     Chunk* getChunk(glm::ivec3 worldChunkPos);
     ChunkMesh* getChunkMesh(glm::ivec3 worldChunkPos);
 
+    Block& getBlock(glm::ivec3 worldPos);
+
 private:
+    static Block m_nullBlock;
+    static Block m_airBlock;
     std::shared_mutex m_mutex;
     entt::registry m_registry;
     std::unordered_map<glm::ivec3, entt::entity> m_chunkMap;

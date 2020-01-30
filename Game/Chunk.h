@@ -25,6 +25,7 @@ struct Block {
     uint8_t type;
 
     Block() : type(0) {}
+    Block(size_t type) : type(static_cast<uint8_t>(type)) {}
 };
 
 template <typename T, size_t Size>

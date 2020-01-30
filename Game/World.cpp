@@ -1,6 +1,8 @@
 #include "World.h"
-#include "Chunk.h"
 #include "ChunkMesh.h"
+
+Block World::m_nullBlock = Block();
+Block World::m_airBlock = Block(1);
 
 World::World() {
 
@@ -55,4 +57,19 @@ ChunkMesh* World::getChunkMesh(glm::ivec3 worldChunkPos) {
     }
 
     return &m_registry.view<ChunkMesh>().get(entity);
+}
+
+Block& World::getBlock(glm::ivec3 worldPos) {
+    if (worldPos.y >= worldHeight * Chunk::chunkSize || worldPos.y < 0) {
+        return m_airBlock;
+    }
+
+    glm::ivec3 worldChunkPos = Chunk::worldToWorldChunk(worldPos);
+    Chunk* chunk = getChunk(worldChunkPos);
+
+    if (chunk != nullptr) {
+        return chunk->blocks()[Chunk::worldToChunk(worldPos)];
+    } else {
+        return m_nullBlock;
+    }
 }
