@@ -14,6 +14,7 @@
 #include "ChunkManager.h"
 #include "TextureManager.h"
 #include "BlockManager.h"
+#include "TerrainGenerator.h"
 
 int main() {
     VoxelEngine::Engine engine;
@@ -45,13 +46,17 @@ int main() {
     BlockManager blockManager;
     World world;
 
-    ChunkManager chunkManager(world, freeCam, 4);
+    ChunkManager chunkManager(world, freeCam, 16);
     engine.getUpdateGroup().add(chunkManager, 20);
+
+    TerrainGenerator terrainGenerator(world, chunkManager);
+    terrainGenerator.run();
 
     ChunkUpdater chunkUpdater(engine, world, blockManager);
     engine.getUpdateGroup().add(chunkUpdater, 30);
     chunkUpdater.run();
 
+    chunkManager.setTerrainGenerator(terrainGenerator);
     chunkManager.setChunkUpdater(chunkUpdater);
 
     Renderer renderer(engine, renderGraph, cameraSystem, world, textureManager);
@@ -63,6 +68,7 @@ int main() {
 
     engine.run();
 
+    terrainGenerator.stop();
     chunkUpdater.stop();
     renderer.wait();
 

@@ -1,6 +1,7 @@
 #pragma once
 #include <entt/entt.hpp>
 #include <Engine/System.h>
+#include <Engine/BufferedQueue.h>
 #include <unordered_map>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
@@ -9,6 +10,7 @@
 #include "World.h"
 #include "PriorityQueue.h"
 
+class TerrainGenerator;
 class ChunkUpdater;
 
 class ChunkGroup {
@@ -48,7 +50,10 @@ public:
 
     ChunkManager(World& world, FreeCam& freeCam, int32_t viewDistance);
 
+    void setTerrainGenerator(TerrainGenerator& terrainGenerator);
     void setChunkUpdater(ChunkUpdater& chunkUpdater);
+
+    VoxelEngine::BufferedQueue<glm::ivec2>& generateResultQueue() { return m_generateResultQueue; }
 
     void update(VoxelEngine::Clock& clock);
 
@@ -56,12 +61,15 @@ private:
     using ChunkMap = std::unordered_map<glm::ivec2, ChunkGroup>;
     World* m_world;
     FreeCam* m_freeCam;
+    TerrainGenerator* m_terrainGenerator;
     ChunkUpdater* m_chunkUpdater;
     glm::ivec3 m_lastPos;
     ChunkMap m_chunkMap;
     int32_t m_viewDistance;
     int32_t m_viewDistance2;
 
+    PriorityQueue<glm::ivec2> m_generateQueue;
+    VoxelEngine::BufferedQueue<glm::ivec2> m_generateResultQueue;
     PriorityQueue<entt::entity> m_updateQueue;
 
     ChunkGroup& makeChunkGroup(glm::ivec2 coord);

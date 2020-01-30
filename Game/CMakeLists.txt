@@ -30,6 +30,8 @@ add_executable("Game"
     World.h
     World.cpp
     PriorityQueue.h
+    TerrainGenerator.h
+    TerrainGenerator.cpp
 )
 
 target_link_libraries("Game"

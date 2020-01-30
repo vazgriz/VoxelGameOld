@@ -6,6 +6,7 @@
 #include <Engine/math.h>
 #include <entt/entt.hpp>
 #include <algorithm>
+#include <limits>
 
 template <typename T>
 class PriorityQueue {
@@ -21,14 +22,15 @@ public:
     };
 
     PriorityQueue() {
-        m_playerPos = {};
+        int32_t max = std::numeric_limits<int32_t>::max();
+        m_playerPos = { max, max, max };
     }
 
     size_t count() const { return m_set.size(); }
 
     void enqueue(glm::ivec3 pos, T data) {
         if (m_set.insert(pos).second) {
-            m_items.push_back({ pos, data });
+            m_items.push_back({ pos, data, VoxelEngine::distance2(pos, m_playerPos) });
             std::push_heap(m_items.begin(), m_items.end());
         }
     }

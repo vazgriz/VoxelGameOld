@@ -1,5 +1,6 @@
 #include "ChunkManager.h"
 #include "ChunkMesh.h"
+#include "TerrainGenerator.h"
 #include "ChunkUpdater.h"
 
 ChunkGroup::ChunkGroup(glm::ivec2 coord, World& world) : m_neighbors() {
@@ -15,8 +16,6 @@ ChunkGroup::ChunkGroup(glm::ivec2 coord, World& world) : m_neighbors() {
             auto& block = chunk.blocks()[pos];
             block.type = 3;
         }
-
-        chunk.setLoadState(ChunkLoadState::Loaded);
 
         m_chunks.push_back(chunkEntity);
     }
@@ -85,6 +84,10 @@ ChunkManager::ChunkManager(World& world, FreeCam& freeCam, int32_t viewDistance)
     m_viewDistance2 = viewDistance * viewDistance;
 }
 
+void ChunkManager::setTerrainGenerator(TerrainGenerator& terrainGenerator) {
+    m_terrainGenerator = &terrainGenerator;
+}
+
 void ChunkManager::setChunkUpdater(ChunkUpdater& chunkUpdater) {
     m_chunkUpdater = &chunkUpdater;
 }
@@ -124,6 +127,32 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
         }
     }
 
+    glm::ivec3 worldChunk2D = worldChunk;
+    worldChunk2D.y = 0;
+    m_generateQueue.update(worldChunk2D);
+
+    while (m_generateQueue.count() > 0) {
+        auto item = m_generateQueue.peek();
+        if (!m_terrainGenerator->enqueue(item.data)) break;
+        m_generateQueue.dequeue();
+    }
+
+    auto& generateResults = m_generateResultQueue.swapDequeue();
+
+    while (generateResults.size() > 0) {
+        auto coord = generateResults.front();
+        generateResults.pop();
+
+        auto it = m_chunkMap.find(coord);
+        if (it == m_chunkMap.end()) continue;
+
+        auto& group = it->second;
+
+        for (int32_t i = 0; i < World::worldHeight; i++) {
+            m_updateQueue.enqueue({ coord.x, i, coord.y }, group.chunks()[i]);
+        }
+    }
+
     m_updateQueue.update(worldChunk);
 
     while (m_updateQueue.count() > 0) {
@@ -148,10 +177,7 @@ ChunkGroup& ChunkManager::makeChunkGroup(glm::ivec2 coord) {
         }
     }
 
-    for (int32_t i = 0; i < worldHeight; i++) {
-        entt::entity chunk = group.chunks()[i];
-        m_updateQueue.enqueue({ coord.x, i, coord.y }, chunk);
-    }
+    m_generateQueue.enqueue({ coord.x, 0, coord.y }, coord);
 
     return group;
 }
@@ -168,6 +194,8 @@ ChunkManager::ChunkMap::iterator ChunkManager::destroyChunkGroup(ChunkMap::itera
             neighbor.setNeighbor(ChunkGroup::getOpposite(dir), nullptr);
         }
     }
+
+    m_generateQueue.remove({ coord.x, 0, coord.y });
 
     for (int32_t i = 0; i < worldHeight; i++) {
         m_updateQueue.remove({ coord.x, i, coord.y });

@@ -50,8 +50,12 @@ void ChunkUpdater::loop() {
         if (!valid) return;
 
         auto lock = m_world->getReadLock();
+        if (!m_world->registry().valid(entity)) continue;
+
         auto view = m_world->registry().view<Chunk, ChunkMesh>();
         Chunk& chunk = view.get<Chunk>(entity);
+        if (chunk.loadState() != ChunkLoadState::Loaded) continue;
+
         ChunkMesh& chunkMesh = view.get<ChunkMesh>(entity);
 
         size_t updateIndex = makeMesh(chunk, chunkMesh);
