@@ -128,7 +128,7 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
 
     while (m_updateQueue.count() > 0) {
         auto item = m_updateQueue.peek();
-        if (!m_chunkUpdater->queue(item.entity)) break;
+        if (!m_chunkUpdater->queue(item.data)) break;
         m_updateQueue.dequeue();
     }
 }

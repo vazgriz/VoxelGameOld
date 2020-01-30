@@ -30,7 +30,6 @@ add_executable("Game"
     World.h
     World.cpp
     PriorityQueue.h
-    PriorityQueue.cpp
 )
 
 target_link_libraries("Game"

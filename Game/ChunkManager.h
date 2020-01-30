@@ -62,7 +62,7 @@ private:
     int32_t m_viewDistance;
     int32_t m_viewDistance2;
 
-    PriorityQueue m_updateQueue;
+    PriorityQueue<entt::entity> m_updateQueue;
 
     ChunkGroup& makeChunkGroup(glm::ivec2 coord);
     ChunkMap::iterator destroyChunkGroup(ChunkMap::iterator it, glm::ivec2 coord);
