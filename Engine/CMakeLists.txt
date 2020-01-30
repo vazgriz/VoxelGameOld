@@ -9,6 +9,7 @@ add_subdirectory(${GLFW_ROOT} ${GLFW_BUILD} EXCLUDE_FROM_ALL)
 
 add_library("Engine"
     include/Engine/math.h
+    math.cpp
     vma.cpp
     include/Engine/Engine.h
     Engine.cpp
