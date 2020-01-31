@@ -2,6 +2,7 @@
 #include <Engine/BlockingQueue.h>
 #include <Engine/math.h>
 #include <thread>
+#include <FastNoise.h>
 
 class ChunkGroup;
 class ChunkManager;
@@ -23,6 +24,9 @@ private:
     ChunkManager* m_chunkManager;
     bool m_running = false;
     std::thread m_thread;
+    FastNoise m_baseNoise;
+    FastNoise m_caveNoise1;
+    FastNoise m_caveNoise2;
 
     void loop();
     void generate(glm::ivec2 coord);

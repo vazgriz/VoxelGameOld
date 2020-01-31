@@ -40,7 +40,7 @@ int main() {
     FreeCam freeCam(camera, window.input());
     engine.getUpdateGroup().add(freeCam, 10);
 
-    freeCam.setPosition({ 0, 265, 0 });
+    freeCam.setPosition({ 0, 80, 0 });
 
     TextureManager textureManager(engine);
     BlockManager blockManager;

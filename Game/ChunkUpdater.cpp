@@ -106,11 +106,11 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
         Block block = chunk.blocks()[pos];
         if (block.type == 0) continue;
         if (block.type == 1) continue;
+        BlockType& blockType = m_blockManager->getType(block.type);
 
         for (size_t i = 0; i < Chunk::Neighbors6.size(); i++) {
             glm::ivec3 offset = Chunk::Neighbors6[i];
             glm::ivec3 neighborPos = pos + offset;
-            BlockType& blockType = m_blockManager->getType(block.type);
 
             bool visible = true;
 
