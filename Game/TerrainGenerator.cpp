@@ -55,7 +55,7 @@ float caveAttenuation = 0.75f;
 void TerrainGenerator::generate(glm::ivec2 coord) {
 
     std::array<std::array<int32_t, Chunk::chunkSize>, Chunk::chunkSize> values;
-    std::array<ChunkData<float, Chunk::chunkSize>, World::worldHeight> caveValues;
+    std::array<ChunkData<bool, Chunk::chunkSize>, World::worldHeight> caveValues;
 
     for (int32_t x = 0; x < Chunk::chunkSize; x++) {
         for (int32_t y = 0; y < Chunk::chunkSize; y++) {
@@ -81,7 +81,7 @@ void TerrainGenerator::generate(glm::ivec2 coord) {
                 caveValue *= caveAttenuation + (factor * (1 - caveAttenuation));
             }
 
-            caveValues[i][pos] = caveValue;
+            caveValues[i][pos] = caveValue > 0.125f;
         }
     }
 
@@ -100,9 +100,9 @@ void TerrainGenerator::generate(glm::ivec2 coord) {
             glm::ivec3 worldPos = worldChunkPos * Chunk::chunkSize + pos;
 
             int32_t ground = values[pos.x][pos.z];
-            float caveValue = caveValues[i][pos];
+            bool caveValue = caveValues[i][pos];
 
-            if (caveValue > 0.125f) {
+            if (caveValue) {
                 block.type = 1;
                 continue;
             }
