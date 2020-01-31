@@ -82,6 +82,8 @@ ChunkManager::ChunkManager(World& world, FreeCam& freeCam, int32_t viewDistance)
     m_freeCam = &freeCam;
     m_viewDistance = viewDistance;
     m_viewDistance2 = viewDistance * viewDistance;
+
+    m_lastPos = { -1, -1, -1 };
 }
 
 void ChunkManager::setTerrainGenerator(TerrainGenerator& terrainGenerator) {
@@ -95,34 +97,40 @@ void ChunkManager::setChunkUpdater(ChunkUpdater& chunkUpdater) {
 void ChunkManager::update(VoxelEngine::Clock& clock) {
     glm::ivec3 worldChunk = Chunk::worldToWorldChunk(m_freeCam->position());
     glm::ivec2 coord = { worldChunk.x, worldChunk.z };
-    auto lock = m_world->getWriteLock();
 
-    {
-        auto it = m_chunkMap.find(coord);
-        if (it == m_chunkMap.end()) {
-            makeChunkGroup(coord);
-        }
-    }
+    worldChunk.y = std::clamp<int32_t>(worldChunk.y, 0, World::worldHeight);
 
-    {
-        auto it = m_chunkMap.begin();
-        while (it != m_chunkMap.end()) {
-            if (distance2(it->first, coord) > m_viewDistance2) {
-                it = destroyChunkGroup(it, it->first);
-            } else {
-                it++;
+    if (worldChunk != m_lastPos) {
+        m_lastPos = worldChunk;
+        auto lock = m_world->getWriteLock();
+
+        {
+            auto it = m_chunkMap.find(coord);
+            if (it == m_chunkMap.end()) {
+                makeChunkGroup(coord);
             }
         }
-    }
 
-    for (int32_t x = -m_viewDistance; x <= m_viewDistance; x++) {
-        for (int32_t y = -m_viewDistance; y <= m_viewDistance; y++) {
-            glm::ivec2 neighbor = glm::ivec2(x, y) + coord;
-            if (distance2(neighbor, coord) > m_viewDistance2) continue;
+        {
+            auto it = m_chunkMap.begin();
+            while (it != m_chunkMap.end()) {
+                if (distance2(it->first, coord) > m_viewDistance2) {
+                    it = destroyChunkGroup(it, it->first);
+                } else {
+                    it++;
+                }
+            }
+        }
 
-            auto it = m_chunkMap.find(neighbor);
-            if (it == m_chunkMap.end()) {
-                makeChunkGroup(neighbor);
+        for (int32_t x = -m_viewDistance; x <= m_viewDistance; x++) {
+            for (int32_t y = -m_viewDistance; y <= m_viewDistance; y++) {
+                glm::ivec2 neighbor = glm::ivec2(x, y) + coord;
+                if (distance2(neighbor, coord) > m_viewDistance2) continue;
+
+                auto it = m_chunkMap.find(neighbor);
+                if (it == m_chunkMap.end()) {
+                    makeChunkGroup(neighbor);
+                }
             }
         }
     }
