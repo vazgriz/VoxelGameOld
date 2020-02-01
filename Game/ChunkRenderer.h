@@ -8,16 +8,19 @@
 #include <entt/entt.hpp>
 
 #include "TextureManager.h"
+#include "SkyboxManager.h"
 #include "World.h"
 
 class ChunkRenderer :public VoxelEngine::RenderGraph::Node {
 public:
-    ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager);
+    ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager);
 
+    vk::RenderPass& renderPass() const { return *m_renderPass; }
     VoxelEngine::RenderGraph::BufferUsage& uniformBufferUsage() const { return *m_uniformBufferUsage; }
     VoxelEngine::RenderGraph::BufferUsage& vertexBufferUsage() const { return *m_vertexBufferUsage; }
     VoxelEngine::RenderGraph::BufferUsage& indexBufferUsage() const { return *m_indexBufferUsage; }
     VoxelEngine::RenderGraph::ImageUsage& textureUsage() const { return *m_textureUsage; }
+    VoxelEngine::RenderGraph::ImageUsage& skyboxUsage() const { return *m_skyboxUsage; }
     VoxelEngine::RenderGraph::ImageUsage& imageUsage() const { return *m_imageUsage; }
 
     void preRender(uint32_t currentFrame);
@@ -32,6 +35,7 @@ private:
     VoxelEngine::CameraSystem* m_cameraSystem;
     World* m_world;
     TextureManager* m_textureManager;
+    SkyboxManager* m_skyboxManager;
 
     std::unique_ptr<VoxelEngine::Image> m_depthBuffer;
     std::unique_ptr<vk::ImageView> m_depthBufferView;
@@ -44,6 +48,7 @@ private:
     std::unique_ptr<VoxelEngine::RenderGraph::BufferUsage> m_vertexBufferUsage;
     std::unique_ptr<VoxelEngine::RenderGraph::BufferUsage> m_indexBufferUsage;
     std::unique_ptr<VoxelEngine::RenderGraph::ImageUsage> m_textureUsage;
+    std::unique_ptr<VoxelEngine::RenderGraph::ImageUsage> m_skyboxUsage;
     std::unique_ptr<VoxelEngine::RenderGraph::ImageUsage> m_imageUsage;
 
     void createDepthBuffer();

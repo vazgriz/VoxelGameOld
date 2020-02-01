@@ -10,14 +10,16 @@
 #include "ChunkRenderer.h"
 #include "TextureManager.h"
 #include "MipmapGenerator.h"
+#include "SkyboxManager.h"
 #include "World.h"
 
 class Renderer : public VoxelEngine::System {
 public:
-    Renderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& renderGraph, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager);
+    Renderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& renderGraph, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager);
 
     VoxelEngine::TransferNode& transferNode() const { return *m_transferNode; }
     MipmapGenerator& mipmapGenerator() const { return *m_mipmapGenerator; }
+    ChunkRenderer& chunkRenderer() const { return *m_chunkRenderer; }
 
     void wait();
 

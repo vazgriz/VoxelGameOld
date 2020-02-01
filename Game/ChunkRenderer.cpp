@@ -20,7 +20,7 @@ static std::vector<char> readFile(const std::string& filename) {
     return buffer;
 }
 
-ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager)
+ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager)
     : VoxelEngine::RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue(), vk::PipelineStageFlags::ColorAttachmentOutput) {
     m_engine = &engine;
     m_graphics = &engine.getGraphics();
@@ -29,6 +29,7 @@ ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGra
     m_cameraSystem = &cameraSystem;
     m_world = &world;
     m_textureManager = &textureManager;
+    m_skyboxManager = &skyboxManager;
 
     createDepthBuffer();
     createRenderPass();
@@ -40,6 +41,7 @@ ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGra
     m_vertexBufferUsage = std::make_unique<VoxelEngine::RenderGraph::BufferUsage>(*this, vk::AccessFlags::VertexAttributeRead, vk::PipelineStageFlags::VertexInput);
     m_indexBufferUsage = std::make_unique<VoxelEngine::RenderGraph::BufferUsage>(*this, vk::AccessFlags::IndexRead, vk::PipelineStageFlags::VertexInput);
     m_textureUsage = std::make_unique<VoxelEngine::RenderGraph::ImageUsage>(*this, vk::ImageLayout::ShaderReadOnlyOptimal, vk::AccessFlags::ShaderRead, vk::PipelineStageFlags::FragmentShader);
+    m_skyboxUsage = std::make_unique<VoxelEngine::RenderGraph::ImageUsage>(*this, vk::ImageLayout::ShaderReadOnlyOptimal, vk::AccessFlags::ShaderRead, vk::PipelineStageFlags::FragmentShader);
     m_imageUsage = std::make_unique<VoxelEngine::RenderGraph::ImageUsage>(*this, vk::ImageLayout::ColorAttachmentOptimal, vk::AccessFlags::ColorAttachmentWrite, vk::PipelineStageFlags::ColorAttachmentOutput);
 
     m_graphics->onSwapchainChanged().connect<&ChunkRenderer::onSwapchainChanged>(this);
@@ -69,6 +71,9 @@ void ChunkRenderer::preRender(uint32_t currentFrame) {
     subresource.levelCount = 1;
 
     m_textureUsage->sync(*m_textureManager->image(), subresource);
+
+    subresource.layerCount = 6;
+    m_skyboxUsage->sync(m_skyboxManager->image(), subresource);
 }
 
 void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer) {
@@ -116,6 +121,8 @@ void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuff
             mesh.mesh().drawIndexed(commandBuffer);
         }
     }
+
+    m_skyboxManager->draw(commandBuffer, viewport, scissor);
 
     commandBuffer.endRenderPass();
 }

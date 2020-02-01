@@ -37,6 +37,8 @@ add_executable("Game"
     PriorityQueue.h
     TerrainGenerator.h
     TerrainGenerator.cpp
+    SkyboxManager.h
+    SkyboxManager.cpp
 )
 
 target_link_libraries("Game"
@@ -52,6 +54,8 @@ target_include_directories("Game"
 set(SHADER_SOURCES
     "shaders/shader.vert" ;
     "shaders/shader.frag" ;
+    "shaders/skybox.vert" ;
+    "shaders/skybox.frag" ;
 )
 set(SPIRV_BINARY_FILES)
 

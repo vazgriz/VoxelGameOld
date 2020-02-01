@@ -15,6 +15,7 @@
 #include "TextureManager.h"
 #include "BlockManager.h"
 #include "TerrainGenerator.h"
+#include "SkyboxManager.h"
 
 int main() {
     VoxelEngine::Engine engine;
@@ -42,6 +43,7 @@ int main() {
 
     freeCam.setPosition({ 0, 80, 0 });
 
+    SkyboxManager skyboxManager(engine, cameraSystem);
     TextureManager textureManager(engine);
     BlockManager blockManager;
     World world;
@@ -59,12 +61,14 @@ int main() {
     chunkManager.setTerrainGenerator(terrainGenerator);
     chunkManager.setChunkUpdater(chunkUpdater);
 
-    Renderer renderer(engine, renderGraph, cameraSystem, world, textureManager);
+    Renderer renderer(engine, renderGraph, cameraSystem, world, textureManager, skyboxManager);
     engine.getUpdateGroup().add(renderer, 100);
 
     cameraSystem.setTransferNode(renderer.transferNode());
     chunkUpdater.setTransferNode(renderer.transferNode());
     textureManager.createTexture(renderer.transferNode(), renderer.mipmapGenerator());
+    skyboxManager.transfer(renderer.transferNode());
+    skyboxManager.createPipeline(renderer.chunkRenderer().renderPass());
 
     engine.run();
 
