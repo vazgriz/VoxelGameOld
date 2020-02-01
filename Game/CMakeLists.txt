@@ -75,6 +75,12 @@ set(TEXTURES
     "resources/grass_side.png";
     "resources/grass_top.png";
     "resources/stone.png";
+    "resources/sky_up.png";
+    "resources/sky_down.png";
+    "resources/sky_right.png";
+    "resources/sky_left.png";
+    "resources/sky_front.png";
+    "resources/sky_back.png";
 )
 set(RESOURCES_TEXTURES)
 
