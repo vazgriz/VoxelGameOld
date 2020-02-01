@@ -15,8 +15,8 @@ namespace VoxelEngine {
         void render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer);
         void postRender(uint32_t currentFrame) {}
 
-        void transfer(Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, void* data);
-        void transfer(Image& image, vk::Offset3D offset, vk::Extent3D extent, vk::ImageSubresourceLayers subresourceLayers, void* data);
+        void transfer(Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, const void* data);
+        void transfer(Image& image, vk::Offset3D offset, vk::Extent3D extent, vk::ImageSubresourceLayers subresourceLayers, const void* data);
 
     private:
         struct BufferInfo {

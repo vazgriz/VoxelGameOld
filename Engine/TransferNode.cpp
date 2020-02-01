@@ -97,7 +97,7 @@ void TransferNode::createStaging() {
     }
 }
 
-void TransferNode::transfer(Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, void* data) {
+void TransferNode::transfer(Buffer& buffer, vk::DeviceSize size, vk::DeviceSize offset, const void* data) {
     if (size == 0) return;
     uint32_t currentFrame = m_renderGraph->currentFrame();
     m_ptr = align(m_ptr, 4);
@@ -121,7 +121,7 @@ void TransferNode::transfer(Buffer& buffer, vk::DeviceSize size, vk::DeviceSize 
     }
 }
 
-void TransferNode::transfer(Image& image, vk::Offset3D offset, vk::Extent3D extent, vk::ImageSubresourceLayers subresourceLayers, void* data) {
+void TransferNode::transfer(Image& image, vk::Offset3D offset, vk::Extent3D extent, vk::ImageSubresourceLayers subresourceLayers, const void* data) {
     size_t size = extent.width * extent.height * extent.depth * vk::getFormatSize(image.image().format());
     if (size == 0) return;
     uint32_t currentFrame = m_renderGraph->currentFrame();
