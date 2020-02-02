@@ -113,15 +113,21 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
         for (size_t i = 0; i < Chunk::Neighbors6.size(); i++) {
             glm::ivec3 offset = Chunk::Neighbors6[i];
             glm::ivec3 neighborPos = pos + offset;
-            glm::ivec3 neighborOffset = Chunk::worldToWorldChunk(neighborPos);
-            glm::ivec3 neighborPosMod = Chunk::worldToChunk(neighborPos);
+            auto neighborResults = Chunk::split(neighborPos);
+            glm::ivec3 neighborOffset = neighborResults[0];
+            glm::ivec3 neighborPosMod = neighborResults[1];
 
-            entt::entity neighborEntity = chunk.neighbor(neighborOffset);
             bool visible = false;
 
-            if (neighborEntity != entt::null) {
-                auto& neighbor = view.get(neighborEntity);
-                visible = neighbor.blocks()[neighborPosMod].type == 1;
+            if (neighborOffset == glm::ivec3()) {
+                visible = chunk.blocks()[neighborPosMod].type == 1;
+            } else {
+                entt::entity neighborEntity = chunk.neighbor(neighborOffset);
+
+                if (neighborEntity != entt::null) {
+                    auto& neighbor = view.get(neighborEntity);
+                    visible = neighbor.blocks()[neighborPosMod].type == 1;
+                }
             }
 
             if (visible) {

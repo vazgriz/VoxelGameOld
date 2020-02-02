@@ -103,10 +103,12 @@ public:
     static size_t index(glm::ivec3 pos);
     static glm::ivec3 position(size_t index);
 
-    static glm::ivec2 divide(int32_t dividend, int32_t divisor);
+    static std::array<int32_t, 2> divide(int32_t dividend, int32_t divisor);
+    static std::array<glm::ivec3, 2> divide(glm::ivec3 dividend, glm::ivec3 divisor);
     static glm::ivec3 worldToWorldChunk(glm::ivec3 worldPos);
     static glm::ivec3 worldToChunk(glm::ivec3 worldPos);
     static glm::ivec3 chunkToWorld(glm::ivec3 chunkPos, glm::ivec3 worldChunkPos);
+    static std::array<glm::ivec3, 2> split(glm::ivec3 worldPos);
 
     ChunkData<Block, chunkSize>& blocks() { return m_blocks; }
     const ChunkData<Block, chunkSize>& blocks() const { return m_blocks; }

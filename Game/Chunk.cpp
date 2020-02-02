@@ -79,32 +79,41 @@ glm::ivec3 Chunk::position(size_t index) {
     return result;
 }
 
-glm::ivec2 Chunk::divide(int32_t dividend, int32_t divisor) {
+std::array<int32_t, 2> Chunk::divide(int32_t dividend, int32_t divisor) {
     //https://stackoverflow.com/a/39308162/8733481
     auto const divT = std::div(dividend, divisor);
     auto const I = divT.rem >= 0 ? 0 : (divisor > 0 ? 1 : -1);
     auto const qE = divT.quot - I;
     auto const rE = divT.rem + I * divisor;
 
-    return glm::ivec2(qE, rE);
+    return { qE, rE };
+}
+
+std::array<glm::ivec3, 2> Chunk::divide(glm::ivec3 dividend, glm::ivec3 divisor) {
+    std::array<std::array<int32_t, 2>, 3> results;
+
+    for (size_t i = 0; i < 3; i++) {
+        results[i] = divide(dividend[i], divisor[i]);
+    }
+
+    return {
+        glm::ivec3(results[0][0], results[1][0], results[2][0]),
+        glm::ivec3(results[0][1], results[1][1], results[2][1])
+    };
 }
 
 glm::ivec3 Chunk::worldToWorldChunk(glm::ivec3 worldPos) {
-    return glm::ivec3(
-        divide(worldPos.x, chunkSize).x,
-        divide(worldPos.y, chunkSize).x,
-        divide(worldPos.z, chunkSize).x
-    );
+    return split(worldPos)[0];
 }
 
 glm::ivec3 Chunk::worldToChunk(glm::ivec3 worldPos) {
-    return glm::ivec3(
-        divide(worldPos.x, chunkSize).y,
-        divide(worldPos.y, chunkSize).y,
-        divide(worldPos.z, chunkSize).y
-    );
+    return split(worldPos)[1];
 }
 
 glm::ivec3 Chunk::chunkToWorld(glm::ivec3 chunkPos, glm::ivec3 worldChunkPos) {
     return chunkPos + (worldChunkPos * chunkSize);
+}
+
+std::array<glm::ivec3, 2> Chunk::split(glm::ivec3 worldPos) {
+    return divide(worldPos, { Chunk::chunkSize, Chunk::chunkSize, Chunk::chunkSize });
 }
