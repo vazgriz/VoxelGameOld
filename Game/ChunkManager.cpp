@@ -146,6 +146,7 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
     }
 
     auto& generateResults = m_generateResultQueue.swapDequeue();
+    auto view = m_world->registry().view<Chunk>();
 
     while (generateResults.size() > 0) {
         auto coord = generateResults.front();
@@ -157,7 +158,16 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
         auto& group = it->second;
 
         for (int32_t i = 0; i < World::worldHeight; i++) {
-            m_updateQueue.enqueue({ coord.x, i, coord.y }, group.chunks()[i]);
+            glm::ivec3 worldChunkPos = { coord.x, i, coord.y };
+            auto chunkEntity = group.chunks()[i];
+            auto& chunk = view.get(chunkEntity);
+            m_updateQueue.enqueue(worldChunkPos, chunkEntity);
+
+            for (auto offset_ : Chunk::Neighbors8) {
+                glm::ivec3 offset = { offset_.x, 0, offset_.y };
+                auto neighborEntity = chunk.neighbor(offset);
+                m_updateQueue.enqueue(worldChunkPos + offset, neighborEntity);
+            }
         }
     }
 

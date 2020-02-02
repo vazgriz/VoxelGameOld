@@ -23,7 +23,9 @@ void ChunkUpdater::update(VoxelEngine::Clock& clock) {
 
     while (queue.size() > 0) {
         auto& update = queue.front();
-        transferMesh(view.get(update.entity), update.index);
+        if (m_world->registry().valid(update.entity)) {
+            transferMesh(view.get(update.entity), update.index);
+        }
         queue.pop();
     }
 }
@@ -55,6 +57,11 @@ void ChunkUpdater::loop() {
         auto view = m_world->registry().view<Chunk, ChunkMesh>();
         Chunk& chunk = view.get<Chunk>(entity);
         if (chunk.loadState() != ChunkLoadState::Loaded) continue;
+
+        for (auto offset : Chunk::Neighbors26) {
+            auto neighborEntity = chunk.neighbor(offset);
+            if (neighborEntity == entt::null) continue;
+        }
 
         ChunkMesh& chunkMesh = view.get<ChunkMesh>(entity);
 
@@ -124,7 +131,7 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
             } else {
                 entt::entity neighborEntity = chunk.neighbor(neighborOffset);
 
-                if (neighborEntity != entt::null) {
+                if (m_world->registry().valid(neighborEntity)) {
                     auto& neighbor = view.get(neighborEntity);
                     visible = neighbor.blocks()[neighborPosMod].type == 1;
                 }
