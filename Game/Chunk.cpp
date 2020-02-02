@@ -45,9 +45,23 @@ Chunk::PositionIterator::PositionIterator(glm::ivec3 state) {
     this->state = state;
 }
 
-Chunk::Chunk(glm::ivec3 pos) {
+Chunk::Chunk(entt::entity entity, glm::ivec3 pos) : m_neighbors() {
     m_worldChunkPosition = pos;
     m_loadState = ChunkLoadState::Loading;
+
+    m_neighbors[1][1][1] = entity;
+}
+
+entt::entity Chunk::neighbor(glm::ivec3 offset) {
+    return m_neighbors[offset.x + 1][offset.y + 1][offset.z + 1];
+}
+
+void Chunk::setNeighbor(glm::ivec3 offset, entt::entity chunk) {
+    if (offset == glm::ivec3(0, 0, 0)) {
+        return;
+    }
+
+    m_neighbors[offset.x + 1][offset.y + 1][offset.z + 1] = chunk;
 }
 
 size_t Chunk::index(glm::ivec3 pos) {

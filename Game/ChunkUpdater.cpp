@@ -102,6 +102,8 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
 
     uint32_t indexCount = 0;
 
+    auto view = m_world->registry().view<Chunk>();
+
     for (glm::ivec3 pos : Chunk::Positions()) {
         Block block = chunk.blocks()[pos];
         if (block.type == 0) continue;
@@ -111,19 +113,15 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
         for (size_t i = 0; i < Chunk::Neighbors6.size(); i++) {
             glm::ivec3 offset = Chunk::Neighbors6[i];
             glm::ivec3 neighborPos = pos + offset;
+            glm::ivec3 neighborOffset = Chunk::worldToWorldChunk(neighborPos);
+            glm::ivec3 neighborPosMod = Chunk::worldToChunk(neighborPos);
 
-            bool visible = true;
+            entt::entity neighborEntity = chunk.neighbor(neighborOffset);
+            bool visible = false;
 
-            if (neighborPos.x < 0 || neighborPos.x >= Chunk::chunkSize
-                || neighborPos.y < 0 || neighborPos.y >= Chunk::chunkSize
-                || neighborPos.z < 0 || neighborPos.z >= Chunk::chunkSize)
-            {
-                glm::ivec3 neighborWorldPos = Chunk::chunkToWorld(pos, chunk.worldChunkPosition()) + offset;
-                Chunk* neighborChunk = m_world->getChunk(Chunk::worldToWorldChunk(neighborWorldPos));
-                Block& block = m_world->getBlock(neighborWorldPos);
-                visible = block.type == 1;
-            } else {
-                visible = chunk.blocks()[neighborPos].type == 1;
+            if (neighborEntity != entt::null) {
+                auto& neighbor = view.get(neighborEntity);
+                visible = neighbor.blocks()[neighborPosMod].type == 1;
             }
 
             if (visible) {

@@ -182,6 +182,27 @@ ChunkGroup& ChunkManager::makeChunkGroup(glm::ivec2 coord) {
             auto& neighbor = it->second;
             group.setNeighbor(dir, &neighbor);
             neighbor.setNeighbor(ChunkGroup::getOpposite(dir), &group);
+
+            auto view = m_world->registry().view<Chunk>();
+
+        }
+    }
+
+    auto view = m_world->registry().view<Chunk>();
+
+    for (size_t i = 0; i < World::worldHeight; i++) {
+        glm::ivec3 worldChunkPos = glm::ivec3(coord.x, i, coord.y);
+        auto chunkEntity = m_world->getEntity(worldChunkPos);
+        auto& chunk = view.get(chunkEntity);
+
+        for (auto offset : Chunk::Neighbors26) {
+            auto neighborEntity = m_world->getEntity(worldChunkPos + offset);
+
+            if (neighborEntity != entt::null) {
+                auto& neighbor = view.get(neighborEntity);
+                chunk.setNeighbor(offset, neighborEntity);
+                neighbor.setNeighbor(-offset, chunkEntity);
+            }
         }
     }
 
@@ -200,6 +221,23 @@ ChunkManager::ChunkMap::iterator ChunkManager::destroyChunkGroup(ChunkMap::itera
         if (neighborIt != m_chunkMap.end()) {
             auto& neighbor = neighborIt->second;
             neighbor.setNeighbor(ChunkGroup::getOpposite(dir), nullptr);
+        }
+    }
+
+    auto view = m_world->registry().view<Chunk>();
+
+    for (size_t i = 0; i < World::worldHeight; i++) {
+        glm::ivec3 worldChunkPos = glm::ivec3(coord.x, i, coord.y);
+        auto chunkEntity = m_world->getEntity(worldChunkPos);
+        auto& chunk = view.get(chunkEntity);
+
+        for (auto offset : Chunk::Neighbors26) {
+            auto neighborEntity = m_world->getEntity(worldChunkPos + offset);
+
+            if (neighborEntity != entt::null) {
+                auto& neighbor = view.get(neighborEntity);
+                neighbor.setNeighbor(-offset, entt::null);
+            }
         }
     }
 

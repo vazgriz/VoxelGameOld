@@ -18,7 +18,7 @@ std::unique_lock<std::shared_mutex> World::getWriteLock() {
 
 entt::entity World::createChunk(glm::ivec3 worldChunkPos) {
     entt::entity chunkEntity = m_registry.create();
-    m_registry.assign<Chunk>(chunkEntity, worldChunkPos);
+    m_registry.assign<Chunk>(chunkEntity, chunkEntity, worldChunkPos);
     m_registry.assign<ChunkMesh>(chunkEntity);
 
     m_chunkMap.insert({ worldChunkPos, chunkEntity });

@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <Engine/math.h>
 #include <array>
+#include <entt/entt.hpp>
 
 enum class ChunkLoadState {
     Unloaded,
@@ -89,12 +90,15 @@ public:
         PositionIterator end() const { return PositionIterator({ 0, 0, chunkSize }); }
     };
 
-    Chunk(glm::ivec3 pos);
+    Chunk(entt::entity entity, glm::ivec3 pos);
 
     glm::ivec3 worldChunkPosition() const { return m_worldChunkPosition; }
 
     ChunkLoadState loadState() const { return m_loadState; }
     void setLoadState(ChunkLoadState loadState) { m_loadState = loadState; }
+
+    entt::entity neighbor(glm::ivec3 offset);
+    void setNeighbor(glm::ivec3 offset, entt::entity chunk);
 
     static size_t index(glm::ivec3 pos);
     static glm::ivec3 position(size_t index);
@@ -143,6 +147,35 @@ public:
         glm::ivec2(-1, -1),
         glm::ivec2(0, -1),
         glm::ivec2(1, -1),
+    };
+
+    static constexpr std::array<glm::ivec3, 26> Neighbors26 = {
+        glm::ivec3(1, 1, 0),    //upper layer
+        glm::ivec3(1, 1, 1),
+        glm::ivec3(0, 1, 1),
+        glm::ivec3(-1, 1, 1),
+        glm::ivec3(-1, 1, 0),
+        glm::ivec3(-1, 1, -1),
+        glm::ivec3(0, 1, -1),
+        glm::ivec3(1, 1, -1),
+        glm::ivec3(0, 1, 0),
+        glm::ivec3(1, 0, 0),    //same layer
+        glm::ivec3(1, 0, 1),
+        glm::ivec3(0, 0, 1),
+        glm::ivec3(-1, 0, 1),
+        glm::ivec3(-1, 0, 0),
+        glm::ivec3(-1, 0, -1),
+        glm::ivec3(0, 0, -1),
+        glm::ivec3(1, 0, -1),
+        glm::ivec3(1, -1, 0),    //lower layer
+        glm::ivec3(1, -1, 1),
+        glm::ivec3(0, -1, 1),
+        glm::ivec3(-1, -1, 1),
+        glm::ivec3(-1, -1, 0),
+        glm::ivec3(-1, -1, -1),
+        glm::ivec3(0, -1, -1),
+        glm::ivec3(1, -1, -1),
+        glm::ivec3(0, -1, 0),
     };
 
     using FaceArray = const std::array<glm::ivec3, 4>;
@@ -206,4 +239,5 @@ private:
     glm::ivec3 m_worldChunkPosition;
     ChunkData<Block, chunkSize> m_blocks;
     ChunkLoadState m_loadState;
+    std::array<std::array<std::array<entt::entity, 3>, 3>, 3 > m_neighbors;
 };
