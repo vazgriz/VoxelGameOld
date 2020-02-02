@@ -68,12 +68,17 @@ void ChunkRenderer::preRender(uint32_t currentFrame) {
     subresource.baseArrayLayer = 0;
     subresource.layerCount = m_textureManager->count();
     subresource.baseMipLevel = 0;
-    subresource.levelCount = 1;
+    subresource.levelCount = m_textureManager->mipLevelCount();
 
     m_textureUsage->sync(*m_textureManager->image(), subresource);
 
-    subresource.layerCount = 6;
-    m_skyboxUsage->sync(m_skyboxManager->image(), subresource);
+    subresource.layerCount = 1;
+    subresource.levelCount = 1;
+
+    for (uint32_t i = 0; i < 6; i++) {
+        subresource.baseArrayLayer = i;
+        m_skyboxUsage->sync(m_skyboxManager->image(), subresource);
+    }
 }
 
 void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer) {

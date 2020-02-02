@@ -79,8 +79,6 @@ void RenderGraph::BufferEdge::recordSourceBarriers(uint32_t currentFrame, vk::Co
 
         if (it != destSyncs.end()) {
             for (auto& sourceSegment : sourcePair.second) {
-                auto& destSegment = it->second;
-
                 vk::BufferMemoryBarrier barrier = {};
                 barrier.buffer = sourcePair.first;
                 barrier.offset = sourceSegment.offset;
@@ -118,18 +116,18 @@ void RenderGraph::BufferEdge::recordDestBarriers(uint32_t currentFrame, vk::Comm
         sourceStageFlags = vk::PipelineStageFlags::TopOfPipe;    //override source stage flags when transfering queue ownership. recordDestBarriers will handle the other side
     }
 
-    for (auto& sourcePair : m_sourceUsage->getSyncs(currentFrame)) {
-        auto& destSyncs = m_destUsage->getSyncs(currentFrame);
-        auto it = destSyncs.find(sourcePair.first);
+    auto& sourceSyncs = m_sourceUsage->getSyncs(currentFrame);
+    auto& destSyncs = m_destUsage->getSyncs(currentFrame);
 
-        if (it != destSyncs.end()) {
-            for (auto& sourceSegment : sourcePair.second) {
-                auto& destSegment = it->second;
+    for (auto& destPair : destSyncs) {
+        auto it = sourceSyncs.find(destPair.first);
 
+        if (it != sourceSyncs.end()) {
+            for (auto& destSegment : it->second) {
                 vk::BufferMemoryBarrier barrier = {};
-                barrier.buffer = sourcePair.first;
-                barrier.offset = sourceSegment.offset;
-                barrier.size = sourceSegment.size;
+                barrier.buffer = destPair.first;
+                barrier.offset = destSegment.offset;
+                barrier.size = destSegment.size;
 
                 if (source().queue().familyIndex() == dest().queue().familyIndex()) {
                     barrier.srcAccessMask = m_sourceUsage->accessMask();
@@ -167,14 +165,14 @@ void RenderGraph::ImageEdge::recordSourceBarriers(uint32_t currentFrame, vk::Com
         destStageFlags = vk::PipelineStageFlags::BottomOfPipe;    //override dest stage flags when transfering queue ownership. recordDestBarriers will handle the other side
     }
 
-    for (auto& sourcePair : m_sourceUsage->getSyncs(currentFrame)) {
-        auto& destSyncs = m_destUsage->getSyncs(currentFrame);
+    auto& sourceSyncs = m_sourceUsage->getSyncs(currentFrame);
+    auto& destSyncs = m_destUsage->getSyncs(currentFrame);
+
+    for (auto& sourcePair : sourceSyncs) {
         auto it = destSyncs.find(sourcePair.first);
 
         if (it != destSyncs.end()) {
             for (auto& sourceSegment : sourcePair.second) {
-                auto& destSegment = it->second;
-
                 vk::ImageMemoryBarrier barrier = {};
                 barrier.image = sourcePair.first;
                 barrier.oldLayout = m_sourceUsage->imageLayout();
@@ -213,19 +211,19 @@ void RenderGraph::ImageEdge::recordDestBarriers(uint32_t currentFrame, vk::Comma
         sourceStageFlags = vk::PipelineStageFlags::TopOfPipe;    //override source stage flags when transfering queue ownership. recordDestBarriers will handle the other side
     }
 
-    for (auto& sourcePair : m_sourceUsage->getSyncs(currentFrame)) {
-        auto& destSyncs = m_destUsage->getSyncs(currentFrame);
-        auto it = destSyncs.find(sourcePair.first);
+    auto& sourceSyncs = m_sourceUsage->getSyncs(currentFrame);
+    auto& destSyncs = m_destUsage->getSyncs(currentFrame);
 
-        if (it != destSyncs.end()) {
-            for (auto& sourceSegment : sourcePair.second) {
-                auto& destSegment = it->second;
+    for (auto& destPair : destSyncs) {
+        auto it = sourceSyncs.find(destPair.first);
 
+        if (it != sourceSyncs.end()) {
+            for (auto& destSegment : it->second) {
                 vk::ImageMemoryBarrier barrier = {};
-                barrier.image = sourcePair.first;
+                barrier.image = destPair.first;
                 barrier.oldLayout = m_sourceUsage->imageLayout();
                 barrier.newLayout = m_destUsage->imageLayout();
-                barrier.subresourceRange = sourceSegment.subresource;
+                barrier.subresourceRange = destSegment.subresource;
 
                 if (source().queue().familyIndex() == dest().queue().familyIndex()) {
                     barrier.srcAccessMask = m_sourceUsage->accessMask();
