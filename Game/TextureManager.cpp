@@ -27,6 +27,10 @@ uint32_t TextureManager::count() const {
     return static_cast<uint32_t>(textureNames.size());
 }
 
+uint32_t TextureManager::mipLevelCount() const {
+    return mipLevels;
+}
+
 void TextureManager::createTexture(VoxelEngine::TransferNode& transferNode, MipmapGenerator& mipmapGenerator) {
     for (uint32_t i = 0; i < textureNames.size(); i++) {
         auto& fileName = textureNames[i];

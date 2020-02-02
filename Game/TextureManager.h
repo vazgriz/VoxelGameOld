@@ -12,6 +12,7 @@ public:
     const vk::DescriptorSet& descriptorSet() const { return *m_descriptorSet; }
     std::shared_ptr<VoxelEngine::Image> image() const { return m_image; }
     uint32_t count() const;
+    uint32_t mipLevelCount() const;
 
     void createTexture(VoxelEngine::TransferNode& transferNode, MipmapGenerator& mipmapGenerator);
 
