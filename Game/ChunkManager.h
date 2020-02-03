@@ -3,6 +3,7 @@
 #include <Engine/System.h>
 #include <Engine/BufferedQueue.h>
 #include <unordered_map>
+#include <queue>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 #include "FreeCam.h"
@@ -71,6 +72,12 @@ private:
     PriorityQueue<glm::ivec2> m_generateQueue;
     VoxelEngine::BufferedQueue<glm::ivec2> m_generateResultQueue;
     PriorityQueue<entt::entity> m_updateQueue;
+
+    struct Requeue {
+        glm::ivec3 pos;
+        entt::entity entity;
+    };
+    std::queue<Requeue> m_updateRequeue;
 
     ChunkGroup& makeChunkGroup(glm::ivec2 coord);
     ChunkMap::iterator destroyChunkGroup(ChunkMap::iterator it, glm::ivec2 coord);

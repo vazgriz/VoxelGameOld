@@ -156,6 +156,7 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
         if (it == m_chunkMap.end()) continue;
 
         auto& group = it->second;
+        group.setLoadState(ChunkLoadState::Loaded);
 
         for (int32_t i = 0; i < World::worldHeight; i++) {
             glm::ivec3 worldChunkPos = { coord.x, i, coord.y };
@@ -178,8 +179,41 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
 
     while (m_updateQueue.count() > 0) {
         auto item = m_updateQueue.peek();
+        auto& chunk = view.get<Chunk>(item.data);
+
+        if (chunk.loadState() != ChunkLoadState::Loaded) {
+            m_updateRequeue.push({ item.pos, item.data });
+            m_updateQueue.dequeue();
+            continue;
+        }
+
+        bool skip = false;
+        for (auto offset : Chunk::Neighbors26) {
+            auto neighborEntity = chunk.neighbor(offset);
+
+            if (neighborEntity != entt::null) {
+                auto& neighborChunk = view.get<Chunk>(neighborEntity);
+                if (neighborChunk.loadState() != ChunkLoadState::Loaded) {
+                    m_updateRequeue.push({ item.pos, item.data });
+                    m_updateQueue.dequeue();
+                    skip = true;
+                    break;
+                }
+            }
+        }
+
+        if (skip) {
+            continue;
+        }
+
         if (!m_chunkUpdater->queue(item.data)) break;
         m_updateQueue.dequeue();
+    }
+
+    while (m_updateRequeue.size() > 0) {
+        auto& item = m_updateRequeue.front();
+        m_updateQueue.enqueue(item.pos, item.entity);
+        m_updateRequeue.pop();
     }
 }
 

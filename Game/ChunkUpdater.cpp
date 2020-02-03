@@ -56,19 +56,6 @@ void ChunkUpdater::loop() {
 
         auto view = m_world->registry().view<Chunk, ChunkMesh>();
         Chunk& chunk = view.get<Chunk>(entity);
-        if (chunk.loadState() != ChunkLoadState::Loaded) continue;
-
-        bool skip = false;
-        for (auto offset : Chunk::Neighbors26) {
-            auto neighborEntity = chunk.neighbor(offset);
-            if (neighborEntity == entt::null) {
-                skip = true;
-                break;
-            }
-        }
-
-        if (skip) continue;
-
         ChunkMesh& chunkMesh = view.get<ChunkMesh>(entity);
 
         size_t updateIndex = makeMesh(chunk, chunkMesh);
