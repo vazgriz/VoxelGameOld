@@ -44,7 +44,22 @@ public:
     auto end() const { return m_data.end(); }
 
     T& operator [] (glm::ivec3 pos) {
-        return m_data[Chunk::index(pos)];
+        return m_data[index(pos)];
+    }
+
+    static size_t index(glm::ivec3 pos) {
+        return pos.x + (pos.y * Size) + (pos.z * Size * Size);
+    }
+
+    static glm::ivec3 position(size_t index) {
+        glm::ivec3 result;
+        result.z = index % Size;
+        index /= Size;
+        result.y = index % Size;
+        index /= Size;
+        result.x = index;
+
+        return result;
     }
 
 private:

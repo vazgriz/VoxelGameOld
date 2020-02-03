@@ -65,7 +65,7 @@ void Chunk::setNeighbor(glm::ivec3 offset, entt::entity chunk) {
 }
 
 size_t Chunk::index(glm::ivec3 pos) {
-    return pos.x + (pos.y * chunkSize) + (pos.z * chunkSize * chunkSize);
+    return ChunkData<Block, chunkSize>::index(pos);
 }
 
 glm::ivec3 Chunk::position(size_t index) {
