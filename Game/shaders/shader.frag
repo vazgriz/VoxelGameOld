@@ -10,5 +10,5 @@ layout (set = 1, binding = 0) uniform sampler textureSampler;
 layout (set = 1, binding = 1) uniform texture2DArray textureArray;
 
 void main() {
-    outColor = vec4(texture(sampler2DArray(textureArray, textureSampler), fragUV).xyz, 1.0);
+    outColor = vec4(fragColor * texture(sampler2DArray(textureArray, textureSampler), fragUV).xyz, 1.0);
 }

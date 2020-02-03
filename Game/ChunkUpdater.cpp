@@ -149,7 +149,7 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
 
                 for (size_t j = 0; j < faceArray.size(); j++) {
                     update.vertexData.push_back(glm::i8vec4(pos + faceArray[j], 0));
-                    update.colorData.push_back(glm::i8vec4(pos.x * 16, pos.y * 16, pos.z * 16, 0));
+                    update.colorData.push_back(glm::i8vec4(255, 255, 255, 0));
                     update.uvData.push_back(glm::i8vec4(Chunk::uvFaces[j], static_cast<uint8_t>(faceIndex), 0));
                 }
 
