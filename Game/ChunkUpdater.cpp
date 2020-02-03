@@ -104,6 +104,14 @@ void ChunkUpdater::createIndexBuffer() {
     m_indexBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, info, allocInfo);
 }
 
+int32_t ChunkUpdater::calculateAmbientOcclusion(int32_t corner, int32_t side1, int32_t side2) {
+    if (side1 == 1 && side2 == 1) {
+        return 3;
+    }
+
+    return side1 + side2 + corner;
+}
+
 size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
     size_t index = m_updateIndex;
     m_updateIndex = (m_updateIndex + 1) % (queueSize * 2);
@@ -123,33 +131,58 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
         if (block.type == 1) continue;
         BlockType& blockType = m_blockManager->getType(block.type);
 
-        for (size_t i = 0; i < Chunk::Neighbors6.size(); i++) {
-            glm::ivec3 offset = Chunk::Neighbors6[i];
+        ChunkData<Block, 3> neighborBlocks;
+        const glm::ivec3 root = { 1, 1, 1 };
+
+        for (auto offset : Chunk::Neighbors26) {
             glm::ivec3 neighborPos = pos + offset;
             auto neighborResults = Chunk::split(neighborPos);
-            glm::ivec3 neighborOffset = neighborResults[0];
+            glm::ivec3 neighborChunkOffset = neighborResults[0];
             glm::ivec3 neighborPosMod = neighborResults[1];
 
-            bool visible = false;
-
-            if (neighborOffset == glm::ivec3()) {
-                visible = chunk.blocks()[neighborPosMod].type == 1;
+            if (neighborChunkOffset == glm::ivec3()) {
+                neighborBlocks[root + offset] = chunk.blocks()[neighborPosMod];
             } else {
-                entt::entity neighborEntity = chunk.neighbor(neighborOffset);
+                entt::entity neighborEntity = chunk.neighbor(neighborChunkOffset);
+                Block block = {};
 
                 if (m_world->registry().valid(neighborEntity)) {
                     auto& neighbor = view.get(neighborEntity);
-                    visible = neighbor.blocks()[neighborPosMod].type == 1;
+                    block = neighbor.blocks()[neighborPosMod];
                 }
+                
+                neighborBlocks[root + offset] = block;
             }
+        }
+
+        for (size_t i = 0; i < Chunk::Neighbors6.size(); i++) {
+            glm::ivec3 offset = Chunk::Neighbors6[i];
+            glm::ivec3 neighborPos = pos + offset;
+
+            bool visible = neighborBlocks[root + offset].type == 1;
 
             if (visible) {
-                Chunk::FaceArray& faceArray = Chunk::NeighborFaces[i];
+                const Chunk::FaceData& faceData = Chunk::NeighborFaces[i];
                 size_t faceIndex = blockType.getFaceIndex(i);
 
-                for (size_t j = 0; j < faceArray.size(); j++) {
-                    update.vertexData.push_back(glm::i8vec4(pos + faceArray[j], 0));
-                    update.colorData.push_back(glm::i8vec4(255, 255, 255, 0));
+                for (size_t j = 0; j < faceData.vertices.size(); j++) {
+                    int32_t light = 15;
+
+                    std::array<int32_t, 3> sides;
+
+                    for (size_t k = 0; k < 3; k++) {
+                        if (neighborBlocks[root + faceData.ambientOcclusion[j][k]].type > 1) {
+                            sides[k] = 1;
+                        } else {
+                            sides[k] = 0;
+                        }
+                    }
+
+                    light -= calculateAmbientOcclusion(sides[0], sides[1], sides[2]);
+                    light = std::max(light * 17, 0);
+
+                    update.vertexData.push_back(glm::i8vec4(pos + faceData.vertices[j], 0));
+                    update.colorData.push_back(glm::i8vec4(light, light, light, 0));
                     update.uvData.push_back(glm::i8vec4(Chunk::uvFaces[j], static_cast<uint8_t>(faceIndex), 0));
                 }
 

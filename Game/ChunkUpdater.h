@@ -54,6 +54,7 @@ private:
     VoxelEngine::BufferedQueue<MeshUpdate2> m_resultQueue;
 
     void createIndexBuffer();
+    int32_t calculateAmbientOcclusion(int32_t corner, int32_t side1, int32_t side2);
     size_t makeMesh(Chunk& chunk, ChunkMesh& chunkMesh);
     void transferMesh(ChunkMesh& chunkMesh, size_t index);
 
