@@ -53,7 +53,6 @@ int32_t caveAttenuationDepth = 10;
 float caveAttenuation = 0.75f;
 
 void TerrainGenerator::generate(glm::ivec2 coord) {
-
     std::array<std::array<int32_t, Chunk::chunkSize>, Chunk::chunkSize> values;
     std::array<ChunkData<bool, Chunk::chunkSize>, World::worldHeight> caveValues;
 
