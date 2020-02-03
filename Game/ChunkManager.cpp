@@ -163,10 +163,13 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
             auto& chunk = view.get(chunkEntity);
             m_updateQueue.enqueue(worldChunkPos, chunkEntity);
 
-            for (auto offset_ : Chunk::Neighbors8) {
+            for (auto offset_ : Chunk::Neighbors8_2D) {
                 glm::ivec3 offset = { offset_.x, 0, offset_.y };
                 auto neighborEntity = chunk.neighbor(offset);
-                m_updateQueue.enqueue(worldChunkPos + offset, neighborEntity);
+
+                if (neighborEntity != entt::null) {
+                    m_updateQueue.enqueue(worldChunkPos + offset, neighborEntity);
+                }
             }
         }
     }
