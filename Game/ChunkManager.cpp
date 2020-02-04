@@ -10,13 +10,6 @@ ChunkGroup::ChunkGroup(glm::ivec2 coord, World& world) : m_neighbors() {
 
     for (int32_t i = 0; i < World::worldHeight; i++) {
         entt::entity chunkEntity = m_world->createChunk(glm::ivec3(coord.x, i, coord.y));
-        auto& chunk = m_world->registry().view<Chunk>().get(chunkEntity);
-
-        for (auto pos : Chunk::Positions()) {
-            auto& block = chunk.blocks()[pos];
-            block.type = 3;
-        }
-
         m_chunks.push_back(chunkEntity);
     }
 }
