@@ -116,8 +116,6 @@ void TerrainGenerator::generate(glm::ivec2 coord) {
                 block.type = 1;
             }
         }
-
-        chunk.setLoadState(ChunkLoadState::Loaded);
     }
 
     lock.unlock();
