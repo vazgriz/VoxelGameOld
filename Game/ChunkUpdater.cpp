@@ -109,8 +109,22 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
     update.uvData.clear();
 
     uint32_t indexCount = 0;
+    const glm::ivec3 root = { 1, 1, 1 };
 
     auto view = m_world->registry().view<Chunk>();
+
+    ChunkData<Chunk*, 3> neighborChunks;
+
+    for (auto offset : Chunk::Neighbors26) {
+        entt::entity neighborEntity = chunk.neighbor(offset);
+
+        if (m_world->registry().valid(neighborEntity)) {
+            auto& neighbor = view.get(neighborEntity);
+            neighborChunks[root + offset] = &neighbor;
+        } else {
+            neighborChunks[root + offset] = nullptr;
+        }
+    }
 
     for (glm::ivec3 pos : Chunk::Positions()) {
         Block block = chunk.blocks()[pos];
@@ -119,7 +133,6 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
         BlockType& blockType = m_blockManager->getType(block.type);
 
         ChunkData<Block, 3> neighborBlocks;
-        const glm::ivec3 root = { 1, 1, 1 };
 
         for (auto offset : Chunk::Neighbors26) {
             glm::ivec3 neighborPos = pos + offset;
@@ -130,12 +143,11 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
             if (neighborChunkOffset == glm::ivec3()) {
                 neighborBlocks[root + offset] = chunk.blocks()[neighborPosMod];
             } else {
-                entt::entity neighborEntity = chunk.neighbor(neighborChunkOffset);
                 Block block = {};
+                Chunk* neighborChunk = neighborChunks[root + neighborChunkOffset];
 
-                if (m_world->registry().valid(neighborEntity)) {
-                    auto& neighbor = view.get(neighborEntity);
-                    block = neighbor.blocks()[neighborPosMod];
+                if (neighborChunk != nullptr) {
+                    block = neighborChunk->blocks()[neighborPosMod];
                 }
                 
                 neighborBlocks[root + offset] = block;
