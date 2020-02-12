@@ -237,10 +237,10 @@ ChunkGroup& ChunkManager::makeChunkGroup(glm::ivec2 coord) {
 
         for (auto offset : Chunk::Neighbors26) {
             auto neighborEntity = m_world->getEntity(worldChunkPos + offset);
+            chunk.setNeighbor(offset, neighborEntity);
 
             if (neighborEntity != entt::null) {
                 auto& neighbor = view.get(neighborEntity);
-                chunk.setNeighbor(offset, neighborEntity);
                 neighbor.setNeighbor(-offset, chunkEntity);
             }
         }
