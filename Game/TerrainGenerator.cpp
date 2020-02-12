@@ -68,10 +68,16 @@ void TerrainGenerator::generate(glm::ivec2 coord) {
 
         for (auto pos : Chunk::Positions()) {
             glm::ivec3 worldPos = worldChunkRoot + pos;
+            int32_t ground = values[pos.x][pos.z];
+
+            if (worldPos.y > ground) {
+                caveValues[i][pos] = false;
+                continue;
+            }
+
             float caveValue1 = m_caveNoise1.GetSimplexFractal(worldPos.x, worldPos.y, worldPos.z);
             float caveValue2 = m_caveNoise2.GetSimplexFractal(worldPos.x, worldPos.y, worldPos.z);
 
-            int32_t ground = values[pos.x][pos.z];
             float caveValue = caveValue1 * caveValue2;
 
             if (worldPos.y <= ground && worldPos.y > ground - caveAttenuationDepth) {
@@ -101,19 +107,19 @@ void TerrainGenerator::generate(glm::ivec2 coord) {
             int32_t ground = values[pos.x][pos.z];
             bool caveValue = caveValues[i][pos];
 
-            if (caveValue) {
+            if (worldPos.y > ground) {
                 block.type = 1;
                 continue;
             }
 
-            if (worldPos.y == ground) {
+            if (caveValue) {
+                block.type = 1;
+            } else if (worldPos.y == ground) {
                 block.type = 3;
             } else if (worldPos.y < ground && worldPos.y >= ground - dirtDepth) {
                 block.type = 2;
             } else if (worldPos.y < ground - dirtDepth) {
                 block.type = 4;
-            } else {
-                block.type = 1;
             }
         }
     }
