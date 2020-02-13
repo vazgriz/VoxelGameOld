@@ -172,6 +172,11 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
 
     while (m_updateQueue.count() > 0) {
         auto item = m_updateQueue.peek();
+        if (!m_world->registry().valid(item.data)) {
+            m_updateQueue.dequeue();
+            continue;
+        }
+
         auto& chunk = view.get<Chunk>(item.data);
 
         if (chunk.loadState() != ChunkLoadState::Loaded) {
