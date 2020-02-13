@@ -159,11 +159,11 @@ public:
     static const std::array<glm::ivec2, 8> Neighbors8_2D;
     static const std::array<glm::ivec3, 26> Neighbors26;
 
-    using AmbientOcclusionOffsets = std::array<glm::ivec3, 3>;
+    using LightOffsets = std::array<glm::ivec3, 3>;
 
     struct FaceData {
         std::array<glm::ivec3, 4> vertices;
-        std::array<AmbientOcclusionOffsets, 4> ambientOcclusion;
+        std::array<LightOffsets, 4> ambientOcclusion;
     };
 
     static const std::array<FaceData, 6> NeighborFaces;

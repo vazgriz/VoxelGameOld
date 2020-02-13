@@ -58,7 +58,6 @@ private:
     void updateLight(Chunk& chunk, ChunkData<Chunk*, 3>& neighborChunks);
 
     void createIndexBuffer();
-    int32_t calculateAmbientOcclusion(int32_t corner, int32_t side1, int32_t side2);
     size_t makeMesh(Chunk& chunk, ChunkMesh& chunkMesh, ChunkData<Chunk*, 3>& neighborChunks);
     void transferMesh(ChunkMesh& chunkMesh, size_t index);
 

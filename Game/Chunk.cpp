@@ -215,22 +215,22 @@ const std::array<Chunk::FaceData, 6> Chunk::NeighborFaces = {
             glm::ivec3(1, 0, 0),
         },
         {
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(1, 1, 1),
                 glm::ivec3(1, 1, 0),
                 glm::ivec3(1, 0, 1)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(1, 1, -1),
                 glm::ivec3(1, 1, 0),
                 glm::ivec3(1, 0, -1)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(1, -1, 1),
                 glm::ivec3(1, -1, 0),
                 glm::ivec3(1, 0, 1)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(1, -1, -1),
                 glm::ivec3(1, -1, 0),
                 glm::ivec3(1, 0, -1)
@@ -246,22 +246,22 @@ const std::array<Chunk::FaceData, 6> Chunk::NeighborFaces = {
             glm::ivec3(0, 0, 1),
         },
         {
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(-1, 1, -1),
                 glm::ivec3(-1, 1, 0),
                 glm::ivec3(-1, 0, -1)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(-1, 1, 1),
                 glm::ivec3(-1, 1, 0),
                 glm::ivec3(-1, 0, 1)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(-1, -1, -1),
                 glm::ivec3(-1, -1, 0),
                 glm::ivec3(-1, 0, -1)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(-1, -1, 1),
                 glm::ivec3(-1, -1, 0),
                 glm::ivec3(-1, 0, 1)
@@ -277,22 +277,22 @@ const std::array<Chunk::FaceData, 6> Chunk::NeighborFaces = {
             glm::ivec3(1, 1, 1),
         },
         {
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(-1, 1, -1),
                 glm::ivec3(0, 1, -1),
                 glm::ivec3(-1, 1, 0)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(1, 1, -1),
                 glm::ivec3(0, 1, -1),
                 glm::ivec3(1, 1, 0)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(-1, 1, 1),
                 glm::ivec3(0, 1, 1),
                 glm::ivec3(-1, 1, 0)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(1, 1, 1),
                 glm::ivec3(0, 1, 1),
                 glm::ivec3(1, 1, 0)
@@ -308,27 +308,27 @@ const std::array<Chunk::FaceData, 6> Chunk::NeighborFaces = {
             glm::ivec3(0, 0, 1),
         },
         {
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(1, -1, -1),
                 glm::ivec3(1, -1, 0),
                 glm::ivec3(0, -1, -1)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(-1, -1, -1),
                 glm::ivec3(-1, -1, 0),
                 glm::ivec3(0, -1, -1)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(1, -1, 1),
                 glm::ivec3(1, -1, 0),
                 glm::ivec3(0, -1, 1)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(-1, -1, 1),
                 glm::ivec3(-1, -1, 0),
                 glm::ivec3(0, -1, 1)
             },
-        }
+        },
     },
     //front
     FaceData {
@@ -339,22 +339,22 @@ const std::array<Chunk::FaceData, 6> Chunk::NeighborFaces = {
             glm::ivec3(1, 0, 1),
         },
         {
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(-1, 1, 1),
                 glm::ivec3(0, 1, 1),
                 glm::ivec3(-1, 0, 1)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(1, 1, 1),
                 glm::ivec3(0, 1, 1),
                 glm::ivec3(1, 0, 1)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(-1, -1, 1),
                 glm::ivec3(0, -1, 1),
                 glm::ivec3(-1, 0, 1)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(1, -1, 1),
                 glm::ivec3(0, -1, 1),
                 glm::ivec3(1, 0, 1)
@@ -370,22 +370,22 @@ const std::array<Chunk::FaceData, 6> Chunk::NeighborFaces = {
             glm::ivec3(0, 0, 0),
         },
         {
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(1, 1, -1),
                 glm::ivec3(0, 1, -1),
                 glm::ivec3(1, 0, -1)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(-1, 1, -1),
                 glm::ivec3(0, 1, -1),
                 glm::ivec3(-1, 0, -1)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(1, -1, -1),
                 glm::ivec3(0, -1, -1),
                 glm::ivec3(1, 0, -1)
             },
-            AmbientOcclusionOffsets {
+            LightOffsets {
                 glm::ivec3(-1, -1, -1),
                 glm::ivec3(0, -1, -1),
                 glm::ivec3(-1, 0, -1)

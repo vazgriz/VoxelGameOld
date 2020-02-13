@@ -168,14 +168,6 @@ void ChunkUpdater::createIndexBuffer() {
     m_indexBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, info, allocInfo);
 }
 
-int32_t ChunkUpdater::calculateAmbientOcclusion(int32_t corner, int32_t side1, int32_t side2) {
-    if (side1 == 1 && side2 == 1) {
-        return 3;
-    }
-
-    return side1 + side2 + corner;
-}
-
 size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh, ChunkData<Chunk*, 3>& neighborChunks) {
     size_t index = m_updateIndex;
     m_updateIndex = (m_updateIndex + 1) % (queueSize * 2);
@@ -241,17 +233,11 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh, ChunkData<Chun
                 for (size_t j = 0; j < faceData.vertices.size(); j++) {
                     int32_t light = neighborLight[root + offset].sun;
 
-                    std::array<int32_t, 3> sides;
-
                     for (size_t k = 0; k < 3; k++) {
-                        if (neighborBlocks[root + faceData.ambientOcclusion[j][k]].type > 1) {
-                            sides[k] = 1;
-                        } else {
-                            sides[k] = 0;
-                        }
+                        light += neighborLight[root + faceData.ambientOcclusion[j][k]].sun;
                     }
 
-                    light -= calculateAmbientOcclusion(sides[0], sides[1], sides[2]);
+                    light /= 4;
                     light = std::max(light * 17, 0);
 
                     update.vertexData.push_back(glm::i8vec4(pos + faceData.vertices[j], 0));
