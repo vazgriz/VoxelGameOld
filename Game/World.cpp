@@ -73,3 +73,18 @@ Block& World::getBlock(glm::ivec3 worldPos) {
         return m_nullBlock;
     }
 }
+
+void World::update(glm::ivec3 worldPosition) {
+    auto worldChunkPos = Chunk::worldToWorldChunk(worldPosition);
+
+    auto it = m_chunkMap.find(worldChunkPos);
+
+    if (it != m_chunkMap.end()) {
+        auto chunkEntity = it->second;
+        update(worldChunkPos, chunkEntity);
+    }
+}
+
+void World::update(glm::ivec3 worldChunkPos, entt::entity entity) {
+    m_worldUpdates.enqueue({ worldChunkPos, entity });
+}

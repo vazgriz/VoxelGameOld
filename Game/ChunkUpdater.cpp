@@ -58,8 +58,85 @@ void ChunkUpdater::loop() {
         Chunk& chunk = view.get<Chunk>(entity);
         ChunkMesh& chunkMesh = view.get<ChunkMesh>(entity);
 
-        size_t updateIndex = makeMesh(chunk, chunkMesh);
-        m_resultQueue.enqueue({ updateIndex, entity });
+        update(entity, chunk, chunkMesh);
+    }
+}
+
+void ChunkUpdater::update(entt::entity entity, Chunk& chunk, ChunkMesh& chunkMesh) {
+    ChunkData<Chunk*, 3> neighborChunks;
+    const glm::ivec3 root = { 1, 1, 1 };
+
+    auto view = m_world->registry().view<Chunk>();
+
+    for (auto offset : Chunk::Neighbors26) {
+        entt::entity neighborEntity = chunk.neighbor(offset);
+
+        if (m_world->registry().valid(neighborEntity)) {
+            auto& neighbor = view.get(neighborEntity);
+            neighborChunks[root + offset] = &neighbor;
+        } else {
+            neighborChunks[root + offset] = nullptr;
+        }
+    }
+
+    updateLight(chunk, neighborChunks);
+
+    size_t updateIndex = makeMesh(chunk, chunkMesh, neighborChunks);
+    m_resultQueue.enqueue({ updateIndex, entity });
+}
+
+void ChunkUpdater::updateLight(Chunk& chunk, ChunkData<Chunk*, 3>& neighborChunks) {
+    std::queue<LightUpdate> queue;
+    const glm::ivec3 root = { 1, 1, 1 };
+
+    auto lightUpdates = chunk.getLightUpdates().swapDequeue();
+
+    while (lightUpdates.size() > 0) {
+        queue.push(lightUpdates.front());
+        lightUpdates.pop();
+    }
+
+    while (queue.size() > 0) {
+        auto light = queue.front().light;
+        auto pos = queue.front().inChunkPos;
+        queue.pop();
+
+        if (!(chunk.light()[pos] < light)) continue;
+
+        chunk.light()[pos].overwrite(light);
+
+        for (auto offset : Chunk::Neighbors6) {
+            glm::ivec3 neighborPos = pos + offset;
+            auto neighborResults = Chunk::split(neighborPos);
+            glm::ivec3 neighborChunkOffset = neighborResults[0];
+            glm::ivec3 neighborPosMod = neighborResults[1];
+
+            int32_t loss = 1;
+
+            if (offset == glm::ivec3(0, 1, 0) || offset == glm::ivec3(0, -1, 0)) {
+                loss = 0;
+            }
+
+            Light newLight(std::max<int8_t>(0, light.sun - loss));
+
+            if (neighborChunkOffset == glm::ivec3()) {
+                Block& block = chunk.blocks()[neighborPosMod];
+
+                if (block.type > 1) continue;
+
+                Light& currentLight = chunk.light()[neighborPosMod];
+                if (newLight > currentLight) {
+                    queue.push({ newLight, neighborPosMod });
+                }
+            } else {
+                Chunk* neighborChunk = neighborChunks[root + neighborChunkOffset];
+
+                if (neighborChunk != nullptr) {
+                    neighborChunk->getLightUpdates().enqueue({ newLight, neighborPosMod });
+                    m_world->update(neighborChunk->worldChunkPosition(), neighborChunk->neighbor({}));
+                }
+            }
+        }
     }
 }
 
@@ -99,7 +176,7 @@ int32_t ChunkUpdater::calculateAmbientOcclusion(int32_t corner, int32_t side1, i
     return side1 + side2 + corner;
 }
 
-size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
+size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh, ChunkData<Chunk*, 3>& neighborChunks) {
     size_t index = m_updateIndex;
     m_updateIndex = (m_updateIndex + 1) % (queueSize * 2);
 
@@ -113,19 +190,6 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
 
     auto view = m_world->registry().view<Chunk>();
 
-    ChunkData<Chunk*, 3> neighborChunks;
-
-    for (auto offset : Chunk::Neighbors26) {
-        entt::entity neighborEntity = chunk.neighbor(offset);
-
-        if (m_world->registry().valid(neighborEntity)) {
-            auto& neighbor = view.get(neighborEntity);
-            neighborChunks[root + offset] = &neighbor;
-        } else {
-            neighborChunks[root + offset] = nullptr;
-        }
-    }
-
     for (glm::ivec3 pos : Chunk::Positions()) {
         Block block = chunk.blocks()[pos];
         if (block.type == 0) continue;
@@ -133,6 +197,7 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
         BlockType& blockType = m_blockManager->getType(block.type);
 
         ChunkData<Block, 3> neighborBlocks;
+        ChunkData<Light, 3> neighborLight;
 
         for (auto offset : Chunk::Neighbors26) {
             glm::ivec3 neighborPos = pos + offset;
@@ -142,30 +207,39 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh) {
 
             if (neighborChunkOffset == glm::ivec3()) {
                 neighborBlocks[root + offset] = chunk.blocks()[neighborPosMod];
+                neighborLight[root + offset] = chunk.light()[neighborPosMod];
             } else {
                 Block block = {};
+                Light light(15);
+
                 Chunk* neighborChunk = neighborChunks[root + neighborChunkOffset];
 
                 if (neighborChunk != nullptr) {
                     block = neighborChunk->blocks()[neighborPosMod];
+                    light = neighborChunk->light()[neighborPosMod];
                 }
                 
                 neighborBlocks[root + offset] = block;
+                neighborLight[root + offset] = light;
             }
         }
 
         for (size_t i = 0; i < Chunk::Neighbors6.size(); i++) {
             glm::ivec3 offset = Chunk::Neighbors6[i];
             glm::ivec3 neighborPos = pos + offset;
+            glm::ivec3 worldNeighborPos = neighborPos + (chunk.worldChunkPosition() * Chunk::chunkSize);
 
-            bool visible = neighborBlocks[root + offset].type == 1;
+            const int32_t worldHeightMin = 0;
+            const int32_t worldHeightMax = World::worldHeight * Chunk::chunkSize;
+
+            bool visible = neighborBlocks[root + offset].type == 1 || worldNeighborPos.y >= worldHeightMax || worldNeighborPos.y < worldHeightMin;
 
             if (visible) {
                 const Chunk::FaceData& faceData = Chunk::NeighborFaces[i];
                 size_t faceIndex = blockType.getFaceIndex(i);
 
                 for (size_t j = 0; j < faceData.vertices.size(); j++) {
-                    int32_t light = 15;
+                    int32_t light = neighborLight[root + offset].sun;
 
                     std::array<int32_t, 3> sides;
 

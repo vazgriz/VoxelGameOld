@@ -91,21 +91,30 @@ void TerrainGenerator::generate(glm::ivec2 coord) {
     }
 
     auto lock = m_world->getWriteLock();
+
+    std::array<Chunk*, World::worldHeight> chunks;
     auto view = m_world->registry().view<Chunk>();
 
     for (int32_t i = 0; i < World::worldHeight; i++) {
         glm::ivec3 worldChunkPos = { coord.x, i, coord.y };
         entt::entity entity = m_world->getEntity(worldChunkPos);
         if (!m_world->registry().valid(entity)) return;
+        chunks[i] = &view.get(entity);
+    }
 
-        auto& chunk = view.get(entity);
+    for (int32_t i = 0; i < World::worldHeight; i++) {
+        glm::ivec3 worldChunkPos = { coord.x, i, coord.y };
+        auto& chunk = *chunks[i];
 
         for (auto pos : Chunk::Positions()) {
             auto& block = chunk.blocks()[pos];
+            auto& light = chunk.light()[pos];
             glm::ivec3 worldPos = worldChunkPos * Chunk::chunkSize + pos;
 
             int32_t ground = values[pos.x][pos.z];
             bool caveValue = caveValues[i][pos];
+
+            light = {};
 
             if (worldPos.y > ground) {
                 block.type = 1;
@@ -120,6 +129,32 @@ void TerrainGenerator::generate(glm::ivec2 coord) {
                 block.type = 2;
             } else if (worldPos.y < ground - dirtDepth) {
                 block.type = 4;
+            }
+        }
+    }
+
+    for (int32_t x = 0; x < Chunk::chunkSize; x++) {
+        for (int32_t z = 0; z < Chunk::chunkSize; z++) {
+            for (int32_t y = (Chunk::chunkSize * World::worldHeight) - 1; y >= 0; y--) {
+                glm::ivec3 worldPos = { x, y, z };
+                auto result = Chunk::divide(y, Chunk::chunkSize);
+                auto& chunk = *chunks[result[0]];
+                glm::ivec3 pos = { x, result[1], z };
+
+                if (chunk.blocks()[pos].type > 1) break;
+
+                chunk.getLightUpdates().enqueue({ { 15 }, pos });
+            }
+
+            for (int32_t y = 0; y < Chunk::chunkSize * World::worldHeight; y++) {
+                glm::ivec3 worldPos = { x, y, z };
+                auto result = Chunk::divide(y, Chunk::chunkSize);
+                auto& chunk = *chunks[result[0]];
+                glm::ivec3 pos = { x, result[1], z };
+
+                if (chunk.blocks()[pos].type > 1) break;
+
+                chunk.getLightUpdates().enqueue({ { 15 }, pos });
             }
         }
     }

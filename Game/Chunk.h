@@ -1,6 +1,8 @@
 #pragma once
 #include <stdint.h>
 #include <Engine/math.h>
+#include <Engine/BlockingQueue.h>
+#include <Engine/BufferedQueue.h>
 #include <array>
 #include <entt/entt.hpp>
 
@@ -27,6 +29,24 @@ struct Block {
 
     Block() : type(0) {}
     Block(size_t type) : type(static_cast<uint8_t>(type)) {}
+};
+
+struct Light {
+    int8_t sun;
+
+    Light() : sun(0) {}
+    Light(int32_t sun) : sun(static_cast<int8_t>(sun)) {}
+
+    bool operator > (Light& other);
+    bool operator < (Light& other);
+    bool operator == (Light& other);
+
+    void overwrite(Light& other);
+};
+
+struct LightUpdate {
+    Light light;
+    glm::ivec3 inChunkPos;
 };
 
 template <typename T, size_t Size>
@@ -127,6 +147,11 @@ public:
 
     ChunkData<Block, chunkSize>& blocks() { return m_blocks; }
     const ChunkData<Block, chunkSize>& blocks() const { return m_blocks; }
+
+    ChunkData<Light, chunkSize>& light() { return m_light; }
+    const ChunkData<Light, chunkSize>& light() const { return m_light; }
+
+    VoxelEngine::BufferedQueue<LightUpdate>& getLightUpdates() { return *m_lightUpdates; };
 
     static constexpr std::array<glm::ivec3, 6> Neighbors6 = {
         glm::ivec3(1, 0, 0),    //right
@@ -404,6 +429,8 @@ private:
 
     glm::ivec3 m_worldChunkPosition;
     ChunkData<Block, chunkSize> m_blocks;
+    ChunkData<Light, chunkSize> m_light;
     ChunkLoadState m_loadState;
     std::array<std::array<std::array<entt::entity, 3>, 3>, 3 > m_neighbors;
+    std::unique_ptr<VoxelEngine::BufferedQueue<LightUpdate>> m_lightUpdates;
 };

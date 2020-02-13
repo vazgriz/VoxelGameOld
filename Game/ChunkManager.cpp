@@ -213,6 +213,14 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
         m_updateQueue.enqueue(item.pos, item.entity);
         m_updateRequeue.pop();
     }
+
+    auto& worldUpdates = m_world->getUpdates();
+
+    while (worldUpdates.size() > 0) {
+        auto update = worldUpdates.front();
+        m_updateQueue.enqueue(update.worldChunkPos, update.chunkEntity);
+        worldUpdates.pop();
+    }
 }
 
 ChunkGroup& ChunkManager::makeChunkGroup(glm::ivec2 coord) {

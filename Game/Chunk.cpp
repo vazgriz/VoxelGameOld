@@ -1,5 +1,23 @@
 #include "Chunk.h"
 
+bool Light::operator > (Light& other) {
+    return sun > other.sun;
+}
+
+bool Light::operator < (Light& other) {
+    return sun < other.sun;
+}
+
+bool Light::operator == (Light& other) {
+    return sun == other.sun;
+}
+
+void Light::overwrite(Light& other) {
+    if (other.sun > sun) {
+        sun = other.sun;
+    }
+}
+
 Chunk::PositionIterator::PositionIterator() {
     state = {};
 }
@@ -50,6 +68,8 @@ Chunk::Chunk(entt::entity entity, glm::ivec3 pos) : m_neighbors() {
     m_loadState = ChunkLoadState::Loading;
 
     m_neighbors[1][1][1] = entity;
+
+    m_lightUpdates = std::make_unique<VoxelEngine::BufferedQueue<LightUpdate>>();
 }
 
 entt::entity Chunk::neighbor(glm::ivec3 offset) {
