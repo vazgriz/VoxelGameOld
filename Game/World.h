@@ -46,4 +46,5 @@ private:
     entt::registry m_registry;
     std::unordered_map<glm::ivec3, entt::entity> m_chunkMap;
     VoxelEngine::BufferedQueue<WorldUpdate> m_worldUpdates;
+    std::queue<entt::entity> m_recycleQueue;
 };

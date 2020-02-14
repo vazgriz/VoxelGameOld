@@ -17,9 +17,16 @@ std::unique_lock<std::shared_mutex> World::getWriteLock() {
 }
 
 entt::entity World::createChunk(glm::ivec3 worldChunkPos) {
-    entt::entity chunkEntity = m_registry.create();
-    m_registry.assign<Chunk>(chunkEntity, chunkEntity, worldChunkPos);
-    m_registry.assign<ChunkMesh>(chunkEntity);
+    entt::entity chunkEntity;
+    
+    if (m_recycleQueue.size() > 0) {
+        chunkEntity = m_recycleQueue.front();
+        m_recycleQueue.pop();
+    } else {
+        chunkEntity = m_registry.create();
+        m_registry.assign<Chunk>(chunkEntity, chunkEntity, worldChunkPos);
+        m_registry.assign<ChunkMesh>(chunkEntity);
+    }
 
     m_chunkMap.insert({ worldChunkPos, chunkEntity });
 
@@ -28,7 +35,7 @@ entt::entity World::createChunk(glm::ivec3 worldChunkPos) {
 
 void World::destroyChunk(glm::ivec3 worldChunkPos, entt::entity entity) {
     if (m_chunkMap.erase(worldChunkPos) == 1) {
-        m_registry.destroy(entity);
+        m_recycleQueue.push(entity);
     }
 }
 
