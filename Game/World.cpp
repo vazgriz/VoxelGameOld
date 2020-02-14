@@ -22,6 +22,9 @@ entt::entity World::createChunk(glm::ivec3 worldChunkPos) {
     if (m_recycleQueue.size() > 0) {
         chunkEntity = m_recycleQueue.front();
         m_recycleQueue.pop();
+
+        auto view = m_registry.view<Chunk>();
+        view.get(chunkEntity).setWorldChunkPosition(worldChunkPos);
     } else {
         chunkEntity = m_registry.create();
         m_registry.assign<Chunk>(chunkEntity, chunkEntity, worldChunkPos);
