@@ -3,10 +3,15 @@
 #include <Engine/math.h>
 #include <thread>
 #include <FastNoise.h>
+#include "Chunk.h"
+#include "World.h"
 
-class ChunkGroup;
 class ChunkManager;
-class World;
+
+struct TerrainResults {
+    glm::ivec2 coord;
+    std::array<ChunkData<Block, Chunk::chunkSize>, World::worldHeight> blocks;
+};
 
 class TerrainGenerator {
 public:

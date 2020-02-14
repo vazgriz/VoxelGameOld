@@ -12,6 +12,7 @@
 #include "PriorityQueue.h"
 
 class TerrainGenerator;
+struct TerrainResults;
 class ChunkUpdater;
 
 class ChunkGroup {
@@ -54,7 +55,7 @@ public:
     void setTerrainGenerator(TerrainGenerator& terrainGenerator);
     void setChunkUpdater(ChunkUpdater& chunkUpdater);
 
-    VoxelEngine::BufferedQueue<glm::ivec2>& generateResultQueue() { return m_generateResultQueue; }
+    VoxelEngine::BufferedQueue<TerrainResults>& generateResultQueue() { return m_generateResultQueue; }
 
     void update(VoxelEngine::Clock& clock);
 
@@ -70,7 +71,7 @@ private:
     int32_t m_viewDistance2;
 
     PriorityQueue<glm::ivec2> m_generateQueue;
-    VoxelEngine::BufferedQueue<glm::ivec2> m_generateResultQueue;
+    VoxelEngine::BufferedQueue<TerrainResults> m_generateResultQueue;
     PriorityQueue<entt::entity> m_updateQueue;
 
     struct Requeue {
