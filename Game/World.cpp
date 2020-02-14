@@ -29,12 +29,14 @@ entt::entity World::createChunk(glm::ivec3 worldChunkPos) {
     }
 
     m_chunkMap.insert({ worldChunkPos, chunkEntity });
+    m_chunkSet.insert(chunkEntity);
 
     return chunkEntity;
 }
 
 void World::destroyChunk(glm::ivec3 worldChunkPos, entt::entity entity) {
     if (m_chunkMap.erase(worldChunkPos) == 1) {
+        m_chunkSet.erase(entity);
         m_recycleQueue.push(entity);
     }
 }
@@ -64,6 +66,14 @@ ChunkMesh* World::getChunkMesh(glm::ivec3 worldChunkPos) {
     }
 
     return &m_registry.view<ChunkMesh>().get(entity);
+}
+
+bool World::valid(glm::ivec3 coord) {
+    return getEntity(coord) != entt::null;
+}
+
+bool World::valid(entt::entity entity) {
+    return m_chunkSet.count(entity) != 0;
 }
 
 Block& World::getBlock(glm::ivec3 worldPos) {

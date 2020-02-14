@@ -125,8 +125,8 @@ void TerrainGenerator::generate(glm::ivec2 coord) {
 
     for (int32_t i = 0; i < World::worldHeight; i++) {
         glm::ivec3 worldChunkPos = { coord.x, i, coord.y };
+        if (!m_world->valid(worldChunkPos)) return;
         entt::entity entity = m_world->getEntity(worldChunkPos);
-        if (!m_world->registry().valid(entity)) return;
         chunks[i] = &view.get(entity);
     }
 

@@ -1,6 +1,7 @@
 #pragma once
 #include <entt/entt.hpp>
 #include <unordered_map>
+#include <unordered_set>
 #include <Engine/math.h>
 #include <Engine/BufferedQueue.h>
 #include <shared_mutex>
@@ -32,6 +33,9 @@ public:
     Chunk* getChunk(glm::ivec3 worldChunkPos);
     ChunkMesh* getChunkMesh(glm::ivec3 worldChunkPos);
 
+    bool valid(glm::ivec3 coord);
+    bool valid(entt::entity entity);
+
     Block& getBlock(glm::ivec3 worldPos);
 
     void update(glm::ivec3 worldPosition);
@@ -44,6 +48,7 @@ private:
     static Block m_airBlock;
     std::shared_mutex m_mutex;
     entt::registry m_registry;
+    std::unordered_set<entt::entity> m_chunkSet;
     std::unordered_map<glm::ivec3, entt::entity> m_chunkMap;
     VoxelEngine::BufferedQueue<WorldUpdate> m_worldUpdates;
     std::queue<entt::entity> m_recycleQueue;
