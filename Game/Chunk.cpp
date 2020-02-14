@@ -70,6 +70,9 @@ Chunk::Chunk(entt::entity entity, glm::ivec3 pos) : m_neighbors() {
     m_neighbors[1][1][1] = entity;
 
     m_lightUpdates = std::make_unique<VoxelEngine::BufferedQueue<LightUpdate>>();
+
+    m_blocks = std::make_unique<ChunkData<Block, chunkSize>>();
+    m_light = std::make_unique<ChunkData<Light, chunkSize>>();
 }
 
 entt::entity Chunk::neighbor(glm::ivec3 offset) {

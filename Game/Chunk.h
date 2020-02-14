@@ -126,6 +126,10 @@ public:
     };
 
     Chunk(entt::entity entity, glm::ivec3 pos);
+    Chunk(const Chunk& other) = delete;
+    Chunk& operator = (const Chunk& other) = delete;
+    Chunk(Chunk&& other) = default;
+    Chunk& operator = (Chunk&& other) = default;
 
     glm::ivec3 worldChunkPosition() const { return m_worldChunkPosition; }
 
@@ -145,11 +149,11 @@ public:
     static glm::ivec3 chunkToWorld(glm::ivec3 chunkPos, glm::ivec3 worldChunkPos);
     static std::array<glm::ivec3, 2> split(glm::ivec3 worldPos);
 
-    ChunkData<Block, chunkSize>& blocks() { return m_blocks; }
-    const ChunkData<Block, chunkSize>& blocks() const { return m_blocks; }
+    ChunkData<Block, chunkSize>& blocks() { return *m_blocks; }
+    const ChunkData<Block, chunkSize>& blocks() const { return *m_blocks; }
 
-    ChunkData<Light, chunkSize>& light() { return m_light; }
-    const ChunkData<Light, chunkSize>& light() const { return m_light; }
+    ChunkData<Light, chunkSize>& light() { return *m_light; }
+    const ChunkData<Light, chunkSize>& light() const { return *m_light; }
 
     VoxelEngine::BufferedQueue<LightUpdate>& getLightUpdates() { return *m_lightUpdates; };
 
@@ -174,8 +178,8 @@ private:
     static const int32_t shiftAmount = 4;
 
     glm::ivec3 m_worldChunkPosition;
-    ChunkData<Block, chunkSize> m_blocks;
-    ChunkData<Light, chunkSize> m_light;
+    std::unique_ptr<ChunkData<Block, chunkSize>> m_blocks;
+    std::unique_ptr<ChunkData<Light, chunkSize>> m_light;
     ChunkLoadState m_loadState;
     std::array<std::array<std::array<entt::entity, 3>, 3>, 3 > m_neighbors;
     std::unique_ptr<VoxelEngine::BufferedQueue<LightUpdate>> m_lightUpdates;
