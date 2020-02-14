@@ -82,6 +82,9 @@ public:
         return result;
     }
 
+    T* data() { return m_data.data(); }
+    const T* data() const { return m_data.data(); }
+
 private:
     Array m_data;
 };
