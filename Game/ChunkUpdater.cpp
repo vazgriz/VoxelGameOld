@@ -281,6 +281,8 @@ void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh, size_t index) {
         return;
     }
 
+    chunkMesh.mesh().setIndexCount(update.indexCount);
+
     size_t vertexSize = update.vertexData.size() * sizeof(glm::i8vec4);
     size_t colorSize = update.colorData.size() * sizeof(glm::i8vec4);
     size_t uvSize = update.uvData.size() * sizeof(glm::i8vec4);
@@ -310,7 +312,6 @@ void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh, size_t index) {
         chunkMesh.mesh().addBinding(uvBuffer);
 
         chunkMesh.mesh().setIndexBuffer(m_indexBuffer, vk::IndexType::Uint32, 0);
-        chunkMesh.mesh().setIndexCount(update.indexCount);
     }
 
     m_transferNode->transfer(*chunkMesh.mesh().getBinding(0), vertexSize, 0, update.vertexData.data());

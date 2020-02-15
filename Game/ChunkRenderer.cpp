@@ -120,7 +120,7 @@ void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuff
 
         auto& mesh = view.get<ChunkMesh>(entity);
 
-        if (mesh.mesh().hasIndexBuffer()) {
+        if (!mesh.isEmpty()) {
             glm::ivec4 transform = glm::ivec4(chunk.worldChunkPosition(), 0) * Chunk::chunkSize;
             commandBuffer.pushConstants(*m_pipelineLayout, vk::ShaderStageFlags::Vertex, 0, sizeof(glm::ivec4), &transform);
             mesh.mesh().drawIndexed(commandBuffer);

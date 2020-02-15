@@ -14,6 +14,7 @@ public:
     void clearDirty() { m_dirty = false; }
 
     void clearMesh();
+    bool isEmpty() const;
 
 private:
     VoxelEngine::Mesh m_mesh;
