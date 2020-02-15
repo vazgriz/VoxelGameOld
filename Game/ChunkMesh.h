@@ -13,6 +13,8 @@ public:
     void setDirty() { m_dirty = true; }
     void clearDirty() { m_dirty = false; }
 
+    void clearMesh();
+
 private:
     VoxelEngine::Mesh m_mesh;
     bool m_dirty = false;

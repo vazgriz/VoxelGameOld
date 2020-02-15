@@ -277,8 +277,7 @@ void ChunkUpdater::transferMesh(ChunkMesh& chunkMesh, size_t index) {
     MeshUpdate& update = m_updates[index];
 
     if (update.indexCount == 0) {
-        chunkMesh.mesh().setIndexCount(0);
-        chunkMesh.mesh().setIndexBuffer(nullptr, vk::IndexType::Uint32, 0);
+        chunkMesh.clearMesh();
         return;
     }
 
