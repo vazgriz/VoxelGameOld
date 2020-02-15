@@ -17,7 +17,7 @@ struct MeshUpdate {
 
 struct MeshUpdate2{
     size_t index;
-    entt::entity entity;
+    glm::ivec3 coord;
 };
 
 class ChunkUpdater : public VoxelEngine::System {
@@ -32,9 +32,12 @@ public:
     void run();
     void stop();
 
-    bool queue(entt::entity);
+    bool queue(glm::ivec3 coord);
 
 private:
+    using ChunkBuffer = ChunkData<Block, Chunk::chunkSize + 2>;
+    using LightBuffer = ChunkData<Light, Chunk::chunkSize + 2>;
+
     VoxelEngine::Engine* m_engine;
     VoxelEngine::TransferNode* m_transferNode;
     BlockManager* m_blockManager;
@@ -50,15 +53,15 @@ private:
 
     std::array<MeshUpdate, queueSize * 2> m_updates;
     size_t m_updateIndex = 0;
-    VoxelEngine::BlockingQueue<entt::entity> m_requestQueue;
+    VoxelEngine::BlockingQueue<glm::ivec3> m_requestQueue;
     VoxelEngine::BufferedQueue<MeshUpdate2> m_resultQueue;
 
-    void update(entt::entity entity, Chunk& chunk, ChunkMesh& chunkMesh);
+    void update(glm::ivec3 worldChunkPos);
 
-    void updateLight(Chunk& chunk, ChunkData<Chunk*, 3>& neighborChunks);
+    void updateLight(std::queue<LightUpdate>& queue, ChunkBuffer& chunkBuffer, LightBuffer& lightBuffer, ChunkData<Chunk*, 3>& neighborChunks);
 
     void createIndexBuffer();
-    size_t makeMesh(Chunk& chunk, ChunkMesh& chunkMesh, ChunkData<Chunk*, 3>& neighborChunks);
+    size_t makeMesh(glm::ivec3 worldChunkPos, ChunkBuffer& chunkBuffer, LightBuffer& lightBuffer);
     void transferMesh(ChunkMesh& chunkMesh, size_t index);
 
     void loop();

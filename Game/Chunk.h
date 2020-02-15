@@ -135,6 +135,7 @@ public:
     Chunk& operator = (Chunk&& other) = default;
 
     glm::ivec3 worldChunkPosition() const { return m_worldChunkPosition; }
+    void setWorldChunkPosition(glm::ivec3 worldChunkPos) { m_worldChunkPosition = worldChunkPos; }
 
     ChunkLoadState loadState() const { return m_loadState; }
     void setLoadState(ChunkLoadState loadState) { m_loadState = loadState; }

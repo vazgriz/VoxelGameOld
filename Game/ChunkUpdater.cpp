@@ -23,8 +23,9 @@ void ChunkUpdater::update(VoxelEngine::Clock& clock) {
 
     while (queue.size() > 0) {
         auto& update = queue.front();
-        if (m_world->registry().valid(update.entity)) {
-            transferMesh(view.get(update.entity), update.index);
+        auto entity = m_world->getEntity(update.coord);
+        if (entity != entt::null) {
+            transferMesh(view.get(entity), update.index);
         }
         queue.pop();
     }
@@ -41,69 +42,99 @@ void ChunkUpdater::stop() {
     m_thread.join();
 }
 
-bool ChunkUpdater::queue(entt::entity entity) {
-    return m_requestQueue.tryEnqueue(entity);
+bool ChunkUpdater::queue(glm::ivec3 coord) {
+    return m_requestQueue.tryEnqueue(coord);
 }
 
 void ChunkUpdater::loop() {
     while (m_running) {
-        entt::entity entity;
-        bool valid = m_requestQueue.dequeue(entity);
+        glm::ivec3 coord;
+        bool valid = m_requestQueue.dequeue(coord);
         if (!valid) return;
 
+        update(coord);
+    }
+}
+
+void ChunkUpdater::update(glm::ivec3 worldChunkPos) {
+    ChunkBuffer blocks;
+    LightBuffer light;
+    ChunkData<Chunk*, 3> neighborChunks;
+    const glm::ivec3 root = { 1, 1, 1 };
+    std::queue<LightUpdate> queue;
+
+    {
         auto lock = m_world->getReadLock();
-        if (!m_world->registry().valid(entity)) continue;
+        entt::entity entity = m_world->getEntity(worldChunkPos);
+        if (entity == entt::null) return;
 
         auto view = m_world->registry().view<Chunk, ChunkMesh>();
         Chunk& chunk = view.get<Chunk>(entity);
         ChunkMesh& chunkMesh = view.get<ChunkMesh>(entity);
 
-        update(entity, chunk, chunkMesh);
-    }
-}
+        for (auto offset : Chunk::Neighbors26) {
+            entt::entity neighborEntity = chunk.neighbor(offset);
 
-void ChunkUpdater::update(entt::entity entity, Chunk& chunk, ChunkMesh& chunkMesh) {
-    ChunkData<Chunk*, 3> neighborChunks;
-    const glm::ivec3 root = { 1, 1, 1 };
+            if (m_world->valid(neighborEntity)) {
+                auto& neighbor = view.get<Chunk>(neighborEntity);
+                neighborChunks[root + offset] = &neighbor;
+            } else {
+                neighborChunks[root + offset] = nullptr;
+            }
+        }
 
-    auto view = m_world->registry().view<Chunk>();
+        for (int32_t x = -1; x < Chunk::chunkSize + 1; x++) {
+            for (int32_t y = -1; y < Chunk::chunkSize + 1; y++) {
+                for (int32_t z = -1; z < Chunk::chunkSize + 1; z++) {
+                    glm::ivec3 pos = { x, y, z };
+                    auto results = Chunk::split(pos);
+                    glm::ivec3 chunkOffset = results[0];
+                    glm::ivec3 posMod = results[1];
 
-    for (auto offset : Chunk::Neighbors26) {
-        entt::entity neighborEntity = chunk.neighbor(offset);
+                    if (chunkOffset == glm::ivec3()) {
+                        blocks[root + pos] = chunk.blocks()[posMod];
+                        light[root + pos] = chunk.light()[posMod];
+                    } else {
+                        auto neighborChunk = neighborChunks[root + chunkOffset];
 
-        if (m_world->registry().valid(neighborEntity)) {
-            auto& neighbor = view.get(neighborEntity);
-            neighborChunks[root + offset] = &neighbor;
-        } else {
-            neighborChunks[root + offset] = nullptr;
+                        if (neighborChunk != nullptr) {
+                            blocks[root + pos] = neighborChunk->blocks()[posMod];
+                            light[root + pos] = neighborChunk->light()[posMod];
+                        } else {
+                            blocks[root + pos] = Block(0);
+                            light[root + pos] = Light(15);
+                        }
+                    }
+                }
+            }
+        }
+
+        auto& lightUpdates = chunk.getLightUpdates().swapDequeue();
+
+        while (lightUpdates.size() > 0) {
+            auto update = lightUpdates.front();
+            lightUpdates.pop();
+            queue.push(update);
         }
     }
 
-    updateLight(chunk, neighborChunks);
+    updateLight(queue, blocks, light, neighborChunks);
 
-    size_t updateIndex = makeMesh(chunk, chunkMesh, neighborChunks);
-    m_resultQueue.enqueue({ updateIndex, entity });
+    size_t updateIndex = makeMesh(worldChunkPos, blocks, light);
+    m_resultQueue.enqueue({ updateIndex, worldChunkPos });
 }
 
-void ChunkUpdater::updateLight(Chunk& chunk, ChunkData<Chunk*, 3>& neighborChunks) {
-    std::queue<LightUpdate> queue;
+void ChunkUpdater::updateLight(std::queue<LightUpdate>& queue, ChunkBuffer& chunkBuffer, LightBuffer& lightBuffer, ChunkData<Chunk*, 3>& neighborChunks) {
     const glm::ivec3 root = { 1, 1, 1 };
-
-    auto lightUpdates = chunk.getLightUpdates().swapDequeue();
-
-    while (lightUpdates.size() > 0) {
-        queue.push(lightUpdates.front());
-        lightUpdates.pop();
-    }
 
     while (queue.size() > 0) {
         auto light = queue.front().light;
         auto pos = queue.front().inChunkPos;
         queue.pop();
 
-        if (!(chunk.light()[pos] < light)) continue;
+        if (!(lightBuffer[root + pos] < light)) continue;
 
-        chunk.light()[pos].overwrite(light);
+        lightBuffer[root + pos].overwrite(light);
 
         for (auto offset : Chunk::Neighbors6) {
             glm::ivec3 neighborPos = pos + offset;
@@ -120,21 +151,21 @@ void ChunkUpdater::updateLight(Chunk& chunk, ChunkData<Chunk*, 3>& neighborChunk
             Light newLight(std::max<int8_t>(0, light.sun - loss));
 
             if (neighborChunkOffset == glm::ivec3()) {
-                Block& block = chunk.blocks()[neighborPosMod];
+                Block& block = chunkBuffer[root + neighborPosMod];
 
                 if (block.type > 1) continue;
 
-                Light& currentLight = chunk.light()[neighborPosMod];
+                Light& currentLight = lightBuffer[root + neighborPosMod];
                 if (newLight > currentLight) {
                     queue.push({ newLight, neighborPosMod });
                 }
             } else {
-                Chunk* neighborChunk = neighborChunks[root + neighborChunkOffset];
-
-                if (neighborChunk != nullptr) {
-                    neighborChunk->getLightUpdates().enqueue({ newLight, neighborPosMod });
-                    m_world->update(neighborChunk->worldChunkPosition(), neighborChunk->neighbor({}));
-                }
+                //Chunk* neighborChunk = neighborChunks[root + neighborChunkOffset];
+                //
+                //if (neighborChunk != nullptr) {
+                //    neighborChunk->getLightUpdates().enqueue({ newLight, neighborPosMod });
+                //    m_world->update(neighborChunk->worldChunkPosition());
+                //}
             }
         }
     }
@@ -168,7 +199,7 @@ void ChunkUpdater::createIndexBuffer() {
     m_indexBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, info, allocInfo);
 }
 
-size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh, ChunkData<Chunk*, 3>& neighborChunks) {
+size_t ChunkUpdater::makeMesh(glm::ivec3 worldChunkPos, ChunkBuffer& chunkBuffer, LightBuffer& lightBuffer) {
     size_t index = m_updateIndex;
     m_updateIndex = (m_updateIndex + 1) % (queueSize * 2);
 
@@ -183,7 +214,7 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh, ChunkData<Chun
     auto view = m_world->registry().view<Chunk>();
 
     for (glm::ivec3 pos : Chunk::Positions()) {
-        Block block = chunk.blocks()[pos];
+        Block block = chunkBuffer[root + pos];
         if (block.type == 0) continue;
         if (block.type == 1) continue;
         BlockType& blockType = m_blockManager->getType(block.type);
@@ -192,34 +223,14 @@ size_t ChunkUpdater::makeMesh(Chunk& chunk, ChunkMesh& chunkMesh, ChunkData<Chun
         ChunkData<Light, 3> neighborLight;
 
         for (auto offset : Chunk::Neighbors26) {
-            glm::ivec3 neighborPos = pos + offset;
-            auto neighborResults = Chunk::split(neighborPos);
-            glm::ivec3 neighborChunkOffset = neighborResults[0];
-            glm::ivec3 neighborPosMod = neighborResults[1];
-
-            if (neighborChunkOffset == glm::ivec3()) {
-                neighborBlocks[root + offset] = chunk.blocks()[neighborPosMod];
-                neighborLight[root + offset] = chunk.light()[neighborPosMod];
-            } else {
-                Block block = {};
-                Light light(15);
-
-                Chunk* neighborChunk = neighborChunks[root + neighborChunkOffset];
-
-                if (neighborChunk != nullptr) {
-                    block = neighborChunk->blocks()[neighborPosMod];
-                    light = neighborChunk->light()[neighborPosMod];
-                }
-                
-                neighborBlocks[root + offset] = block;
-                neighborLight[root + offset] = light;
-            }
+            neighborBlocks[root + offset] = chunkBuffer[root + pos + offset];
+            neighborLight[root + offset] = lightBuffer[root + pos + offset];
         }
 
         for (size_t i = 0; i < Chunk::Neighbors6.size(); i++) {
             glm::ivec3 offset = Chunk::Neighbors6[i];
             glm::ivec3 neighborPos = pos + offset;
-            glm::ivec3 worldNeighborPos = neighborPos + (chunk.worldChunkPosition() * Chunk::chunkSize);
+            glm::ivec3 worldNeighborPos = neighborPos + (worldChunkPos * Chunk::chunkSize);
 
             const int32_t worldHeightMin = 0;
             const int32_t worldHeightMax = World::worldHeight * Chunk::chunkSize;

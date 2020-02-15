@@ -72,13 +72,8 @@ private:
 
     PriorityQueue<glm::ivec2> m_generateQueue;
     VoxelEngine::BufferedQueue<TerrainResults> m_generateResultQueue;
-    PriorityQueue<entt::entity> m_updateQueue;
-
-    struct Requeue {
-        glm::ivec3 pos;
-        entt::entity entity;
-    };
-    std::queue<Requeue> m_updateRequeue;
+    PriorityQueue<glm::ivec3> m_updateQueue;
+    std::queue<glm::ivec3> m_updateRequeue;
 
     ChunkGroup& makeChunkGroup(glm::ivec2 coord);
     ChunkMap::iterator destroyChunkGroup(ChunkMap::iterator it, glm::ivec2 coord);
