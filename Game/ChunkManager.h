@@ -70,9 +70,9 @@ private:
     int32_t m_viewDistance;
     int32_t m_viewDistance2;
 
-    PriorityQueue<glm::ivec2> m_generateQueue;
+    PriorityQueue m_generateQueue;
     VoxelEngine::BufferedQueue<TerrainResults> m_generateResultQueue;
-    PriorityQueue<glm::ivec3> m_updateQueue;
+    PriorityQueue m_updateQueue;
     std::queue<glm::ivec3> m_updateRequeue;
 
     ChunkGroup& makeChunkGroup(glm::ivec2 coord);

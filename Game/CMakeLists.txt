@@ -35,6 +35,7 @@ add_executable("Game"
     World.h
     World.cpp
     PriorityQueue.h
+    PriorityQueue.cpp
     TerrainGenerator.h
     TerrainGenerator.cpp
     SkyboxManager.h
