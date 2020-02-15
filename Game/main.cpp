@@ -11,6 +11,7 @@
 #include "Chunk.h"
 #include "ChunkMesh.h"
 #include "ChunkUpdater.h"
+#include "ChunkMesher.h"
 #include "ChunkManager.h"
 #include "TextureManager.h"
 #include "BlockManager.h"
@@ -54,18 +55,22 @@ int main() {
     TerrainGenerator terrainGenerator(world, chunkManager);
     terrainGenerator.run();
 
-    ChunkUpdater chunkUpdater(engine, world, blockManager);
-    engine.getUpdateGroup().add(chunkUpdater, 30);
+    ChunkUpdater chunkUpdater(engine, world, blockManager, chunkManager);
     chunkUpdater.run();
+
+    ChunkMesher chunkMesher(engine, world, blockManager);
+    engine.getUpdateGroup().add(chunkMesher, 30);
+    chunkMesher.run();
 
     chunkManager.setTerrainGenerator(terrainGenerator);
     chunkManager.setChunkUpdater(chunkUpdater);
+    chunkManager.setChunkMesher(chunkMesher);
 
     Renderer renderer(engine, renderGraph, cameraSystem, world, textureManager, skyboxManager);
     engine.getUpdateGroup().add(renderer, 100);
 
     cameraSystem.setTransferNode(renderer.transferNode());
-    chunkUpdater.setTransferNode(renderer.transferNode());
+    chunkMesher.setTransferNode(renderer.transferNode());
     textureManager.createTexture(renderer.transferNode(), renderer.mipmapGenerator());
     skyboxManager.transfer(renderer.transferNode());
     skyboxManager.createPipeline(renderer.chunkRenderer().renderPass());
@@ -74,6 +79,7 @@ int main() {
 
     terrainGenerator.stop();
     chunkUpdater.stop();
+    chunkMesher.stop();
     renderer.wait();
 
     return 0;

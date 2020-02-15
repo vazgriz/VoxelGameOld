@@ -1,34 +1,22 @@
 #pragma once
 #include <Engine/Engine.h>
-#include <Engine/RenderGraph/TransferNode.h>
 #include <Engine/BlockingQueue.h>
 #include <Engine/BufferedQueue.h>
 #include <entt/entt.hpp>
 #include "Chunk.h"
-#include "BlockManager.h"
 #include "World.h"
+#include "BlockManager.h"
+#include "ChunkManager.h"
 
-struct MeshUpdate {
-    std::vector<glm::i8vec4> vertexData;
-    std::vector<glm::i8vec4> colorData;
-    std::vector<glm::i8vec4> uvData;
-    uint32_t indexCount;
-};
-
-struct MeshUpdate2{
-    size_t index;
-    glm::ivec3 coord;
+struct UpdateResults {
+    glm::ivec3 worldChunkPos;
     ChunkData<Light, Chunk::chunkSize + 2> lightBuffer;
 };
 
-class ChunkUpdater : public VoxelEngine::System {
+class ChunkUpdater {
 public:
     static const size_t queueSize = 16;
-    ChunkUpdater(VoxelEngine::Engine& engine, World& world, BlockManager& blockManager);
-
-    void setTransferNode(VoxelEngine::TransferNode& transferNode);
-
-    void update(VoxelEngine::Clock& clock);
+    ChunkUpdater(VoxelEngine::Engine& engine, World& world, BlockManager& blockManager, ChunkManager& chunkManager);
 
     void run();
     void stop();
@@ -40,30 +28,17 @@ private:
     using LightBuffer = ChunkData<Light, Chunk::chunkSize + 2>;
 
     VoxelEngine::Engine* m_engine;
-    VoxelEngine::TransferNode* m_transferNode;
-    BlockManager* m_blockManager;
     World* m_world;
+    BlockManager* m_blockManager;
+    ChunkManager* m_chunkManager;
 
     bool m_running = false;
     std::thread m_thread;
 
-    std::vector<uint32_t> m_indexData;
-    size_t m_indexBufferSize;
-    uint32_t m_indexCount;
-    std::shared_ptr<VoxelEngine::Buffer> m_indexBuffer;
-
-    std::array<MeshUpdate, queueSize * 2> m_updates;
-    size_t m_updateIndex = 0;
     VoxelEngine::BlockingQueue<glm::ivec3> m_requestQueue;
-    VoxelEngine::BufferedQueue<MeshUpdate2> m_resultQueue;
 
     void update(glm::ivec3 worldChunkPos);
-
     void updateLight(std::queue<LightUpdate>& queue, ChunkBuffer& chunkBuffer, LightBuffer& lightBuffer, ChunkData<Chunk*, 3>& neighborChunks);
-
-    void createIndexBuffer();
-    size_t makeMesh(glm::ivec3 worldChunkPos, ChunkBuffer& chunkBuffer, LightBuffer& lightBuffer);
-    void transferMesh(ChunkMesh& chunkMesh, size_t index);
 
     void loop();
 };

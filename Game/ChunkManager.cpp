@@ -2,6 +2,7 @@
 #include "ChunkMesh.h"
 #include "TerrainGenerator.h"
 #include "ChunkUpdater.h"
+#include "ChunkMesher.h"
 
 ChunkGroup::ChunkGroup(glm::ivec2 coord, World& world) : m_neighbors() {
     m_coord = coord;
@@ -87,6 +88,10 @@ void ChunkManager::setChunkUpdater(ChunkUpdater& chunkUpdater) {
     m_chunkUpdater = &chunkUpdater;
 }
 
+void ChunkManager::setChunkMesher(ChunkMesher& chunkMesher) {
+    m_chunkMesher = &chunkMesher;
+}
+
 void ChunkManager::update(VoxelEngine::Clock& clock) {
     glm::ivec3 worldChunk = Chunk::worldToWorldChunk(m_freeCam->position());
     glm::ivec2 coord = { worldChunk.x, worldChunk.z };
@@ -150,7 +155,6 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
         if (it == m_chunkMap.end()) continue;
 
         auto& group = it->second;
-        group.setLoadState(ChunkLoadState::Loaded);
 
         for (int32_t i = 0; i < World::worldHeight; i++) {
             glm::ivec3 worldChunkPos = { coord.x, i, coord.y };
@@ -170,6 +174,7 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
 
     while (m_updateQueue.count() > 0) {
         auto item = m_updateQueue.peek();
+
         if (!m_world->valid(item)) {
             m_updateQueue.dequeue();
             continue;
@@ -177,9 +182,62 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
 
         auto& chunk = view.get<Chunk>(m_world->getEntity(item));
 
+        if (!m_chunkUpdater->queue(item)) break;
+        m_updateQueue.dequeue();
+    }
+
+    while (m_updateRequeue.size() > 0) {
+        auto item = m_updateRequeue.front();
+        m_updateQueue.enqueue(item);
+        m_updateRequeue.pop();
+    }
+
+    auto& updateResults = m_updateResultQueue.swapDequeue();
+
+    while (updateResults.size() > 0) {
+        auto worldChunkPos = updateResults.front().worldChunkPos;
+        auto& lightBuffer = updateResults.front().lightBuffer;
+
+        auto entity = m_world->getEntity(worldChunkPos);
+
+        if (entity == entt::null) {
+            updateResults.pop();
+            continue;
+        }
+
+        auto& chunk = view.get<Chunk>(entity);
+        chunk.setLoadState(ChunkLoadState::Loaded);
+
+        for (auto pos : Chunk::Positions()) {
+            chunk.light()[pos] = lightBuffer[pos + glm::ivec3(1, 1, 1)];
+        }
+
+        m_meshingQueue.enqueue(worldChunkPos);
+
+        for (auto offset : Chunk::Neighbors26) {
+            auto pos = worldChunkPos + offset;
+            if (m_world->valid(pos)) {
+                m_meshingQueue.enqueue(pos);
+            }
+        }
+
+        updateResults.pop();
+    }
+
+    m_meshingQueue.update(worldChunk);
+
+    while (m_meshingQueue.count() > 0) {
+        auto item = m_meshingQueue.peek();
+        if (!m_world->valid(item)) {
+            m_meshingQueue.dequeue();
+            continue;
+        }
+
+        auto& chunk = view.get<Chunk>(m_world->getEntity(item));
+
         if (chunk.loadState() != ChunkLoadState::Loaded) {
-            m_updateRequeue.push(item);
-            m_updateQueue.dequeue();
+            m_meshingRequeue.push(item);
+            m_meshingQueue.dequeue();
             continue;
         }
 
@@ -190,8 +248,8 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
             if (neighborEntity != entt::null) {
                 auto& neighborChunk = view.get<Chunk>(neighborEntity);
                 if (neighborChunk.loadState() != ChunkLoadState::Loaded) {
-                    m_updateRequeue.push(item);
-                    m_updateQueue.dequeue();
+                    m_meshingRequeue.push(item);
+                    m_meshingQueue.dequeue();
                     skip = true;
                     break;
                 }
@@ -202,14 +260,14 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
             continue;
         }
 
-        if (!m_chunkUpdater->queue(item)) break;
-        m_updateQueue.dequeue();
+        if (!m_chunkMesher->queue(item)) break;
+        m_meshingQueue.dequeue();
     }
 
-    while (m_updateRequeue.size() > 0) {
-        auto& item = m_updateRequeue.front();
-        m_updateQueue.enqueue(item);
-        m_updateRequeue.pop();
+    while (m_meshingRequeue.size() > 0) {
+        auto& item = m_meshingRequeue.front();
+        m_meshingQueue.enqueue(item);
+        m_meshingRequeue.pop();
     }
 
     auto& worldUpdates = m_world->getUpdates();
@@ -297,7 +355,7 @@ ChunkManager::ChunkMap::iterator ChunkManager::destroyChunkGroup(ChunkMap::itera
     m_generateQueue.remove({ coord.x, 0, coord.y });
 
     for (int32_t i = 0; i < worldHeight; i++) {
-        m_updateQueue.remove({ coord.x, i, coord.y });
+        m_meshingQueue.remove({ coord.x, i, coord.y });
     }
 
     return m_chunkMap.erase(it);

@@ -24,6 +24,8 @@ add_executable("Game"
     ChunkMesh.cpp
     ChunkUpdater.h
     ChunkUpdater.cpp
+    ChunkMesher.h
+    ChunkMesher.cpp
     ChunkManager.h
     ChunkManager.cpp
     TextureManager.h

@@ -14,6 +14,8 @@
 class TerrainGenerator;
 struct TerrainResults;
 class ChunkUpdater;
+struct UpdateResults;
+class ChunkMesher;
 
 class ChunkGroup {
 public:
@@ -54,8 +56,10 @@ public:
 
     void setTerrainGenerator(TerrainGenerator& terrainGenerator);
     void setChunkUpdater(ChunkUpdater& chunkUpdater);
+    void setChunkMesher(ChunkMesher& chunkMesher);
 
     VoxelEngine::BufferedQueue<TerrainResults>& generateResultQueue() { return m_generateResultQueue; }
+    VoxelEngine::BufferedQueue<UpdateResults>& updateResultQueue() { return m_updateResultQueue; }
 
     void update(VoxelEngine::Clock& clock);
 
@@ -65,6 +69,7 @@ private:
     FreeCam* m_freeCam;
     TerrainGenerator* m_terrainGenerator;
     ChunkUpdater* m_chunkUpdater;
+    ChunkMesher* m_chunkMesher;
     glm::ivec3 m_lastPos;
     ChunkMap m_chunkMap;
     int32_t m_viewDistance;
@@ -73,7 +78,10 @@ private:
     PriorityQueue m_generateQueue;
     VoxelEngine::BufferedQueue<TerrainResults> m_generateResultQueue;
     PriorityQueue m_updateQueue;
+    VoxelEngine::BufferedQueue<UpdateResults> m_updateResultQueue;
     std::queue<glm::ivec3> m_updateRequeue;
+    PriorityQueue m_meshingQueue;
+    std::queue<glm::ivec3> m_meshingRequeue;
 
     ChunkGroup& makeChunkGroup(glm::ivec2 coord);
     ChunkMap::iterator destroyChunkGroup(ChunkMap::iterator it, glm::ivec2 coord);
