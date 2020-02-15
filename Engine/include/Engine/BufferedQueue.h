@@ -26,6 +26,12 @@ namespace VoxelEngine {
             return backQueue;
         }
 
+        void clear() {
+            std::unique_lock<std::mutex> lock(m_mutex);
+            m_queues.clear();
+            m_queues.resize(2);
+        }
+
     private:
         std::vector<std::queue<T>> m_queues;
         std::mutex m_mutex;
