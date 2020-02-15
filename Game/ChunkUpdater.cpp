@@ -19,13 +19,20 @@ void ChunkUpdater::setTransferNode(VoxelEngine::TransferNode& transferNode) {
 
 void ChunkUpdater::update(VoxelEngine::Clock& clock) {
     std::queue<MeshUpdate2>& queue = m_resultQueue.swapDequeue();
-    auto view = m_world->registry().view<ChunkMesh>();
+    auto view = m_world->registry().view<Chunk, ChunkMesh>();
 
     while (queue.size() > 0) {
         auto& update = queue.front();
         auto entity = m_world->getEntity(update.coord);
         if (entity != entt::null) {
-            transferMesh(view.get(entity), update.index);
+            transferMesh(view.get<ChunkMesh>(entity), update.index);
+
+            auto& chunk = view.get<Chunk>(entity);
+            const glm::ivec3 root = { 1, 1, 1 };
+
+            for (auto pos : Chunk::Positions()) {
+                chunk.light()[pos] = update.lightBuffer[root + pos];
+            }
         }
         queue.pop();
     }
@@ -121,7 +128,7 @@ void ChunkUpdater::update(glm::ivec3 worldChunkPos) {
     updateLight(queue, blocks, light, neighborChunks);
 
     size_t updateIndex = makeMesh(worldChunkPos, blocks, light);
-    m_resultQueue.enqueue({ updateIndex, worldChunkPos });
+    m_resultQueue.enqueue({ updateIndex, worldChunkPos, light });
 }
 
 void ChunkUpdater::updateLight(std::queue<LightUpdate>& queue, ChunkBuffer& chunkBuffer, LightBuffer& lightBuffer, ChunkData<Chunk*, 3>& neighborChunks) {
@@ -160,12 +167,12 @@ void ChunkUpdater::updateLight(std::queue<LightUpdate>& queue, ChunkBuffer& chun
                     queue.push({ newLight, neighborPosMod });
                 }
             } else {
-                //Chunk* neighborChunk = neighborChunks[root + neighborChunkOffset];
-                //
-                //if (neighborChunk != nullptr) {
-                //    neighborChunk->getLightUpdates().enqueue({ newLight, neighborPosMod });
-                //    m_world->update(neighborChunk->worldChunkPosition());
-                //}
+                Chunk* neighborChunk = neighborChunks[root + neighborChunkOffset];
+                
+                if (neighborChunk != nullptr) {
+                    neighborChunk->getLightUpdates().enqueue({ newLight, neighborPosMod });
+                    m_world->update(neighborChunk->worldChunkPosition());
+                }
             }
         }
     }

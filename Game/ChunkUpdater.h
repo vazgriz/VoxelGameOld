@@ -18,6 +18,7 @@ struct MeshUpdate {
 struct MeshUpdate2{
     size_t index;
     glm::ivec3 coord;
+    ChunkData<Light, Chunk::chunkSize + 2> lightBuffer;
 };
 
 class ChunkUpdater : public VoxelEngine::System {
