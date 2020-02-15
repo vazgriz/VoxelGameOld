@@ -134,6 +134,8 @@ public:
     Chunk(Chunk&& other) = default;
     Chunk& operator = (Chunk&& other) = default;
 
+    void reset();
+
     glm::ivec3 worldChunkPosition() const { return m_worldChunkPosition; }
     void setWorldChunkPosition(glm::ivec3 worldChunkPos) { m_worldChunkPosition = worldChunkPos; }
 

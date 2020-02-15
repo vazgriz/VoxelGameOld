@@ -75,6 +75,10 @@ Chunk::Chunk(entt::entity entity, glm::ivec3 pos) : m_neighbors() {
     m_light = std::make_unique<ChunkData<Light, chunkSize>>();
 }
 
+void Chunk::reset() {
+    m_lightUpdates->clear();
+}
+
 entt::entity Chunk::neighbor(glm::ivec3 offset) {
     return m_neighbors[offset.x + 1][offset.y + 1][offset.z + 1];
 }
