@@ -139,7 +139,7 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
     }
 
     auto& generateResults = m_generateResultQueue.swapDequeue();
-    auto view = m_world->registry().view<Chunk>();
+    auto view = m_world->registry().view<Chunk, ChunkMesh>();
 
     while (generateResults.size() > 0) {
         auto results = generateResults.front();
@@ -155,10 +155,14 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
         for (int32_t i = 0; i < World::worldHeight; i++) {
             glm::ivec3 worldChunkPos = { coord.x, i, coord.y };
             auto chunkEntity = group.chunks()[i];
-            auto& chunk = view.get(chunkEntity);
-            m_updateQueue.enqueue(worldChunkPos, worldChunkPos);
+            auto& chunk = view.get<Chunk>(chunkEntity);
+            auto& chunkMesh = view.get<ChunkMesh>(chunkEntity);
 
             memcpy(chunk.blocks().data(), results.blocks[i].data(), sizeof(ChunkData<Block, Chunk::chunkSize>));
+            memset(chunk.light().data(), 0, sizeof(ChunkData<Light, Chunk::chunkSize>));
+
+            chunkMesh.clearMesh();
+            m_updateQueue.enqueue(worldChunkPos, worldChunkPos);
 
             for (auto offset_ : Chunk::Neighbors8_2D) {
                 glm::ivec3 offset = { offset_.x, 0, offset_.y };
@@ -229,6 +233,7 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
 ChunkGroup& ChunkManager::makeChunkGroup(glm::ivec2 coord) {
     auto result = m_chunkMap.emplace(coord, ChunkGroup(coord, *m_world));
     ChunkGroup& group = result.first->second;
+    group.setLoadState(ChunkLoadState::Loading);
 
     for (auto offset : Chunk::Neighbors8_2D) {
         ChunkDirection dir = ChunkGroup::getDirection(offset);
