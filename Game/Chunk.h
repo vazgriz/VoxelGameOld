@@ -148,6 +148,7 @@ public:
     static size_t index(glm::ivec3 pos);
     static glm::ivec3 position(size_t index);
 
+    static bool chunkPosInBounds(glm::ivec3 posInChunk);
     static std::array<int32_t, 2> divide(int32_t dividend, int32_t divisor);
     static std::array<glm::ivec3, 2> divide(glm::ivec3 dividend, glm::ivec3 divisor);
     static glm::ivec3 worldToWorldChunk(glm::ivec3 worldPos);

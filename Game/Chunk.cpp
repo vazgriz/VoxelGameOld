@@ -106,6 +106,12 @@ glm::ivec3 Chunk::position(size_t index) {
     return result;
 }
 
+bool Chunk::chunkPosInBounds(glm::ivec3 posInChunk) {
+    return posInChunk.x >= 0 && posInChunk.x < Chunk::chunkSize
+        && posInChunk.y >= 0 && posInChunk.y < Chunk::chunkSize
+        && posInChunk.z >= 0 && posInChunk.z < Chunk::chunkSize;
+}
+
 std::array<int32_t, 2> Chunk::divide(int32_t dividend, int32_t divisor) {
     //https://stackoverflow.com/a/39308162/8733481
     auto const divT = std::div(dividend, divisor);
