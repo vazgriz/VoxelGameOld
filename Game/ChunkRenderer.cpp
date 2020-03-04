@@ -1,24 +1,8 @@
 #include "ChunkRenderer.h"
 #include <glm/glm.hpp>
-#include <fstream>
 #include "Chunk.h"
 #include "ChunkMesh.h"
-
-static std::vector<char> readFile(const std::string& filename) {
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-    if (!file.is_open()) {
-        throw std::runtime_error("Failed to open shader");
-    }
-
-    size_t fileSize = (size_t)file.tellg();
-    std::vector<char> buffer(fileSize);
-    file.seekg(0);
-    file.read(buffer.data(), fileSize);
-    file.close();
-
-    return buffer;
-}
+#include <Engine/Utilities.h>
 
 ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager)
     : VoxelEngine::RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue(), vk::PipelineStageFlags::ColorAttachmentOutput) {
@@ -243,8 +227,8 @@ static vk::ShaderModule createShaderModule(vk::Device& device, const std::vector
 }
 
 void ChunkRenderer::createPipeline() {
-    std::vector<char> vertShaderCode = readFile("shaders/shader.vert.spv");
-    std::vector<char> fragShaderCode = readFile("shaders/shader.frag.spv");
+    std::vector<char> vertShaderCode = VoxelEngine::readFile("shaders/shader.vert.spv");
+    std::vector<char> fragShaderCode = VoxelEngine::readFile("shaders/shader.frag.spv");
 
     vk::ShaderModule vertShader = createShaderModule(m_graphics->device(), vertShaderCode);
     vk::ShaderModule fragShader = createShaderModule(m_graphics->device(), fragShaderCode);

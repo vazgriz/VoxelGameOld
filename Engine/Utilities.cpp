@@ -1,4 +1,5 @@
 #include "Engine/Utilities.h"
+#include <fstream>
 
 using namespace VoxelEngine;
 
@@ -12,4 +13,20 @@ size_t VoxelEngine::align(size_t ptr, size_t alignment) {
         size_t unalign = alignment - tail;
         return ptr + unalign;
     }
+}
+
+std::vector<char> VoxelEngine::readFile(const std::string& filename) {
+    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+    if (!file.is_open()) {
+        throw std::runtime_error("Failed to open shader");
+    }
+
+    size_t fileSize = (size_t)file.tellg();
+    std::vector<char> buffer(fileSize);
+    file.seekg(0);
+    file.read(buffer.data(), fileSize);
+    file.close();
+
+    return buffer;
 }

@@ -2,22 +2,7 @@
 #include <stb_image.h>
 #include <Engine/math.h>
 #include <fstream>
-
-static std::vector<char> readFile(const std::string& filename) {
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-    if (!file.is_open()) {
-        throw std::runtime_error("Failed to open shader");
-    }
-
-    size_t fileSize = (size_t)file.tellg();
-    std::vector<char> buffer(fileSize);
-    file.seekg(0);
-    file.read(buffer.data(), fileSize);
-    file.close();
-
-    return buffer;
-}
+#include <Engine/Utilities.h>
 
 static const std::vector<std::string> textures = {
     "resources/sky_right.png",
@@ -197,8 +182,8 @@ static vk::ShaderModule createShaderModule(vk::Device& device, const std::vector
 }
 
 void SkyboxManager::createPipeline(vk::RenderPass& renderPass) {
-    std::vector<char> vertShaderCode = readFile("shaders/skybox.vert.spv");
-    std::vector<char> fragShaderCode = readFile("shaders/skybox.frag.spv");
+    std::vector<char> vertShaderCode = VoxelEngine::readFile("shaders/skybox.vert.spv");
+    std::vector<char> fragShaderCode = VoxelEngine::readFile("shaders/skybox.frag.spv");
 
     vk::ShaderModule vertShader = createShaderModule(m_engine->getGraphics().device(), vertShaderCode);
     vk::ShaderModule fragShader = createShaderModule(m_engine->getGraphics().device(), fragShaderCode);
