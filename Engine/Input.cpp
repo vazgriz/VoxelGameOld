@@ -147,11 +147,6 @@ void Input::setCursorState(CursorState state) {
         glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     } else if (state == CursorState::Locked) {
         glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-        if (glfwRawMouseMotionSupported()) {
-            glfwSetInputMode(m_window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-        }
-
     } else {
         return;
     }
