@@ -12,12 +12,15 @@ Input::Input(GLFWwindow* window)
 
 void Input::preUpdate() {
     m_delta = {};
-}
 
-void Input::handleKeyInput(int key_, int scancode, int action, int mods) {
     m_keyDowns.clear();
     m_keyUps.clear();
 
+    m_mouseButtonDowns.clear();
+    m_mouseButtonUps.clear();
+}
+
+void Input::handleKeyInput(int key_, int scancode, int action, int mods) {
     Key key = static_cast<Key>(key_);
     auto it = m_keyStates.find(key);
 
@@ -44,9 +47,6 @@ void Input::handleKeyInput(int key_, int scancode, int action, int mods) {
 }
 
 void Input::handleMouseButtonInput(int mouseButton, int action, int mods) {
-    m_mouseButtonDowns.clear();
-    m_mouseButtonUps.clear();
-
     MouseButton button = static_cast<MouseButton>(mouseButton);
     auto it = m_mouseButtonStates.find(button);
 
