@@ -8,13 +8,15 @@ class BlockType {
 public:
     using FaceArray = std::array<size_t, 6>;
 
-    BlockType(uint32_t id, const FaceArray& faces);
+    BlockType(uint32_t id, const FaceArray& faces, bool solid = true);
 
     size_t getFaceIndex(size_t index) const { return m_faces[index]; }
+    bool solid() const;
 
 private:
     uint32_t m_id;
     FaceArray m_faces;
+    bool m_solid;
 };
 
 class BlockManager {
