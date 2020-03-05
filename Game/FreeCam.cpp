@@ -86,7 +86,7 @@ void FreeCam::update(VoxelEngine::Clock& clock) {
         m_selectionBox->setSelection(m_raycastResult);
 
         if (m_raycastResult && m_input->mouseButtonDown(VoxelEngine::MouseButton::Button1)) {
-            //destroy
+            m_raycastResult->chunk->queueBlockUpdate({ World::airBlock(), Chunk::worldToChunk(m_raycastResult->blockPosition) });
         }
     } else {
         m_raycastResult = {};

@@ -194,8 +194,10 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
     auto& updateResults = m_updateResultQueue.swapDequeue();
 
     while (updateResults.size() > 0) {
-        auto worldChunkPos = updateResults.front().worldChunkPos;
-        auto& lightBuffer = updateResults.front().lightBuffer;
+        auto update = updateResults.front();
+        auto worldChunkPos = update.worldChunkPos;
+        auto& blockBuffer = update.blockBuffer;
+        auto& lightBuffer = update.lightBuffer;
 
         auto entity = m_world->getEntity(worldChunkPos);
 
@@ -208,6 +210,7 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
         chunk.setLoadState(ChunkLoadState::Loaded);
 
         for (auto pos : Chunk::Positions()) {
+            chunk.blocks()[pos] = blockBuffer[pos + glm::ivec3(1, 1, 1)];
             chunk.light()[pos] = lightBuffer[pos + glm::ivec3(1, 1, 1)];
         }
 

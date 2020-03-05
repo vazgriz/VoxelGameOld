@@ -10,6 +10,7 @@
 
 struct UpdateResults {
     glm::ivec3 worldChunkPos;
+    ChunkData<Block, Chunk::chunkSize + 2> blockBuffer;
     ChunkData<Light, Chunk::chunkSize + 2> lightBuffer;
 };
 

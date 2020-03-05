@@ -87,6 +87,20 @@ void ChunkUpdater::update(glm::ivec3 worldChunkPos) {
             }
         }
 
+        auto& blockUpdates = chunk.getBlockUpdates();
+
+        while (blockUpdates.size() > 0) {
+            auto update = blockUpdates.front();
+            blockUpdates.pop();
+
+            blocks[root + update.inChunkPos] = update.block;
+
+            for (auto offset : Chunk::Neighbors6) {
+                auto neighborPos = update.inChunkPos + offset;
+                queue.push({ light[root + neighborPos], neighborPos, true });
+            }
+        }
+
         auto& lightUpdates = chunk.getLightUpdates();
 
         while (lightUpdates.size() > 0) {
@@ -98,7 +112,7 @@ void ChunkUpdater::update(glm::ivec3 worldChunkPos) {
 
     updateLight(queue, blocks, light, neighborChunks);
 
-    m_chunkManager->updateResultQueue().enqueue({ worldChunkPos, light });
+    m_chunkManager->updateResultQueue().enqueue({ worldChunkPos, blocks, light });
 }
 
 void ChunkUpdater::updateLight(std::queue<LightUpdate>& queue, ChunkBuffer& chunkBuffer, LightBuffer& lightBuffer, ChunkData<Chunk*, 3>& neighborChunks) {
@@ -107,9 +121,10 @@ void ChunkUpdater::updateLight(std::queue<LightUpdate>& queue, ChunkBuffer& chun
     while (queue.size() > 0) {
         auto light = queue.front().light;
         auto pos = queue.front().inChunkPos;
+        auto force = queue.front().forcePropagation;
         queue.pop();
 
-        if (!(lightBuffer[root + pos] < light)) continue;
+        if (!(lightBuffer[root + pos] < light) && !force) continue;
 
         lightBuffer[root + pos].overwrite(light);
 

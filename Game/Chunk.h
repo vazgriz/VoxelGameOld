@@ -49,6 +49,7 @@ struct Light {
 struct LightUpdate {
     Light light;
     glm::ivec3 inChunkPos;
+    bool forcePropagation = false;
 };
 
 struct BlockUpdate {
@@ -201,6 +202,6 @@ private:
     std::unique_ptr<ChunkData<Light, chunkSize>> m_light;
     ChunkLoadState m_loadState;
     std::array<std::array<std::array<entt::entity, 3>, 3>, 3 > m_neighbors;
-    std::unique_ptr<VoxelEngine::BufferedQueue<LightUpdate>> m_lightUpdates;
     std::unique_ptr<VoxelEngine::BufferedQueue<BlockUpdate>> m_blockUpdates;
+    std::unique_ptr<VoxelEngine::BufferedQueue<LightUpdate>> m_lightUpdates;
 };
