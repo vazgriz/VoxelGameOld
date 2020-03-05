@@ -51,7 +51,7 @@ int main() {
 
     freeCam.setPosition({ 0, 80, 0 });
 
-    ChunkManager chunkManager(world, freeCam, 4);
+    ChunkManager chunkManager(world, freeCam, 16);
     engine.getUpdateGroup().add(chunkManager, 20);
 
     TerrainGenerator terrainGenerator(world, chunkManager);
