@@ -148,6 +148,7 @@ std::optional<RaycastResult> World::raycast(glm::vec3 origin, glm::vec3 dir, flo
                 RaycastResult result;
                 result.blockPosition = i;
                 result.position = origin + t * dir;
+                result.normal = {};
                 result.normal[steppedIndex] = -step[steppedIndex];
                 result.chunk = currentChunk;
 

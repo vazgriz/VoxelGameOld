@@ -16,7 +16,7 @@ class BlockManager;
 struct RaycastResult {
     glm::vec3 position;
     glm::ivec3 blockPosition;
-    glm::vec3 normal;
+    glm::ivec3 normal;
     Chunk* chunk;
 };
 

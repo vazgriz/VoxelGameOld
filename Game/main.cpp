@@ -46,7 +46,7 @@ int main() {
     BlockManager blockManager;
     World world(blockManager);
 
-    FreeCam freeCam(camera, window.input(), world, selectionBox);
+    FreeCam freeCam(camera, window.input(), world, blockManager, selectionBox);
     engine.getUpdateGroup().add(freeCam, 10);
 
     freeCam.setPosition({ 0, 80, 0 });
