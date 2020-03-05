@@ -27,6 +27,8 @@ public:
 
     void setTransferNode(VoxelEngine::TransferNode& transferNode);
 
+    std::shared_ptr<VoxelEngine::Buffer> indexBuffer() { return m_indexBuffer; }
+
     void update(VoxelEngine::Clock& clock);
 
     void run();
