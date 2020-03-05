@@ -141,7 +141,7 @@ void ChunkUpdater::updateLight(std::queue<LightUpdate>& queue, ChunkBuffer& chun
                 
                 if (neighborChunk != nullptr) {
                     neighborChunk->getLightUpdates().enqueue({ newLight, neighborPosMod });
-                    m_world->update(neighborChunk->worldChunkPosition());
+                    m_world->queueLightUpdate(neighborChunk->worldChunkPosition());
                 }
             }
         }

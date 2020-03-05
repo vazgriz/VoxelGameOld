@@ -91,7 +91,7 @@ Block& World::getBlock(glm::ivec3 worldPos) {
     }
 }
 
-void World::update(glm::ivec3 worldChunkPos) {
+void World::queueChunkUpdate(glm::ivec3 worldChunkPos) {
     m_worldUpdates.enqueue(worldChunkPos);
 }
 

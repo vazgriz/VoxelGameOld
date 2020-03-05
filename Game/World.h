@@ -41,9 +41,9 @@ public:
 
     Block& getBlock(glm::ivec3 worldPos);
 
-    void update(glm::ivec3 worldChunkPos);
+    void queueChunkUpdate(glm::ivec3 worldChunkPos);
 
-    std::queue<glm::ivec3>& getUpdates() { return m_worldUpdates.swapDequeue(); }
+    std::queue<glm::ivec3>& getChunkUpdates() { return m_worldUpdates.swapDequeue(); }
 
     std::optional<RaycastResult> raycast(glm::vec3 origin, glm::vec3 dir, float distance);
 

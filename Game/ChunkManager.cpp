@@ -269,12 +269,12 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
         m_meshingRequeue.pop();
     }
 
-    auto& worldUpdates = m_world->getUpdates();
+    auto& worldChunkUpdates = m_world->getChunkUpdates();
 
-    while (worldUpdates.size() > 0) {
-        auto update = worldUpdates.front();
+    while (worldChunkUpdates.size() > 0) {
+        auto update = worldChunkUpdates.front();
         m_updateQueue.enqueue(update);
-        worldUpdates.pop();
+        worldChunkUpdates.pop();
     }
 }
 
