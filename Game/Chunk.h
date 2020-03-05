@@ -51,6 +51,11 @@ struct LightUpdate {
     glm::ivec3 inChunkPos;
 };
 
+struct BlockUpdate {
+    Block block;
+    glm::ivec3 inChunkPos;
+};
+
 template <typename T, size_t Size>
 class ChunkData {
 public:
@@ -164,7 +169,11 @@ public:
     ChunkData<Light, chunkSize>& light() { return *m_light; }
     const ChunkData<Light, chunkSize>& light() const { return *m_light; }
 
-    VoxelEngine::BufferedQueue<LightUpdate>& getLightUpdates() { return *m_lightUpdates; };
+    void queueLightUpdate(LightUpdate update);
+    void queueBlockUpdate(BlockUpdate update);
+
+    std::queue<LightUpdate>& getLightUpdates() { return m_lightUpdates->swapDequeue(); };
+    std::queue<BlockUpdate>& getBlockUpdates() { return m_blockUpdates->swapDequeue(); };
 
     static const std::array<glm::ivec3, 6> Neighbors6;
     static const std::array<glm::ivec3, 4> Neighbors4;
@@ -193,4 +202,5 @@ private:
     ChunkLoadState m_loadState;
     std::array<std::array<std::array<entt::entity, 3>, 3>, 3 > m_neighbors;
     std::unique_ptr<VoxelEngine::BufferedQueue<LightUpdate>> m_lightUpdates;
+    std::unique_ptr<VoxelEngine::BufferedQueue<BlockUpdate>> m_blockUpdates;
 };

@@ -108,7 +108,7 @@ void ChunkMesher::update(glm::ivec3 worldChunkPos) {
             }
         }
 
-        auto& lightUpdates = chunk.getLightUpdates().swapDequeue();
+        auto& lightUpdates = chunk.getLightUpdates();
 
         while (lightUpdates.size() > 0) {
             auto update = lightUpdates.front();

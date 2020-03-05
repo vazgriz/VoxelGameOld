@@ -153,6 +153,16 @@ std::array<glm::ivec3, 2> Chunk::split(glm::ivec3 worldPos) {
     return divide(worldPos, { Chunk::chunkSize, Chunk::chunkSize, Chunk::chunkSize });
 }
 
+void Chunk::queueLightUpdate(LightUpdate update) {
+    m_lightUpdates->enqueue(update);
+    m_world->queueChunkUpdate(m_worldChunkPosition);
+}
+
+void Chunk::queueBlockUpdate(BlockUpdate update) {
+    m_blockUpdates->enqueue(update);
+    m_world->queueChunkUpdate(m_worldChunkPosition);
+}
+
 const std::array<glm::ivec3, 6> Chunk::Neighbors6 = {
     glm::ivec3(1, 0, 0),    //right
     glm::ivec3(-1, 0, 0),   //left

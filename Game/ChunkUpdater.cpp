@@ -87,7 +87,7 @@ void ChunkUpdater::update(glm::ivec3 worldChunkPos) {
             }
         }
 
-        auto& lightUpdates = chunk.getLightUpdates().swapDequeue();
+        auto& lightUpdates = chunk.getLightUpdates();
 
         while (lightUpdates.size() > 0) {
             auto update = lightUpdates.front();
@@ -140,8 +140,7 @@ void ChunkUpdater::updateLight(std::queue<LightUpdate>& queue, ChunkBuffer& chun
                 Chunk* neighborChunk = neighborChunks[root + neighborChunkOffset];
                 
                 if (neighborChunk != nullptr) {
-                    neighborChunk->getLightUpdates().enqueue({ newLight, neighborPosMod });
-                    m_world->queueLightUpdate(neighborChunk->worldChunkPosition());
+                    neighborChunk->queueLightUpdate({ newLight, neighborPosMod });
                 }
             }
         }

@@ -138,7 +138,7 @@ void TerrainGenerator::generate(glm::ivec2 coord) {
                 glm::ivec3 pos = { x, result[1], z };
 
                 if (results.blocks[result[0]][pos].type > 1) break;
-                chunks[result[0]]->getLightUpdates().enqueue({ Light(15), pos });
+                chunks[result[0]]->queueLightUpdate({ Light(15), pos });
             }
 
             for (int32_t y = 0; y < Chunk::chunkSize * World::worldHeight; y++) {
@@ -146,7 +146,7 @@ void TerrainGenerator::generate(glm::ivec2 coord) {
                 glm::ivec3 pos = { x, result[1], z };
 
                 if (results.blocks[result[0]][pos].type > 1) break;
-                chunks[result[0]]->getLightUpdates().enqueue({ Light(15), pos });
+                chunks[result[0]]->queueLightUpdate({ Light(15), pos });
             }
         }
     }
