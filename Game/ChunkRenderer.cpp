@@ -109,16 +109,15 @@ void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuff
     auto view = m_world->registry().view<Chunk, ChunkMesh>();
     for (auto entity : view) {
         auto& chunk = view.get<Chunk>(entity);
+        auto& mesh = view.get<ChunkMesh>(entity);
+
+        if (mesh.isEmpty()) continue;
         if (chunk.loadState() != ChunkLoadState::Loaded) continue;
         if (!frustum.testAABB(chunk.worldChunkPosition() * 16, glm::vec3(16, 16, 16))) continue;
 
-        auto& mesh = view.get<ChunkMesh>(entity);
-
-        if (!mesh.isEmpty()) {
-            glm::ivec4 transform = glm::ivec4(chunk.worldChunkPosition(), 0) * Chunk::chunkSize;
-            commandBuffer.pushConstants(*m_pipelineLayout, vk::ShaderStageFlags::Vertex, 0, sizeof(glm::ivec4), &transform);
-            mesh.mesh().drawIndexed(commandBuffer);
-        }
+        glm::ivec4 transform = glm::ivec4(chunk.worldChunkPosition(), 0) * Chunk::chunkSize;
+        commandBuffer.pushConstants(*m_pipelineLayout, vk::ShaderStageFlags::Vertex, 0, sizeof(glm::ivec4), &transform);
+        mesh.mesh().drawIndexed(commandBuffer);
     }
 
     m_selectionBox->draw(commandBuffer, viewport, scissor);
