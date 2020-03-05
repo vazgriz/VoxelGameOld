@@ -1,11 +1,12 @@
 #include "World.h"
 #include "ChunkMesh.h"
+#include "BlockManager.h"
 
 Block World::m_nullBlock = Block();
 Block World::m_airBlock = Block(1);
 
-World::World() {
-
+World::World(BlockManager& blockManager) {
+    m_blockManager = &blockManager;
 }
 
 std::shared_lock<std::shared_mutex> World::getReadLock() {
@@ -96,4 +97,96 @@ Block& World::getBlock(glm::ivec3 worldPos) {
 
 void World::update(glm::ivec3 worldChunkPos) {
     m_worldUpdates.enqueue(worldChunkPos);
+}
+
+std::optional<RaycastResult> World::raycast(glm::vec3 origin, glm::vec3 dir, float distance) {
+    float t = 0.0f;
+
+    glm::ivec3 i = glm::ivec3(
+        static_cast<int32_t>(floor(origin.x)),
+        static_cast<int32_t>(floor(origin.y)),
+        static_cast<int32_t>(floor(origin.z))
+    );
+
+    auto worldPos = Chunk::split(i);
+
+    glm::ivec3 chunkPos = worldPos[0];
+    glm::ivec3 pos = worldPos[1];
+
+    glm::ivec3 step = glm::ivec3(
+        (dir.x > 0) ? 1 : -1,
+        (dir.y > 0) ? 1 : -1,
+        (dir.z > 0) ? 1 : -1
+    );
+
+    glm::vec3 tDelta = glm::vec3(abs(1 / dir.x), abs(1 / dir.y), abs(1 / dir.z));
+    glm::vec3 dist = glm::vec3(
+        (step.x > 0) ? (i.x + 1 - origin.x) : (origin.x - i.x),
+        (step.y > 0) ? (i.y + 1 - origin.y) : (origin.y - i.y),
+        (step.z > 0) ? (i.z + 1 - origin.z) : (origin.z - i.z)
+    );
+
+    glm::vec3 max = tDelta * dist;
+    int32_t steppedIndex = -1;
+
+    auto view = m_registry.view<Chunk>();
+    Chunk* currentChunk = getChunk(chunkPos);
+
+    while (t <= distance) {
+        if (!Chunk::chunkPosInBounds(pos)) {
+            auto worldPos = Chunk::split(i);
+
+            chunkPos = worldPos[0];
+            pos = worldPos[1];
+
+            currentChunk = getChunk(chunkPos);
+        }
+
+        if (currentChunk != nullptr) {
+            Block& block = currentChunk->blocks()[pos];
+            BlockType& type = m_blockManager->getType(block);
+
+            if (type.solid()) {
+                RaycastResult result;
+                result.blockPosition = i;
+                result.position = origin + t * dir;
+                result.normal[steppedIndex] = -step[steppedIndex];
+                result.chunk = currentChunk;
+
+                return result;
+            }
+        }
+
+        if (max.x < max.y) {
+            if (max.x < max.z) {
+                i.x += step.x;
+                pos.x += step.x;
+                t = max.x;
+                max.x += tDelta.x;
+                steppedIndex = 0;
+            } else {
+                i.z += step.z;
+                pos.z += step.z;
+                t = max.z;
+                max.z += tDelta.z;
+                steppedIndex = 2;
+            }
+        } else {
+            if (max.y < max.z) {
+                i.y += step.y;
+                pos.y += step.y;
+                t = max.y;
+                max.y += tDelta.y;
+                steppedIndex = 1;
+            } else {
+                i.z += step.z;
+                pos.z += step.z;
+                t = max.z;
+                max.z += tDelta.z;
+                steppedIndex = 2;
+            }
+        }
+    }
+
+    return {};
 }
