@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <vector>
 #include <array>
+#include "Chunk.h"
 
 class BlockType {
 public:
@@ -22,6 +23,7 @@ public:
 
     size_t typeCount() const { return m_types.size(); }
     BlockType& getType(size_t id) { return m_types[id]; }
+    BlockType& getType(Block block) { return m_types[block.type]; }
 
 private:
     std::vector<BlockType> m_types;
