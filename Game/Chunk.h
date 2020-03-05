@@ -6,6 +6,8 @@
 #include <array>
 #include <entt/entt.hpp>
 
+class World;
+
 enum class ChunkLoadState {
     Unloaded,
     Loading,
@@ -128,7 +130,7 @@ public:
         PositionIterator end() const { return PositionIterator({ 0, 0, chunkSize }); }
     };
 
-    Chunk(entt::entity entity, glm::ivec3 pos);
+    Chunk(entt::entity entity, glm::ivec3 pos, World& world);
     Chunk(const Chunk& other) = delete;
     Chunk& operator = (const Chunk& other) = delete;
     Chunk(Chunk&& other) = default;
@@ -185,6 +187,7 @@ private:
     static const int32_t shiftAmount = 4;
 
     glm::ivec3 m_worldChunkPosition;
+    World* m_world;
     std::unique_ptr<ChunkData<Block, chunkSize>> m_blocks;
     std::unique_ptr<ChunkData<Light, chunkSize>> m_light;
     ChunkLoadState m_loadState;

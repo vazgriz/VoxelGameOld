@@ -1,4 +1,5 @@
 #include "Chunk.h"
+#include "World.h"
 
 bool Light::operator > (Light& other) {
     return sun > other.sun;
@@ -63,8 +64,9 @@ Chunk::PositionIterator::PositionIterator(glm::ivec3 state) {
     this->state = state;
 }
 
-Chunk::Chunk(entt::entity entity, glm::ivec3 pos) : m_neighbors() {
+Chunk::Chunk(entt::entity entity, glm::ivec3 pos, World& world) : m_neighbors() {
     m_worldChunkPosition = pos;
+    m_world = &world;
     m_loadState = ChunkLoadState::Loading;
 
     m_neighbors[1][1][1] = entity;

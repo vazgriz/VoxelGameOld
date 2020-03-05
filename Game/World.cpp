@@ -24,7 +24,7 @@ entt::entity World::createChunk(glm::ivec3 worldChunkPos) {
         view.get(chunkEntity).setWorldChunkPosition(worldChunkPos);
     } else {
         chunkEntity = m_registry.create();
-        m_registry.assign<Chunk>(chunkEntity, chunkEntity, worldChunkPos);
+        m_registry.assign<Chunk>(chunkEntity, chunkEntity, worldChunkPos, *this);
         m_registry.assign<ChunkMesh>(chunkEntity);
     }
 
