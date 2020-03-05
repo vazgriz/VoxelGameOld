@@ -11,11 +11,12 @@
 #include "TextureManager.h"
 #include "MipmapGenerator.h"
 #include "SkyboxManager.h"
+#include "SelectionBox.h"
 #include "World.h"
 
 class Renderer : public VoxelEngine::System {
 public:
-    Renderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& renderGraph, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager);
+    Renderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& renderGraph, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager, SelectionBox& selectionBox);
 
     VoxelEngine::TransferNode& transferNode() const { return *m_transferNode; }
     MipmapGenerator& mipmapGenerator() const { return *m_mipmapGenerator; }

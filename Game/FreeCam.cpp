@@ -6,9 +6,11 @@
 using Key = VoxelEngine::Key;
 using MouseButton = VoxelEngine::MouseButton;
 
-FreeCam::FreeCam(VoxelEngine::Camera& camera, VoxelEngine::Input& input) {
+FreeCam::FreeCam(VoxelEngine::Camera& camera, VoxelEngine::Input& input, World& world, SelectionBox& selectionBox) {
     m_camera = &camera;
     m_input = &input;
+    m_world = &world;
+    m_selectionBox = &selectionBox;
 
     m_look = {};
     m_position = { 0, 0, 2 };
@@ -20,9 +22,12 @@ void FreeCam::setPosition(glm::vec3 pos) {
 }
 
 void FreeCam::update(VoxelEngine::Clock& clock) {
+    bool lockedThisFrame = false;
+
     if (!m_locked && m_input->mouseButtonDown(MouseButton::Button1)) {
         m_locked = true;
         m_input->setCursorState(VoxelEngine::CursorState::Locked);
+        lockedThisFrame = true;
     }
 
     if (m_locked && m_input->keyDown(Key::Escape)) {
@@ -74,4 +79,16 @@ void FreeCam::update(VoxelEngine::Clock& clock) {
 
     m_camera->setPosition(m_position);
     m_camera->setRotation(m_rotation);
+
+    if (m_locked && !lockedThisFrame) {
+        m_raycastResult = m_world->raycast(m_position, m_rotation * glm::vec3(0, 0, -1), 5);
+
+        m_selectionBox->setSelection(m_raycastResult);
+
+        if (m_raycastResult && m_input->mouseButtonDown(VoxelEngine::MouseButton::Button1)) {
+            //destroy
+        }
+    } else {
+        m_raycastResult = {};
+    }
 }

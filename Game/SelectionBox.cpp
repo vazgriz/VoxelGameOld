@@ -1,25 +1,17 @@
-#include "SkyboxManager.h"
-#include <stb_image.h>
-#include <Engine/math.h>
-#include <fstream>
+#include "SelectionBox.h"
 #include <Engine/Utilities.h>
+#include <stb_image.h>
+#include "Chunk.h"
+#include "ChunkMesher.h"
 
-static const std::vector<std::string> textures = {
-    "resources/sky_right.png",
-    "resources/sky_left.png",
-    "resources/sky_up.png",
-    "resources/sky_down.png",
-    "resources/sky_front.png",
-    "resources/sky_back.png",
-};
+const std::string textureName = "resources/selection.png";
+const uint32_t textureSize = 16;
 
-static const uint32_t textureSize = 1024;
-
-SkyboxManager::SkyboxManager(VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem) {
+SelectionBox::SelectionBox(VoxelEngine::Engine& engine, VoxelEngine::CameraSystem& cameraSystem) {
     m_engine = &engine;
     m_cameraSystem = &cameraSystem;
 
-    createCubeMap();
+    createTexture();
     createImageView();
     createSampler();
     createDescriptorSetLayout();
@@ -29,37 +21,80 @@ SkyboxManager::SkyboxManager(VoxelEngine::Engine& engine, VoxelEngine::CameraSys
     createPipelineLayout();
 }
 
-void SkyboxManager::draw(vk::CommandBuffer& commandBuffer, vk::Viewport viewport, vk::Rect2D scissor) {
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::Graphics, *m_pipeline);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::Graphics, *m_pipelineLayout, 0, { m_cameraSystem->descriptorSet(), *m_descriptorSet }, nullptr);
-    commandBuffer.setViewport(0, { viewport });
-    commandBuffer.setScissor(0, { scissor });
-    commandBuffer.draw(3, 1, 0, 0);
-}
-
-void SkyboxManager::transfer(VoxelEngine::TransferNode& transferNode) {
+void SelectionBox::transfer(VoxelEngine::TransferNode& transferNode) {
     vk::ImageSubresourceLayers subresource = {};
     subresource.aspectMask = vk::ImageAspectFlags::Color;
     subresource.layerCount = 1;
+    subresource.baseArrayLayer = 0;
 
-    for (uint32_t i = 0; i < textures.size(); i++) {
-        auto& name = textures[i];
-        int width, height, channels;
-        auto data = stbi_load(name.c_str(), &width, &height, &channels, 4);
+    int width, height, channels;
+    auto data = stbi_load(textureName.c_str(), &width, &height, &channels, 4);
 
-        subresource.baseArrayLayer = i;
+    transferNode.transfer(*m_image, vk::Offset3D{}, vk::Extent3D{ textureSize, textureSize, 1 }, subresource, data);
 
-        transferNode.transfer(*m_image, vk::Offset3D{}, vk::Extent3D{ textureSize, textureSize, 1 }, subresource, data);
+    stbi_image_free(data);
+}
 
-        stbi_image_free(data);
+void SelectionBox::createMesh(VoxelEngine::TransferNode& transferNode, ChunkMesher& chunkMesher) {
+    m_mesh = std::make_unique<VoxelEngine::Mesh>();
+
+    std::vector<glm::i8vec4> positions;
+    std::vector<glm::i8vec4> uvs;
+
+    for (size_t i = 0; i < 6; i++) {
+        for (size_t j = 0; j < 4; j++) {
+            positions.push_back(glm::i8vec4(Chunk::NeighborFaces[i].vertices[j], 0));
+            uvs.push_back(glm::i8vec4(Chunk::uvFaces[j], 0, 0));
+        }
+    }
+
+    size_t vertexSize = positions.size() * sizeof(glm::i8vec4);
+    size_t uvSize = uvs.size() * sizeof(glm::i8vec4);
+
+    vk::BufferCreateInfo vertexInfo = {};
+    vertexInfo.size = vertexSize;
+    vertexInfo.usage = vk::BufferUsageFlags::VertexBuffer | vk::BufferUsageFlags::TransferDst;
+    vertexInfo.sharingMode = vk::SharingMode::Exclusive;
+
+    vk::BufferCreateInfo uvInfo = vertexInfo;
+
+    VmaAllocationCreateInfo allocInfo = {};
+    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    allocInfo.preferredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+    std::shared_ptr<VoxelEngine::Buffer> vertexBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, vertexInfo, allocInfo);
+    std::shared_ptr<VoxelEngine::Buffer> uvsBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, uvInfo, allocInfo);
+
+    transferNode.transfer(*vertexBuffer, vertexSize, 0, positions.data());
+    transferNode.transfer(*uvsBuffer, uvSize, 0, uvs.data());
+
+    m_mesh->addBinding(vertexBuffer, 0);
+    m_mesh->addBinding(uvsBuffer, 0);
+    m_mesh->setIndexBuffer(chunkMesher.indexBuffer(), vk::IndexType::Uint32, 0);
+}
+
+void SelectionBox::setSelection(std::optional<RaycastResult>& raycast) {
+    m_selection = raycast;
+}
+
+void SelectionBox::draw(vk::CommandBuffer& commandBuffer, vk::Viewport viewport, vk::Rect2D scissor) {
+    if (m_selection) {
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::Graphics, *m_pipeline);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::Graphics, *m_pipelineLayout, 0, { m_cameraSystem->descriptorSet(), *m_descriptorSet }, nullptr);
+        commandBuffer.setViewport(0, { viewport });
+        commandBuffer.setScissor(0, { scissor });
+
+        glm::ivec4 data = glm::ivec4(m_selection->blockPosition, 0);
+        commandBuffer.pushConstants(*m_pipelineLayout, vk::ShaderStageFlags::Vertex, 0, sizeof(glm::ivec4), &data);
+
+        m_mesh->drawIndexed(commandBuffer, 36);
     }
 }
 
-void SkyboxManager::createCubeMap() {
+void SelectionBox::createTexture() {
     vk::ImageCreateInfo info = {};
     info.usage = vk::ImageUsageFlags::TransferDst | vk::ImageUsageFlags::Sampled;
-    info.flags = vk::ImageCreateFlags::CubeCompatible;
-    info.arrayLayers = 6;
+    info.arrayLayers = 1;
     info.mipLevels = 1;
     info.extent = { textureSize, textureSize, 1 };
     info.samples = vk::SampleCountFlags::_1;
@@ -73,25 +108,25 @@ void SkyboxManager::createCubeMap() {
     m_image = std::make_unique<VoxelEngine::Image>(*m_engine, info, allocInfo);
 }
 
-void SkyboxManager::createImageView() {
+void SelectionBox::createImageView() {
     vk::ImageViewCreateInfo info = {};
-    info.viewType = vk::ImageViewType::Cube;
+    info.viewType = vk::ImageViewType::_2D;
     info.format = vk::Format::R8G8B8A8_Unorm;
     info.image = &m_image->image();
     info.subresourceRange.aspectMask = vk::ImageAspectFlags::Color;
     info.subresourceRange.baseArrayLayer = 0;
-    info.subresourceRange.layerCount = 6;
+    info.subresourceRange.layerCount = 1;
     info.subresourceRange.baseMipLevel = 0;
     info.subresourceRange.levelCount = 1;
 
     m_imageView = std::make_unique<vk::ImageView>(m_engine->getGraphics().device(), info);
 }
 
-void SkyboxManager::createSampler() {
+void SelectionBox::createSampler() {
     vk::SamplerCreateInfo info = {};
     info.magFilter = vk::Filter::Nearest;
     info.minFilter = vk::Filter::Nearest;
-    info.mipmapMode = vk::SamplerMipmapMode::Linear;
+    info.mipmapMode = vk::SamplerMipmapMode::Nearest;
     info.addressModeU = vk::SamplerAddressMode::ClampToEdge;
     info.addressModeV = vk::SamplerAddressMode::ClampToEdge;
     //info.anisotropyEnable = true;
@@ -100,7 +135,7 @@ void SkyboxManager::createSampler() {
     m_sampler = std::make_unique<vk::Sampler>(m_engine->getGraphics().device(), info);
 }
 
-void SkyboxManager::createDescriptorSetLayout() {
+void SelectionBox::createDescriptorSetLayout() {
     vk::DescriptorSetLayoutBinding binding1 = {};
     binding1.binding = 0;
     binding1.descriptorType = vk::DescriptorType::Sampler;
@@ -122,7 +157,7 @@ void SkyboxManager::createDescriptorSetLayout() {
     m_descriptorSetLayout = std::make_unique<vk::DescriptorSetLayout>(m_engine->getGraphics().device(), info);
 }
 
-void SkyboxManager::createDescriptorPool() {
+void SelectionBox::createDescriptorPool() {
     vk::DescriptorPoolCreateInfo info = {};
     info.maxSets = 1;
     info.poolSizes = {
@@ -133,7 +168,7 @@ void SkyboxManager::createDescriptorPool() {
     m_descriptorPool = std::make_unique<vk::DescriptorPool>(m_engine->getGraphics().device(), info);
 }
 
-void SkyboxManager::createDecriptorSet() {
+void SelectionBox::createDecriptorSet() {
     vk::DescriptorSetAllocateInfo info = {};
     info.descriptorPool = m_descriptorPool.get();
     info.setLayouts = { *m_descriptorSetLayout };
@@ -141,7 +176,7 @@ void SkyboxManager::createDecriptorSet() {
     m_descriptorSet = std::make_unique<vk::DescriptorSet>(std::move(m_descriptorPool->allocate(info)[0]));
 }
 
-void SkyboxManager::writeDescriptorSet() {
+void SelectionBox::writeDescriptorSet() {
     vk::DescriptorImageInfo imageInfo1 = {};
     imageInfo1.sampler = m_sampler.get();
 
@@ -164,19 +199,26 @@ void SkyboxManager::writeDescriptorSet() {
     m_descriptorSet->update(m_engine->getGraphics().device(), { write1, write2 }, nullptr);
 }
 
-void SkyboxManager::createPipelineLayout() {
+void SelectionBox::createPipelineLayout() {
     vk::PipelineLayoutCreateInfo info = {};
     info.setLayouts = {
         m_cameraSystem->descriptorLayout(),
         *m_descriptorSetLayout
     };
+    info.pushConstantRanges = {
+        {
+            vk::ShaderStageFlags::Vertex,
+            0,
+            sizeof(glm::ivec4)
+        }
+    };
 
     m_pipelineLayout = std::make_unique<vk::PipelineLayout>(m_engine->getGraphics().device(), info);
 }
 
-void SkyboxManager::createPipeline(vk::RenderPass& renderPass) {
-    std::vector<char> vertShaderCode = VoxelEngine::readFile("shaders/skybox.vert.spv");
-    std::vector<char> fragShaderCode = VoxelEngine::readFile("shaders/skybox.frag.spv");
+void SelectionBox::createPipeline(vk::RenderPass& renderPass) {
+    std::vector<char> vertShaderCode = VoxelEngine::readFile("shaders/selection.vert.spv");
+    std::vector<char> fragShaderCode = VoxelEngine::readFile("shaders/selection.frag.spv");
 
     vk::ShaderModule vertShader = VoxelEngine::createShaderModule(m_engine->getGraphics().device(), vertShaderCode);
     vk::ShaderModule fragShader = VoxelEngine::createShaderModule(m_engine->getGraphics().device(), fragShaderCode);
@@ -194,6 +236,22 @@ void SkyboxManager::createPipeline(vk::RenderPass& renderPass) {
     std::vector<vk::PipelineShaderStageCreateInfo> stages = { std::move(vertInfo), std::move(fragInfo) };
 
     vk::PipelineVertexInputStateCreateInfo vertexInputInfo = {};
+    vertexInputInfo.vertexBindingDescriptions = {
+        {
+            0, sizeof(glm::i8vec4)
+        },
+        {
+            1, sizeof(glm::i8vec4)
+        }
+    };
+    vertexInputInfo.vertexAttributeDescriptions = {
+        {
+            0, 0, vk::Format::R8G8B8A8_Sint
+        },
+        {
+            1, 1, vk::Format::R8G8B8A8_Sint
+        },
+    };
 
     vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo = {};
     inputAssemblyInfo.topology = vk::PrimitiveTopology::TriangleList;
@@ -218,6 +276,10 @@ void SkyboxManager::createPipeline(vk::RenderPass& renderPass) {
         | vk::ColorComponentFlags::G
         | vk::ColorComponentFlags::B
         | vk::ColorComponentFlags::A;
+    colorBlendState.blendEnable = true;
+    colorBlendState.colorBlendOp = vk::BlendOp::Add;
+    colorBlendState.srcColorBlendFactor = vk::BlendFactor::SrcAlpha;
+    colorBlendState.dstColorBlendFactor = vk::BlendFactor::OneMinusSrcAlpha;
 
     vk::PipelineColorBlendStateCreateInfo colorBlendInfo = {};
     colorBlendInfo.attachments = { colorBlendState };

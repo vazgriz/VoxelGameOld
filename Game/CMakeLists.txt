@@ -42,6 +42,8 @@ add_executable("Game"
     TerrainGenerator.cpp
     SkyboxManager.h
     SkyboxManager.cpp
+    SelectionBox.h
+    SelectionBox.cpp
 )
 
 target_link_libraries("Game"
@@ -59,6 +61,8 @@ set(SHADER_SOURCES
     "shaders/shader.frag" ;
     "shaders/skybox.vert" ;
     "shaders/skybox.frag" ;
+    "shaders/selection.vert" ;
+    "shaders/selection.frag" ;
 )
 set(SPIRV_BINARY_FILES)
 
@@ -88,6 +92,7 @@ set(TEXTURES
     "resources/sky_left.png";
     "resources/sky_front.png";
     "resources/sky_back.png";
+    "resources/selection.png";
 )
 set(RESOURCES_TEXTURES)
 

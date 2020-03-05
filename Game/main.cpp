@@ -17,6 +17,7 @@
 #include "BlockManager.h"
 #include "TerrainGenerator.h"
 #include "SkyboxManager.h"
+#include "SelectionBox.h"
 
 int main() {
     VoxelEngine::Engine engine;
@@ -39,17 +40,18 @@ int main() {
 
     window.onFramebufferResized().connect<&VoxelEngine::Camera::setSize>(&camera);
 
-    FreeCam freeCam(camera, window.input());
+    SkyboxManager skyboxManager(engine, cameraSystem);
+    SelectionBox selectionBox(engine, cameraSystem);
+    TextureManager textureManager(engine);
+    BlockManager blockManager;
+    World world(blockManager);
+
+    FreeCam freeCam(camera, window.input(), world, selectionBox);
     engine.getUpdateGroup().add(freeCam, 10);
 
     freeCam.setPosition({ 0, 80, 0 });
 
-    SkyboxManager skyboxManager(engine, cameraSystem);
-    TextureManager textureManager(engine);
-    BlockManager blockManager;
-    World world;
-
-    ChunkManager chunkManager(world, freeCam, 16);
+    ChunkManager chunkManager(world, freeCam, 4);
     engine.getUpdateGroup().add(chunkManager, 20);
 
     TerrainGenerator terrainGenerator(world, chunkManager);
@@ -66,7 +68,7 @@ int main() {
     chunkManager.setChunkUpdater(chunkUpdater);
     chunkManager.setChunkMesher(chunkMesher);
 
-    Renderer renderer(engine, renderGraph, cameraSystem, world, textureManager, skyboxManager);
+    Renderer renderer(engine, renderGraph, cameraSystem, world, textureManager, skyboxManager, selectionBox);
     engine.getUpdateGroup().add(renderer, 100);
 
     cameraSystem.setTransferNode(renderer.transferNode());
@@ -74,6 +76,9 @@ int main() {
     textureManager.createTexture(renderer.transferNode(), renderer.mipmapGenerator());
     skyboxManager.transfer(renderer.transferNode());
     skyboxManager.createPipeline(renderer.chunkRenderer().renderPass());
+    selectionBox.transfer(renderer.transferNode());
+    selectionBox.createMesh(renderer.transferNode(), chunkMesher);
+    selectionBox.createPipeline(renderer.chunkRenderer().renderPass());
 
     engine.run();
 

@@ -9,11 +9,12 @@
 
 #include "TextureManager.h"
 #include "SkyboxManager.h"
+#include "SelectionBox.h"
 #include "World.h"
 
 class ChunkRenderer :public VoxelEngine::RenderGraph::Node {
 public:
-    ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager);
+    ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager, SelectionBox& selectionBox);
 
     vk::RenderPass& renderPass() const { return *m_renderPass; }
     VoxelEngine::RenderGraph::BufferUsage& uniformBufferUsage() const { return *m_uniformBufferUsage; }
@@ -21,6 +22,7 @@ public:
     VoxelEngine::RenderGraph::BufferUsage& indexBufferUsage() const { return *m_indexBufferUsage; }
     VoxelEngine::RenderGraph::ImageUsage& textureUsage() const { return *m_textureUsage; }
     VoxelEngine::RenderGraph::ImageUsage& skyboxUsage() const { return *m_skyboxUsage; }
+    VoxelEngine::RenderGraph::ImageUsage& selectionTextureUsage() const { return *m_selectionTextureUsage; }
     VoxelEngine::RenderGraph::ImageUsage& imageUsage() const { return *m_imageUsage; }
 
     void preRender(uint32_t currentFrame);
@@ -36,6 +38,7 @@ private:
     World* m_world;
     TextureManager* m_textureManager;
     SkyboxManager* m_skyboxManager;
+    SelectionBox* m_selectionBox;
 
     std::unique_ptr<VoxelEngine::Image> m_depthBuffer;
     std::unique_ptr<vk::ImageView> m_depthBufferView;
@@ -49,6 +52,7 @@ private:
     std::unique_ptr<VoxelEngine::RenderGraph::BufferUsage> m_indexBufferUsage;
     std::unique_ptr<VoxelEngine::RenderGraph::ImageUsage> m_textureUsage;
     std::unique_ptr<VoxelEngine::RenderGraph::ImageUsage> m_skyboxUsage;
+    std::unique_ptr<VoxelEngine::RenderGraph::ImageUsage> m_selectionTextureUsage;
     std::unique_ptr<VoxelEngine::RenderGraph::ImageUsage> m_imageUsage;
 
     void createDepthBuffer();
