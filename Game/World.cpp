@@ -96,6 +96,8 @@ void World::update(glm::ivec3 worldChunkPos) {
 }
 
 std::optional<RaycastResult> World::raycast(glm::vec3 origin, glm::vec3 dir, float distance) {
+    auto lock = getLock();
+
     float t = 0.0f;
 
     glm::ivec3 i = glm::ivec3(
