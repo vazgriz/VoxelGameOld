@@ -165,7 +165,6 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
             memcpy(chunk.blocks().data(), results.blocks[i].data(), sizeof(ChunkData<Block, Chunk::chunkSize>));
             memset(chunk.light().data(), 0, sizeof(ChunkData<Light, Chunk::chunkSize>));
 
-            chunkMesh.clearMesh();
             m_updateQueue.enqueue(worldChunkPos);
         }
     }
@@ -335,21 +334,24 @@ ChunkManager::ChunkMap::iterator ChunkManager::destroyChunkGroup(ChunkMap::itera
         }
     }
 
-    auto view = m_world->registry().view<Chunk>();
+    auto view = m_world->registry().view<Chunk, ChunkMesh>();
 
     for (size_t i = 0; i < World::worldHeight; i++) {
         glm::ivec3 worldChunkPos = glm::ivec3(coord.x, i, coord.y);
         auto chunkEntity = m_world->getEntity(worldChunkPos);
-        auto& chunk = view.get(chunkEntity);
+        auto& chunk = view.get<Chunk>(chunkEntity);
 
         for (auto offset : Chunk::Neighbors26) {
             auto neighborEntity = m_world->getEntity(worldChunkPos + offset);
 
             if (neighborEntity != entt::null) {
-                auto& neighbor = view.get(neighborEntity);
+                auto& neighbor = view.get<Chunk>(neighborEntity);
                 neighbor.setNeighbor(-offset, entt::null);
             }
         }
+
+        auto& chunkMesh = view.get<ChunkMesh>(chunkEntity);
+        chunkMesh.clearMesh();
     }
 
     m_generateQueue.remove({ coord.x, 0, coord.y });
