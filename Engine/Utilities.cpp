@@ -30,3 +30,10 @@ std::vector<char> VoxelEngine::readFile(const std::string& filename) {
 
     return buffer;
 }
+
+vk::ShaderModule VoxelEngine::createShaderModule(vk::Device& device, const std::vector<char>& byteCode) {
+    vk::ShaderModuleCreateInfo info = {};
+    info.code = byteCode;
+
+    return vk::ShaderModule(device, info);
+}
