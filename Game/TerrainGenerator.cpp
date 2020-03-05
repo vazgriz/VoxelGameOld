@@ -119,7 +119,7 @@ void TerrainGenerator::generate(glm::ivec2 coord) {
         }
     }
 
-    auto lock = m_world->getReadLock();
+    auto lock = m_world->getLock();
     std::array<Chunk*, World::worldHeight> chunks;
     auto view = m_world->registry().view<Chunk>();
 

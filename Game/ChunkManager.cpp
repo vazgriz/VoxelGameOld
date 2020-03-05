@@ -100,7 +100,7 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
 
     if (worldChunk != m_lastPos) {
         m_lastPos = worldChunk;
-        auto lock = m_world->getWriteLock();
+        auto lock = m_world->getLock();
 
         {
             auto it = m_chunkMap.find(coord);

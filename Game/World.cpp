@@ -9,12 +9,8 @@ World::World(BlockManager& blockManager) {
     m_blockManager = &blockManager;
 }
 
-std::shared_lock<std::shared_mutex> World::getReadLock() {
-    return std::shared_lock<std::shared_mutex>(m_mutex);
-}
-
-std::unique_lock<std::shared_mutex> World::getWriteLock() {
-    return std::unique_lock<std::shared_mutex>(m_mutex);
+std::unique_lock<std::mutex> World::getLock() {
+    return std::unique_lock<std::mutex>(m_mutex);
 }
 
 entt::entity World::createChunk(glm::ivec3 worldChunkPos) {

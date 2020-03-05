@@ -42,7 +42,7 @@ void ChunkUpdater::update(glm::ivec3 worldChunkPos) {
     std::queue<LightUpdate> queue;
 
     {
-        auto lock = m_world->getReadLock();
+        auto lock = m_world->getLock();
         entt::entity entity = m_world->getEntity(worldChunkPos);
         if (entity == entt::null) return;
 

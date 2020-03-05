@@ -4,7 +4,7 @@
 #include <unordered_set>
 #include <Engine/math.h>
 #include <Engine/BufferedQueue.h>
-#include <shared_mutex>
+#include <mutex>
 #include <optional>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
@@ -26,8 +26,7 @@ public:
 
     World(BlockManager& blockManager);
 
-    std::shared_lock<std::shared_mutex> getReadLock();
-    std::unique_lock<std::shared_mutex> getWriteLock();
+    std::unique_lock<std::mutex> getLock();
 
     entt::entity createChunk(glm::ivec3 worldChunkPos);
     void destroyChunk(glm::ivec3 worldChunkPos, entt::entity entity);
@@ -52,7 +51,7 @@ private:
     static Block m_nullBlock;
     static Block m_airBlock;
     BlockManager* m_blockManager;
-    std::shared_mutex m_mutex;
+    std::mutex m_mutex;
     entt::registry m_registry;
     std::unordered_set<entt::entity> m_chunkSet;
     std::unordered_map<glm::ivec3, entt::entity> m_chunkMap;
