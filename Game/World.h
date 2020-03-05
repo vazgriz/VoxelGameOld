@@ -23,6 +23,8 @@ struct RaycastResult {
 class World {
 public:
     static const size_t worldHeight = 16;
+    static const Block& nullBlock() { return m_nullBlock; }
+    static const Block& airBlock() { return m_airBlock; }
 
     World(BlockManager& blockManager);
 
@@ -50,6 +52,7 @@ public:
 private:
     static Block m_nullBlock;
     static Block m_airBlock;
+
     BlockManager* m_blockManager;
     std::mutex m_mutex;
     entt::registry m_registry;
