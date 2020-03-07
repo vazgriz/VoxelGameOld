@@ -5,6 +5,7 @@ using namespace VoxelEngine;
 Mesh::Mesh() {
     m_indexCount = 0;
     m_vertexCount = 0;
+    m_vertexOffset = 0;
 }
 
 void Mesh::addBinding(std::shared_ptr<Buffer> buffer, vk::DeviceSize offset) {
