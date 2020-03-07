@@ -44,6 +44,8 @@ add_executable("Game"
     SkyboxManager.cpp
     SelectionBox.h
     SelectionBox.cpp
+    MeshManager.h
+    MeshManager.cpp
 )
 
 target_link_libraries("Game"

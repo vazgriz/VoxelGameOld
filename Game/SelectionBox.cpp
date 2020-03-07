@@ -2,7 +2,7 @@
 #include <Engine/Utilities.h>
 #include <stb_image.h>
 #include "Chunk.h"
-#include "ChunkMesher.h"
+#include "MeshManager.h"
 
 const std::string textureName = "resources/selection.png";
 const uint32_t textureSize = 16;
@@ -35,7 +35,7 @@ void SelectionBox::transfer(VoxelEngine::TransferNode& transferNode) {
     stbi_image_free(data);
 }
 
-void SelectionBox::createMesh(VoxelEngine::TransferNode& transferNode, ChunkMesher& chunkMesher) {
+void SelectionBox::createMesh(VoxelEngine::TransferNode& transferNode, MeshManager& meshManager) {
     m_mesh = std::make_unique<VoxelEngine::Mesh>();
 
     std::vector<glm::i8vec4> positions;
@@ -70,7 +70,7 @@ void SelectionBox::createMesh(VoxelEngine::TransferNode& transferNode, ChunkMesh
 
     m_mesh->addBinding(vertexBuffer, 0);
     m_mesh->addBinding(uvsBuffer, 0);
-    m_mesh->setIndexBuffer(chunkMesher.indexBuffer(), vk::IndexType::Uint32, 0);
+    m_mesh->setIndexBuffer(meshManager.indexBuffer(), vk::IndexType::Uint32, 0);
 }
 
 void SelectionBox::setSelection(std::optional<RaycastResult>& raycast) {

@@ -1,19 +1,15 @@
 #include "ChunkMesher.h"
 #include "ChunkMesh.h"
 
-ChunkMesher::ChunkMesher(VoxelEngine::Engine& engine, World& world, BlockManager& blockManager) : m_requestQueue(queueSize) {
+ChunkMesher::ChunkMesher(VoxelEngine::Engine& engine, World& world, BlockManager& blockManager, MeshManager& meshManager) : m_requestQueue(queueSize) {
     m_engine = &engine;
     m_world = &world;
     m_blockManager = &blockManager;
-
-    createIndexBuffer();
+    m_meshManager = &meshManager;
 }
 
 void ChunkMesher::setTransferNode(VoxelEngine::TransferNode& transferNode) {
     m_transferNode = &transferNode;
-
-    m_transferNode->transfer(*m_indexBuffer, m_indexBufferSize, 0, m_indexData.data());
-    m_indexData = {};
 }
 
 void ChunkMesher::update(VoxelEngine::Clock& clock) {
@@ -121,34 +117,6 @@ void ChunkMesher::update(glm::ivec3 worldChunkPos) {
     m_resultQueue.enqueue({ updateIndex, worldChunkPos, light });
 }
 
-void ChunkMesher::createIndexBuffer() {
-    uint32_t index = 0;
-
-    for (uint32_t i = 0; i < 2048 * 6; i++) {
-        m_indexData.push_back(index + 0);
-        m_indexData.push_back(index + 1);
-        m_indexData.push_back(index + 2);
-        m_indexData.push_back(index + 1);
-        m_indexData.push_back(index + 3);
-        m_indexData.push_back(index + 2);
-        index += 4;
-    }
-
-    m_indexCount = static_cast<uint32_t>(m_indexData.size());
-    m_indexBufferSize = m_indexData.size() * sizeof(uint32_t);
-
-    vk::BufferCreateInfo info = {};
-    info.size = m_indexBufferSize;
-    info.usage = vk::BufferUsageFlags::IndexBuffer | vk::BufferUsageFlags::TransferDst;
-    info.sharingMode = vk::SharingMode::Exclusive;
-
-    VmaAllocationCreateInfo allocInfo = {};
-    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-    allocInfo.preferredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-    m_indexBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, info, allocInfo);
-}
-
 size_t ChunkMesher::makeMesh(glm::ivec3 worldChunkPos, ChunkBuffer& chunkBuffer, LightBuffer& lightBuffer) {
     size_t index = m_updateIndex;
     m_updateIndex = (m_updateIndex + 1) % (queueSize * 2);
@@ -254,7 +222,7 @@ void ChunkMesher::transferMesh(ChunkMesh& chunkMesh, size_t index) {
         chunkMesh.mesh().addBinding(colorBuffer);
         chunkMesh.mesh().addBinding(uvBuffer);
 
-        chunkMesh.mesh().setIndexBuffer(m_indexBuffer, vk::IndexType::Uint32, 0);
+        chunkMesh.mesh().setIndexBuffer(m_meshManager->indexBuffer(), vk::IndexType::Uint32, 0);
     }
 
     m_transferNode->transfer(*chunkMesh.mesh().getBinding(0), vertexSize, 0, update.vertexData.data());

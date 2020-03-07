@@ -18,6 +18,7 @@
 #include "TerrainGenerator.h"
 #include "SkyboxManager.h"
 #include "SelectionBox.h"
+#include "MeshManager.h"
 
 int main() {
     VoxelEngine::Engine engine;
@@ -45,6 +46,7 @@ int main() {
     TextureManager textureManager(engine);
     BlockManager blockManager;
     World world(blockManager);
+    MeshManager meshManager(engine);
 
     FreeCam freeCam(camera, window.input(), world, blockManager, selectionBox);
     engine.getUpdateGroup().add(freeCam, 10);
@@ -60,7 +62,7 @@ int main() {
     ChunkUpdater chunkUpdater(engine, world, blockManager, chunkManager);
     chunkUpdater.run();
 
-    ChunkMesher chunkMesher(engine, world, blockManager);
+    ChunkMesher chunkMesher(engine, world, blockManager, meshManager);
     engine.getUpdateGroup().add(chunkMesher, 30);
     chunkMesher.run();
 
@@ -71,13 +73,14 @@ int main() {
     Renderer renderer(engine, renderGraph, cameraSystem, world, textureManager, skyboxManager, selectionBox);
     engine.getUpdateGroup().add(renderer, 100);
 
+    meshManager.setTransferNode(renderer.transferNode());
     cameraSystem.setTransferNode(renderer.transferNode());
     chunkMesher.setTransferNode(renderer.transferNode());
     textureManager.createTexture(renderer.transferNode(), renderer.mipmapGenerator());
     skyboxManager.transfer(renderer.transferNode());
     skyboxManager.createPipeline(renderer.chunkRenderer().renderPass());
     selectionBox.transfer(renderer.transferNode());
-    selectionBox.createMesh(renderer.transferNode(), chunkMesher);
+    selectionBox.createMesh(renderer.transferNode(), meshManager);
     selectionBox.createPipeline(renderer.chunkRenderer().renderPass());
 
     engine.run();

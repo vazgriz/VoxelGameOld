@@ -5,7 +5,7 @@
 #include <Engine/CameraSystem.h>
 #include "World.h"
 
-class ChunkMesher;
+class MeshManager;
 
 class SelectionBox {
 public:
@@ -19,7 +19,7 @@ public:
 
     void transfer(VoxelEngine::TransferNode& transferNode);
     void createPipeline(vk::RenderPass& renderPass);
-    void createMesh(VoxelEngine::TransferNode& transferNode, ChunkMesher& chunkMesher);
+    void createMesh(VoxelEngine::TransferNode& transferNode, MeshManager& meshManager);
     void setSelection(std::optional<RaycastResult>& raycast);
 
     void draw(vk::CommandBuffer& commandBuffer, vk::Viewport viewport, vk::Rect2D scissor);
