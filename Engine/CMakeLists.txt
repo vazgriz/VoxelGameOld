@@ -51,6 +51,8 @@ add_library("Engine"
     Image.cpp
     include/Engine/BlockingQueue.h
     include/Engine/BufferedQueue.h
+    include/Engine/FreeListAllocator.h
+    FreeListAllocator.cpp
 )
 
 target_compile_definitions("Engine" PUBLIC

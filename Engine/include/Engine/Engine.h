@@ -11,6 +11,7 @@
 #include "Engine/RenderGraph/RenderGraph.h"
 #include "Engine/System.h"
 #include "Engine/Window.h"
+#include "FreeListAllocator.h"
 
 namespace VoxelEngine {
     class RenderGraph;
