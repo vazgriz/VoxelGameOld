@@ -198,36 +198,28 @@ void ChunkMesher::transferMesh(ChunkMesh& chunkMesh, size_t index) {
     size_t colorSize = update.colorData.size() * sizeof(glm::i8vec4);
     size_t uvSize = update.uvData.size() * sizeof(glm::i8vec4);
 
-    if (chunkMesh.mesh().bindingCount() == 0 || chunkMesh.mesh().getBinding(0)->size() < vertexSize) {
-        vk::BufferCreateInfo vertexInfo = {};
-        vertexInfo.size = vertexSize;
-        vertexInfo.usage = vk::BufferUsageFlags::VertexBuffer | vk::BufferUsageFlags::TransferDst;
-        vertexInfo.sharingMode = vk::SharingMode::Exclusive;
+    if (chunkMesh.mesh().bindingCount() == 0 || chunkMesh.mesh().getBinding(0)->size() != vertexSize) {
+        auto vertexBuffer = m_meshManager->allocateBuffer(vertexSize, sizeof(glm::i8vec4));
+        auto colorBuffer = m_meshManager->allocateBuffer(colorSize, sizeof(glm::i8vec4));
+        auto uvBuffer = m_meshManager->allocateBuffer(uvSize, sizeof(glm::i8vec4));
 
-        vk::BufferCreateInfo colorInfo = vertexInfo;
-        colorInfo.size = colorSize;
+        chunkMesh.setVertexOffset(vertexBuffer.allocation.offset);
 
-        vk::BufferCreateInfo uvInfo = vertexInfo;
+        chunkMesh.clearBindings();
+        chunkMesh.addBinding(std::move(vertexBuffer));
+        chunkMesh.addBinding(std::move(colorBuffer));
+        chunkMesh.addBinding(std::move(uvBuffer));
 
-        VmaAllocationCreateInfo allocInfo = {};
-        allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-        allocInfo.preferredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-        std::shared_ptr<VoxelEngine::Buffer> vertexBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, vertexInfo, allocInfo);
-        std::shared_ptr<VoxelEngine::Buffer> colorBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, colorInfo, allocInfo);
-        std::shared_ptr<VoxelEngine::Buffer> uvBuffer = std::make_shared<VoxelEngine::Buffer>(*m_engine, uvInfo, allocInfo);
-
-        chunkMesh.mesh().clearBindings();
-        chunkMesh.mesh().addBinding(vertexBuffer);
-        chunkMesh.mesh().addBinding(colorBuffer);
-        chunkMesh.mesh().addBinding(uvBuffer);
-
-        chunkMesh.mesh().setIndexBuffer(m_meshManager->indexBuffer(), vk::IndexType::Uint32, 0);
+        chunkMesh.setIndexBuffer(m_meshManager->indexBuffer());
     }
 
-    m_transferNode->transfer(*chunkMesh.mesh().getBinding(0), vertexSize, 0, update.vertexData.data());
-    m_transferNode->transfer(*chunkMesh.mesh().getBinding(1), colorSize, 0, update.colorData.data());
-    m_transferNode->transfer(*chunkMesh.mesh().getBinding(2), uvSize, 0, update.uvData.data());
+    auto& vertexBuffer = chunkMesh.getBinding(0);
+    auto& colorBuffer = chunkMesh.getBinding(1);
+    auto& uvBuffer = chunkMesh.getBinding(2);
+
+    m_transferNode->transfer(*vertexBuffer.buffer, vertexSize, vertexBuffer.allocation.offset, update.vertexData.data());
+    m_transferNode->transfer(*colorBuffer.buffer, colorSize, colorBuffer.allocation.offset, update.colorData.data());
+    m_transferNode->transfer(*uvBuffer.buffer, uvSize, uvBuffer.allocation.offset, update.uvData.data());
 
     chunkMesh.setDirty();
 }
