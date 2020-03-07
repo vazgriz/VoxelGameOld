@@ -8,13 +8,13 @@ Mesh::Mesh() {
     m_vertexOffset = 0;
 }
 
-void Mesh::addBinding(std::shared_ptr<Buffer> buffer, vk::DeviceSize offset) {
+void Mesh::addBinding(const std::shared_ptr<Buffer>& buffer, vk::DeviceSize offset) {
     m_bindings.push_back(buffer);
     m_buffers.push_back(buffer->buffer());
     m_offsets.push_back(offset);
 }
 
-void Mesh::setIndexBuffer(std::shared_ptr<Buffer> buffer, vk::IndexType type, vk::DeviceSize offset) {
+void Mesh::setIndexBuffer(const std::shared_ptr<Buffer>& buffer, vk::IndexType type, vk::DeviceSize offset) {
     m_indexBuffer = buffer;
     m_indexType = type;
     m_indexOffset = offset;

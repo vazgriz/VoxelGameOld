@@ -20,11 +20,11 @@ namespace VoxelEngine {
         const std::vector<std::shared_ptr<VoxelEngine::Buffer>>& bindings() const { return m_bindings; }
         const std::shared_ptr<Buffer>& indexBuffer() const { return m_indexBuffer; }
 
-        void addBinding(std::shared_ptr<Buffer> buffer, vk::DeviceSize offset = 0);
+        void addBinding(const std::shared_ptr<Buffer>& buffer, vk::DeviceSize offset = 0);
         std::shared_ptr<Buffer> getBinding(size_t index) const { return m_bindings[index]; }
         size_t bindingCount() const { return m_bindings.size(); }
 
-        void setIndexBuffer(std::shared_ptr<Buffer> buffer, vk::IndexType type, vk::DeviceSize offset);
+        void setIndexBuffer(const std::shared_ptr<Buffer>& buffer, vk::IndexType type, vk::DeviceSize offset);
         bool hasIndexBuffer() const { return m_indexBuffer != nullptr; }
 
         void clearBindings();
