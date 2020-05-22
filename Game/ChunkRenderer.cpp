@@ -111,7 +111,6 @@ void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuff
         auto& chunk = view.get<Chunk>(entity);
         auto& mesh = view.get<ChunkMesh>(entity);
 
-        if (mesh.isEmpty()) continue;
         if (chunk.loadState() != ChunkLoadState::Loaded) continue;
         if (!frustum.testAABB(chunk.worldChunkPosition() * 16, glm::vec3(16, 16, 16))) continue;
 

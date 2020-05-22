@@ -20,7 +20,6 @@ public:
     void clearDirty() { m_dirty = false; }
 
     void clearMesh();
-    bool isEmpty() const;
 
     int32_t vertexOffset() const { return m_mesh.vertexOffset(); }
     void setVertexOffset(int32_t vertexOffset) { m_mesh.setVertexOffset(vertexOffset); }

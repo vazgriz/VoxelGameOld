@@ -54,7 +54,7 @@ private:
     VoxelEngine::BufferedQueue<MeshUpdate2> m_resultQueue;
 
     size_t makeMesh(glm::ivec3 worldChunkPos, ChunkBuffer& chunkBuffer, LightBuffer& lightBuffer);
-    void transferMesh(ChunkMesh& chunkMesh, size_t index);
+    void transferMesh(entt::entity entity, size_t index);
 
     void update(glm::ivec3 worldChunkPos);
 

@@ -25,7 +25,6 @@ entt::entity World::createChunk(glm::ivec3 worldChunkPos) {
     } else {
         chunkEntity = m_registry.create();
         m_registry.assign<Chunk>(chunkEntity, chunkEntity, worldChunkPos, *this);
-        m_registry.assign<ChunkMesh>(chunkEntity);
     }
 
     m_chunkMap.insert({ worldChunkPos, chunkEntity });

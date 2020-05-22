@@ -46,9 +46,8 @@ void ChunkUpdater::update(glm::ivec3 worldChunkPos) {
         entt::entity entity = m_world->getEntity(worldChunkPos);
         if (entity == entt::null) return;
 
-        auto view = m_world->registry().view<Chunk, ChunkMesh>();
+        auto view = m_world->registry().view<Chunk>();
         Chunk& chunk = view.get<Chunk>(entity);
-        ChunkMesh& chunkMesh = view.get<ChunkMesh>(entity);
 
         for (auto offset : Chunk::Neighbors26) {
             entt::entity neighborEntity = chunk.neighbor(offset);

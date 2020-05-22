@@ -8,10 +8,6 @@ void ChunkMesh::clearMesh() {
     m_mesh.setIndexCount(0);
 }
 
-bool ChunkMesh::isEmpty() const {
-    return m_mesh.indexCount() == 0;
-}
-
 void ChunkMesh::clearBindings() {
     m_mesh.clearBindings();
     m_allocations.clear();

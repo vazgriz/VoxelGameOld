@@ -14,13 +14,12 @@ void ChunkMesher::setTransferNode(VoxelEngine::TransferNode& transferNode) {
 
 void ChunkMesher::update(VoxelEngine::Clock& clock) {
     std::queue<MeshUpdate2>& queue = m_resultQueue.swapDequeue();
-    auto view = m_world->registry().view<Chunk, ChunkMesh>();
 
     while (queue.size() > 0) {
         auto& update = queue.front();
         auto entity = m_world->getEntity(update.coord);
         if (entity != entt::null) {
-            transferMesh(view.get<ChunkMesh>(entity), update.index);
+            transferMesh(entity, update.index);
         }
         queue.pop();
     }
@@ -63,9 +62,8 @@ void ChunkMesher::update(glm::ivec3 worldChunkPos) {
         entt::entity entity = m_world->getEntity(worldChunkPos);
         if (entity == entt::null) return;
 
-        auto view = m_world->registry().view<Chunk, ChunkMesh>();
+        auto view = m_world->registry().view<Chunk>();
         Chunk& chunk = view.get<Chunk>(entity);
-        ChunkMesh& chunkMesh = view.get<ChunkMesh>(entity);
 
         for (auto offset : Chunk::Neighbors26) {
             entt::entity neighborEntity = chunk.neighbor(offset);
@@ -184,13 +182,25 @@ size_t ChunkMesher::makeMesh(glm::ivec3 worldChunkPos, ChunkBuffer& chunkBuffer,
     return index;
 }
 
-void ChunkMesher::transferMesh(ChunkMesh& chunkMesh, size_t index) {
+void ChunkMesher::transferMesh(entt::entity entity, size_t index) {
     MeshUpdate& update = m_updates[index];
 
     if (update.indexCount == 0) {
-        chunkMesh.clearMesh();
+        if (m_world->registry().has<ChunkMesh>(entity)) {
+            m_world->registry().remove<ChunkMesh>(entity);
+        }
         return;
     }
+
+    ChunkMesh* chunkMeshPtr = nullptr;
+
+    if (m_world->registry().has<ChunkMesh>(entity)) {
+        chunkMeshPtr = &m_world->registry().get<ChunkMesh>(entity);
+    } else {
+        chunkMeshPtr = &m_world->registry().assign<ChunkMesh>(entity);
+    }
+
+    ChunkMesh& chunkMesh = *chunkMeshPtr;
 
     chunkMesh.mesh().setIndexCount(update.indexCount);
 

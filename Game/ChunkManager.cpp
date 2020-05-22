@@ -144,7 +144,7 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
     }
 
     auto& generateResults = m_generateResultQueue.swapDequeue();
-    auto view = m_world->registry().view<Chunk, ChunkMesh>();
+    auto view = m_world->registry().view<Chunk>();
 
     while (generateResults.size() > 0) {
         auto results = generateResults.front();
@@ -160,7 +160,6 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
             glm::ivec3 worldChunkPos = { coord.x, i, coord.y };
             auto chunkEntity = group.chunks()[i];
             auto& chunk = view.get<Chunk>(chunkEntity);
-            auto& chunkMesh = view.get<ChunkMesh>(chunkEntity);
 
             memcpy(chunk.blocks().data(), results.blocks[i].data(), sizeof(ChunkData<Block, Chunk::chunkSize>));
             memset(chunk.light().data(), 0, sizeof(ChunkData<Light, Chunk::chunkSize>));
@@ -173,13 +172,12 @@ void ChunkManager::update(VoxelEngine::Clock& clock) {
 
     while (m_updateQueue.count() > 0) {
         auto item = m_updateQueue.peek();
+        auto entity = m_world->getEntity(item);
 
-        if (!m_world->valid(item)) {
+        if (entity == entt::null) {
             m_updateQueue.dequeue();
             continue;
         }
-
-        auto& chunk = view.get<Chunk>(m_world->getEntity(item));
 
         if (!m_chunkUpdater->queue(item)) break;
         m_updateQueue.dequeue();
