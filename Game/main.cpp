@@ -41,12 +41,12 @@ int main() {
 
     window.onFramebufferResized().connect<&VoxelEngine::Camera::setSize>(&camera);
 
+    MeshManager meshManager(engine);
     SkyboxManager skyboxManager(engine, cameraSystem);
     SelectionBox selectionBox(engine, cameraSystem);
     TextureManager textureManager(engine);
     BlockManager blockManager;
     World world(blockManager);
-    MeshManager meshManager(engine);
 
     FreeCam freeCam(camera, window.input(), world, blockManager, selectionBox);
     engine.getUpdateGroup().add(freeCam, 10);
