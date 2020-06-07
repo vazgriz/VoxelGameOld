@@ -335,7 +335,7 @@ ChunkManager::ChunkMap::iterator ChunkManager::destroyChunkGroup(ChunkMap::itera
         }
     }
 
-    auto view = m_world->registry().view<Chunk, ChunkMesh>();
+    auto view = m_world->registry().view<Chunk>();
 
     for (size_t i = 0; i < World::worldHeight; i++) {
         glm::ivec3 worldChunkPos = glm::ivec3(coord.x, i, coord.y);
@@ -350,9 +350,6 @@ ChunkManager::ChunkMap::iterator ChunkManager::destroyChunkGroup(ChunkMap::itera
                 neighbor.setNeighbor(-offset, entt::null);
             }
         }
-
-        auto& chunkMesh = view.get<ChunkMesh>(chunkEntity);
-        chunkMesh.clearMesh();
     }
 
     m_generateQueue.remove({ coord.x, 0, coord.y });
