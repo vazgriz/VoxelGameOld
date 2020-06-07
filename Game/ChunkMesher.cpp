@@ -121,8 +121,6 @@ size_t ChunkMesher::makeMesh(glm::ivec3 worldChunkPos, ChunkBuffer& chunkBuffer,
 
     MeshUpdate& update = m_updates[index];
     update.vertexData.clear();
-    update.colorData.clear();
-    update.uvData.clear();
 
     uint32_t indexCount = 0;
     const glm::ivec3 root = { 1, 1, 1 };
@@ -167,9 +165,13 @@ size_t ChunkMesher::makeMesh(glm::ivec3 worldChunkPos, ChunkBuffer& chunkBuffer,
                     light /= 4;
                     light = std::max(light * 17, 0);
 
-                    update.vertexData.push_back(glm::i8vec4(pos + faceData.vertices[j], 0));
-                    update.colorData.push_back(glm::i8vec4(light, light, light, 0));
-                    update.uvData.push_back(glm::i8vec4(Chunk::uvFaces[j], static_cast<uint8_t>(faceIndex), 0));
+                    ChunkVertex vertex = {
+                        glm::i8vec4(pos + faceData.vertices[j], 0),
+                        glm::i8vec4(light, light, light, 0),
+                        glm::i8vec4(Chunk::uvFaces[j], static_cast<uint8_t>(faceIndex), 0)
+                    };
+
+                    update.vertexData.push_back(vertex);
                 }
 
                 indexCount++;
@@ -204,32 +206,22 @@ void ChunkMesher::transferMesh(entt::entity entity, size_t index) {
 
     chunkMesh.mesh().setIndexCount(update.indexCount);
 
-    size_t vertexSize = update.vertexData.size() * sizeof(glm::i8vec4);
-    size_t colorSize = update.colorData.size() * sizeof(glm::i8vec4);
-    size_t uvSize = update.uvData.size() * sizeof(glm::i8vec4);
+    size_t vertexSize = update.vertexData.size() * sizeof(ChunkVertex);
 
     if (chunkMesh.mesh().bindingCount() == 0 || chunkMesh.mesh().getBinding(0)->size() != vertexSize) {
         auto vertexBuffer = m_meshManager->allocateBuffer(vertexSize, sizeof(glm::i8vec4));
-        auto colorBuffer = m_meshManager->allocateBuffer(colorSize, sizeof(glm::i8vec4));
-        auto uvBuffer = m_meshManager->allocateBuffer(uvSize, sizeof(glm::i8vec4));
 
         chunkMesh.setVertexOffset(vertexBuffer.allocation.offset);
 
         chunkMesh.clearBindings();
         chunkMesh.addBinding(std::move(vertexBuffer));
-        chunkMesh.addBinding(std::move(colorBuffer));
-        chunkMesh.addBinding(std::move(uvBuffer));
 
         chunkMesh.setIndexBuffer(m_meshManager->indexBuffer());
     }
 
     auto& vertexBuffer = chunkMesh.getBinding(0);
-    auto& colorBuffer = chunkMesh.getBinding(1);
-    auto& uvBuffer = chunkMesh.getBinding(2);
 
     m_transferNode->transfer(*vertexBuffer.buffer, vertexSize, vertexBuffer.allocation.offset, update.vertexData.data());
-    m_transferNode->transfer(*colorBuffer.buffer, colorSize, colorBuffer.allocation.offset, update.colorData.data());
-    m_transferNode->transfer(*uvBuffer.buffer, uvSize, uvBuffer.allocation.offset, update.uvData.data());
 
     chunkMesh.setDirty();
 }

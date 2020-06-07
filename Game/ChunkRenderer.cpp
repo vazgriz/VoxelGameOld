@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include "Chunk.h"
 #include "ChunkMesh.h"
+#include "ChunkMesher.h"
 #include <Engine/Utilities.h>
 
 ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager, SelectionBox& selectionBox)
@@ -44,8 +45,6 @@ void ChunkRenderer::preRender(uint32_t currentFrame) {
             mesh.clearDirty();
 
             m_vertexBufferUsage->sync(*mesh.mesh().getBinding(0), VK_WHOLE_SIZE, 0);
-            m_vertexBufferUsage->sync(*mesh.mesh().getBinding(1), VK_WHOLE_SIZE, 0);
-            m_vertexBufferUsage->sync(*mesh.mesh().getBinding(2), VK_WHOLE_SIZE, 0);
         }
     }
 
@@ -250,24 +249,18 @@ void ChunkRenderer::createPipeline() {
     vk::PipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.vertexBindingDescriptions = {
         {
-            0, sizeof(glm::i8vec4)
-        },
-        {
-            1, sizeof(glm::i8vec4)
-        },
-        {
-            2, sizeof(glm::i8vec4)
+            0, sizeof(ChunkVertex)
         }
     };
     vertexInputInfo.vertexAttributeDescriptions = {
         {
-            0, 0, vk::Format::R8G8B8A8_Sint
+            0, 0, vk::Format::R8G8B8A8_Sint, 0
         },
         {
-            1, 1, vk::Format::R8G8B8A8_Unorm
+            1, 0, vk::Format::R8G8B8A8_Unorm, sizeof(glm::i8vec4)
         },
         {
-            2, 2, vk::Format::R8G8B8A8_Sint
+            2, 0, vk::Format::R8G8B8A8_Sint, sizeof(glm::i8vec4) * 2
         },
     };
 

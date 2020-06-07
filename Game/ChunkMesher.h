@@ -8,10 +8,14 @@
 #include "World.h"
 #include "MeshManager.h"
 
+struct ChunkVertex {
+    glm::i8vec4 posData;
+    glm::i8vec4 colorData;
+    glm::i8vec4 uvData;
+};
+
 struct MeshUpdate {
-    std::vector<glm::i8vec4> vertexData;
-    std::vector<glm::i8vec4> colorData;
-    std::vector<glm::i8vec4> uvData;
+    std::vector<ChunkVertex> vertexData;
     uint32_t indexCount;
 };
 
