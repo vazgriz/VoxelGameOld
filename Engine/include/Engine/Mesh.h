@@ -12,10 +12,10 @@ namespace VoxelEngine {
 
         size_t indexCount() const { return m_indexCount; }
         size_t vertexCount() const { return m_vertexCount; }
-        int32_t vertexOffset() const { return m_vertexOffset; }
+        uint32_t vertexOffset() const { return m_vertexOffset; }
         void setIndexCount(uint32_t indexCount) { m_indexCount = indexCount; }
         void setVertexCount(uint32_t vertexCount) { m_vertexCount = vertexCount; }
-        void setVertexOffset(int32_t vertexOffset) { m_vertexOffset = vertexOffset; }
+        void setVertexOffset(uint32_t vertexOffset) { m_vertexOffset = vertexOffset; }
 
         const std::vector<std::shared_ptr<VoxelEngine::Buffer>>& bindings() const { return m_bindings; }
         const std::shared_ptr<Buffer>& indexBuffer() const { return m_indexBuffer; }
