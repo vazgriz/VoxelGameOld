@@ -5,7 +5,7 @@
 #include "ChunkMesher.h"
 #include <Engine/Utilities.h>
 
-ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager, SelectionBox& selectionBox)
+ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager, SelectionBox& selectionBox, MeshManager& meshManager)
     : VoxelEngine::RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue(), vk::PipelineStageFlags::ColorAttachmentOutput) {
     m_engine = &engine;
     m_graphics = &engine.getGraphics();
@@ -16,6 +16,7 @@ ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGra
     m_textureManager = &textureManager;
     m_skyboxManager = &skyboxManager;
     m_selectionBox = &selectionBox;
+    m_meshManager = &meshManager;
 
     createDepthBuffer();
     createRenderPass();
@@ -102,20 +103,31 @@ void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuff
     commandBuffer.setScissor(0, { scissor });
 
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::Graphics, *m_pipelineLayout, 0, { m_cameraSystem->descriptorSet(), m_textureManager->descriptorSet() }, nullptr);
+    commandBuffer.bindIndexBuffer(m_meshManager->indexBuffer()->buffer(), 0, vk::IndexType::Uint32);
 
     VoxelEngine::Frustum frustum = m_cameraSystem->camera().frustum();
+
+    VkBuffer boundBuffer = VK_NULL_HANDLE;
 
     auto view = m_world->registry().view<Chunk, ChunkMesh>();
     for (auto entity : view) {
         auto& chunk = view.get<Chunk>(entity);
-        auto& mesh = view.get<ChunkMesh>(entity);
+        auto& chunkMesh = view.get<ChunkMesh>(entity);
 
         if (chunk.loadState() != ChunkLoadState::Loaded) continue;
         if (!frustum.testAABB(chunk.worldChunkPosition() * 16, glm::vec3(16, 16, 16))) continue;
 
+        auto& mesh = chunkMesh.mesh();
+        auto& buffer = mesh.getBinding(0)->buffer();
+
+        if (buffer.handle() != boundBuffer) {
+            mesh.bindVertexBuffers(commandBuffer);
+            boundBuffer = buffer.handle();
+        }
+
         glm::ivec4 transform = glm::ivec4(chunk.worldChunkPosition(), 0) * Chunk::chunkSize;
         commandBuffer.pushConstants(*m_pipelineLayout, vk::ShaderStageFlags::Vertex, 0, sizeof(glm::ivec4), &transform);
-        mesh.mesh().drawIndexed(commandBuffer);
+        mesh.drawIndexed(commandBuffer);
     }
 
     m_selectionBox->draw(commandBuffer, viewport, scissor);

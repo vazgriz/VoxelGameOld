@@ -70,7 +70,7 @@ int main() {
     chunkManager.setChunkUpdater(chunkUpdater);
     chunkManager.setChunkMesher(chunkMesher);
 
-    Renderer renderer(engine, renderGraph, cameraSystem, world, textureManager, skyboxManager, selectionBox);
+    Renderer renderer(engine, renderGraph, cameraSystem, world, textureManager, skyboxManager, selectionBox, meshManager);
     engine.getUpdateGroup().add(renderer, 100);
 
     meshManager.setTransferNode(renderer.transferNode());

@@ -12,9 +12,11 @@
 #include "SelectionBox.h"
 #include "World.h"
 
+class MeshManager;
+
 class ChunkRenderer :public VoxelEngine::RenderGraph::Node {
 public:
-    ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager, SelectionBox& selectionBox);
+    ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager, SelectionBox& selectionBox, MeshManager& meshManager);
 
     vk::RenderPass& renderPass() const { return *m_renderPass; }
     VoxelEngine::RenderGraph::BufferUsage& uniformBufferUsage() const { return *m_uniformBufferUsage; }
@@ -39,6 +41,7 @@ private:
     TextureManager* m_textureManager;
     SkyboxManager* m_skyboxManager;
     SelectionBox* m_selectionBox;
+    MeshManager* m_meshManager;
 
     std::unique_ptr<VoxelEngine::Image> m_depthBuffer;
     std::unique_ptr<vk::ImageView> m_depthBufferView;

@@ -14,9 +14,11 @@
 #include "SelectionBox.h"
 #include "World.h"
 
+class MeshManager;
+
 class Renderer : public VoxelEngine::System {
 public:
-    Renderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& renderGraph, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager, SelectionBox& selectionBox);
+    Renderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& renderGraph, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager, SelectionBox& selectionBox, MeshManager& meshManager);
 
     VoxelEngine::TransferNode& transferNode() const { return *m_transferNode; }
     MipmapGenerator& mipmapGenerator() const { return *m_mipmapGenerator; }

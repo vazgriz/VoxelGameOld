@@ -25,7 +25,7 @@ public:
     void setVertexOffset(int32_t vertexOffset) { m_mesh.setVertexOffset(vertexOffset); }
 
     void clearBindings();
-    void addBinding(MeshAllocation&& allocation);
+    void addBinding(MeshAllocation&& allocation, size_t attributeSize);
     void setIndexBuffer(const std::shared_ptr<VoxelEngine::Buffer>& buffer);
 
     MeshAllocation& getBinding(size_t index) { return m_allocations[index]; }

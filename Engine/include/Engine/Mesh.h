@@ -30,6 +30,9 @@ namespace VoxelEngine {
         void clearBindings();
         void clearIndexBuffer();
 
+        void bindVertexBuffers(vk::CommandBuffer& commandBuffer);
+        void bindIndexBuffer(vk::CommandBuffer& commandBuffer);
+
         void draw(vk::CommandBuffer& commandBuffer, uint32_t vertexCount) const;
         void drawIndexed(vk::CommandBuffer& commandBuffer, uint32_t indexCount) const;
         void draw(vk::CommandBuffer& commandBuffer) const;

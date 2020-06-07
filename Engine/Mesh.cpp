@@ -30,15 +30,20 @@ void Mesh::clearIndexBuffer() {
     m_indexBuffer.reset();
 }
 
-void Mesh::draw(vk::CommandBuffer& commandBuffer, uint32_t vertexCount) const {
+void Mesh::bindVertexBuffers(vk::CommandBuffer& commandBuffer) {
     commandBuffer.bindVertexBuffers(0, m_buffers, m_offsets);
-    commandBuffer.draw(vertexCount, 1, 0, 0);
+}
+
+void Mesh::bindIndexBuffer(vk::CommandBuffer& commandBuffer) {
+    commandBuffer.bindIndexBuffer(m_indexBuffer->buffer(), 0, m_indexType);
+}
+
+void Mesh::draw(vk::CommandBuffer& commandBuffer, uint32_t vertexCount) const {
+    commandBuffer.draw(vertexCount, 1, m_vertexOffset, 0);
 }
 
 void Mesh::drawIndexed(vk::CommandBuffer& commandBuffer, uint32_t indexCount) const {
-    commandBuffer.bindVertexBuffers(0, m_buffers, m_offsets);
-    commandBuffer.bindIndexBuffer(m_indexBuffer->buffer(), 0, m_indexType);
-    commandBuffer.drawIndexed(indexCount, 1, 0, 0, 0);
+    commandBuffer.drawIndexed(indexCount, 1, 0, m_vertexOffset, 0);
 }
 
 void Mesh::draw(vk::CommandBuffer& commandBuffer) const {

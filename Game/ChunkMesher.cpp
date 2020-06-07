@@ -214,7 +214,7 @@ void ChunkMesher::transferMesh(entt::entity entity, size_t index) {
         chunkMesh.setVertexOffset(vertexBuffer.allocation.offset);
 
         chunkMesh.clearBindings();
-        chunkMesh.addBinding(std::move(vertexBuffer));
+        chunkMesh.addBinding(std::move(vertexBuffer), sizeof(ChunkVertex));
 
         chunkMesh.setIndexBuffer(m_meshManager->indexBuffer());
     }

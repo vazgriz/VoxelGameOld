@@ -13,9 +13,10 @@ void ChunkMesh::clearBindings() {
     m_allocations.clear();
 }
 
-void ChunkMesh::addBinding(MeshAllocation&& allocation) {
+void ChunkMesh::addBinding(MeshAllocation&& allocation, size_t attributeSize) {
     auto& alloc = m_allocations.emplace_back(std::move(allocation));
-    m_mesh.addBinding(alloc.buffer, alloc.allocation.offset);
+    m_mesh.addBinding(alloc.buffer, 0);
+    m_mesh.setVertexOffset(alloc.allocation.offset / attributeSize);
 }
 
 void ChunkMesh::setIndexBuffer(const std::shared_ptr<VoxelEngine::Buffer>& buffer) {
