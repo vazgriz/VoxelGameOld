@@ -87,6 +87,8 @@ void SelectionBox::draw(vk::CommandBuffer& commandBuffer, vk::Viewport viewport,
         glm::ivec4 data = glm::ivec4(m_selection->blockPosition, 0);
         commandBuffer.pushConstants(*m_pipelineLayout, vk::ShaderStageFlags::Vertex, 0, sizeof(glm::ivec4), &data);
 
+        m_mesh->bindVertexBuffers(commandBuffer);
+        m_mesh->bindIndexBuffer(commandBuffer);
         m_mesh->drawIndexed(commandBuffer, 36);
     }
 }
