@@ -175,7 +175,7 @@ void ChunkRenderer::createRenderPass() {
     attachment.stencilLoadOp = vk::AttachmentLoadOp::DontCare;
     attachment.stencilStoreOp = vk::AttachmentStoreOp::DontCare;
     attachment.initialLayout = vk::ImageLayout::Undefined;
-    attachment.finalLayout = vk::ImageLayout::PresentSrcKhr;
+    attachment.finalLayout = vk::ImageLayout::PresentSrcKHR;
 
     vk::AttachmentDescription depthAttachment = {};
     depthAttachment.format = m_depthBuffer->image().format();
