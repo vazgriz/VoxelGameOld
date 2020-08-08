@@ -46,7 +46,8 @@ int main() {
     SelectionBox selectionBox(engine, cameraSystem);
     TextureManager textureManager(engine);
     BlockManager blockManager;
-    World world(blockManager);
+    std::unique_ptr<World> worldPtr = std::make_unique<World>(blockManager);    //allocate on the heap to optimize shutdown (see below)
+    World& world = *worldPtr;
 
     FreeCam freeCam(camera, window.input(), world, blockManager, selectionBox);
     engine.getUpdateGroup().add(freeCam, 10);
@@ -89,6 +90,8 @@ int main() {
     chunkUpdater.stop();
     chunkMesher.stop();
     renderer.wait();
+
+    worldPtr.release(); //drop the pointer on purpose. entt::registry deallocation is slow and not needed by this point
 
     return 0;
 }
