@@ -31,7 +31,7 @@ void Graphics::createInstance() {
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.engineName = "Voxel Game";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.apiVersion = VK_MAKE_VERSION(1, 2, 0);
 
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions;
@@ -46,7 +46,7 @@ void Graphics::createInstance() {
     }
 
     info.enabledLayerNames = {
-        "VK_LAYER_LUNARG_standard_validation",
+        "VK_LAYER_LUNARG_standard_validation"
     };
 
     m_instance = std::make_unique<vk::Instance>(info);

@@ -154,10 +154,10 @@ namespace VoxelEngine {
             std::vector<Edge*> m_inputEdges;
             std::vector<Edge*> m_outputEdges;
 
-            std::vector<vk::Fence> m_fences;
             std::unique_ptr<vk::CommandPool> m_commandPool;
             std::vector<vk::CommandBuffer> m_commandBuffers;
             vk::SubmitInfo m_submitInfo;
+            vk::TimelineSemaphoreSubmitInfo m_timelineSubmitInfo;
 
             void addOutput(Node& output, Edge& edge);
             void addUsage(BufferUsage& usage);
@@ -165,11 +165,9 @@ namespace VoxelEngine {
 
             void makeInputTransfers(uint32_t currentFrame, vk::CommandBuffer& commandBuffer);
             void makeOutputTransfers(uint32_t currentFrame, vk::CommandBuffer& commandBuffer);
-            void wait(uint32_t currentFrame);
             void clearSync(uint32_t currentFrame);
             void internalRender(uint32_t currentFrame);
             void submit(uint32_t currentFrame);
-            void wait();
         };
 
         RenderGraph(vk::Device& device, uint32_t framesInFlight);
@@ -178,6 +176,7 @@ namespace VoxelEngine {
         vk::Device& device() const { return *m_device; }
         uint32_t framesInFlight() const { return m_framesInFlight; }
         uint32_t currentFrame() const { return m_currentFrame; }
+        uint32_t frameCount() const { return m_frameCount; }
 
         template<class T, class... Args>
         T& addNode(Args&&... args) {
@@ -196,17 +195,25 @@ namespace VoxelEngine {
         void queueDestroy(ImageState&& state);
 
     private:
+        struct SemaphoreInfo {
+            std::unique_ptr<vk::Semaphore> semaphore;
+            uint64_t value;
+        };
+
         vk::Device* m_device;
         uint32_t m_framesInFlight;
         mutable uint32_t m_currentFrame;
+        uint32_t m_frameCount;
         std::vector<std::unique_ptr<Node>> m_nodes;
         std::vector<std::unique_ptr<Edge>> m_edges;
         std::vector<Node*> m_nodeList;
-        std::vector<std::unique_ptr<vk::Semaphore>> m_semaphores;
+        std::vector<SemaphoreInfo> m_semaphores;
+        vk::SemaphoreWaitInfo m_semaphoreWaitInfo;
 
         std::queue<std::vector<BufferState>> m_bufferDestroyQueue;
         std::queue<std::vector<ImageState>> m_imageDestroyQueue;
 
         void makeSemaphores();
+        void wait(uint32_t targetFrame);
     };
 }

@@ -265,23 +265,20 @@ RenderGraph::Node::Node(RenderGraph& graph, const vk::Queue& queue, vk::Pipeline
 
     m_commandBuffers = m_commandPool->allocate(allocInfo);
 
-    for (size_t i = 0; i < graph.framesInFlight(); i++) {
-        vk::FenceCreateInfo info = {};
-        info.flags = vk::FenceCreateFlags::Signaled;
-        m_fences.emplace_back(graph.device(), info);
-    }
-
     m_submitInfo = {};
     m_submitInfo.commandBuffers = { m_commandBuffers[0] };
+    m_submitInfo.next = &m_timelineSubmitInfo;
 }
 
 void RenderGraph::Node::addExternalWait(vk::Semaphore& semaphore, vk::PipelineStageFlags stages) {
     m_submitInfo.waitSemaphores.push_back(semaphore);
     m_submitInfo.waitDstStageMask.push_back(stages);
+    m_timelineSubmitInfo.waitSemaphoreValues.push_back(m_graph->framesInFlight());
 }
 
 void RenderGraph::Node::addExternalSignal(vk::Semaphore& semaphore) {
     m_submitInfo.signalSemaphores.push_back(semaphore);
+    m_timelineSubmitInfo.signalSemaphoreValues.push_back(m_graph->framesInFlight());
 }
 
 void RenderGraph::Node::addUsage(BufferUsage& usage) {
@@ -308,12 +305,6 @@ void RenderGraph::Node::makeOutputTransfers(uint32_t currentFrame, vk::CommandBu
     for (auto& edge : m_outputEdges) {
         edge->recordSourceBarriers(currentFrame, commandBuffer);
     }
-}
-
-void RenderGraph::Node::wait(uint32_t currentFrame) {
-    vk::Fence& fence = m_fences[currentFrame];
-    fence.wait();
-    fence.reset();
 }
 
 void RenderGraph::Node::clearSync(uint32_t currentFrame) {
@@ -345,17 +336,22 @@ void RenderGraph::Node::internalRender(uint32_t currentFrame) {
 
 void RenderGraph::Node::submit(uint32_t currentFrame) {
     m_submitInfo.commandBuffers[0] = m_commandBuffers[currentFrame];
+    
+    for (auto& value : m_timelineSubmitInfo.waitSemaphoreValues) {
+        value = m_graph->frameCount() - m_graph->framesInFlight();
+    }
 
-    m_queue->submit(m_submitInfo, &m_fences[currentFrame]);
-}
+    for (auto& value : m_timelineSubmitInfo.signalSemaphoreValues) {
+        value = m_graph->frameCount();
+    }
 
-void RenderGraph::Node::wait() {
-    vk::Fence::wait(m_queue->device(), m_fences, true, -1);
+    m_queue->submit(m_submitInfo, nullptr);
 }
 
 RenderGraph::RenderGraph(vk::Device& device, uint32_t framesInFlight) {
     m_device = &device;
     m_framesInFlight = framesInFlight;
+    m_frameCount = framesInFlight;
     m_currentFrame = 0;
 
     for (uint32_t i = 0; i < framesInFlight; i++) {
@@ -408,21 +404,38 @@ void RenderGraph::bake() {
 void RenderGraph::makeSemaphores() {
     for (Node* node : m_nodeList) {
         for (Node* outputNode : node->m_outputNodes) {
+            vk::SemaphoreTypeCreateInfo timelineInfo = {};
+            timelineInfo.semaphoreType = vk::SemaphoreType::Timeline;
+
             vk::SemaphoreCreateInfo info = {};
-            m_semaphores.emplace_back(std::make_unique<vk::Semaphore>(*m_device, info));
-            auto& semaphore = *m_semaphores.back();
+            info.next = &timelineInfo;
+
+            m_semaphores.emplace_back(SemaphoreInfo{ std::make_unique<vk::Semaphore>(*m_device, info), 0 });
+            auto& semaphore = *m_semaphores.back().semaphore;
 
             node->m_submitInfo.signalSemaphores.push_back(semaphore);
+            node->m_timelineSubmitInfo.signalSemaphoreValues.push_back(framesInFlight());
+
             outputNode->m_submitInfo.waitSemaphores.push_back(semaphore);
             outputNode->m_submitInfo.waitDstStageMask.push_back(outputNode->m_stages);
+            outputNode->m_timelineSubmitInfo.waitSemaphoreValues.push_back(framesInFlight());
+
+            m_semaphoreWaitInfo.semaphores.push_back(semaphore);
+            m_semaphoreWaitInfo.values.push_back(framesInFlight());
         }
     }
 }
 
 void RenderGraph::wait() {
-    for (Node* node : m_nodeList) {
-        node->wait();
+    wait(frameCount() - 1); //wait until previous frame finishes
+}
+
+void RenderGraph::wait(uint32_t targetFrame) {
+    for (auto& value : m_semaphoreWaitInfo.values) {
+        value = targetFrame;
     }
+
+    vk::Semaphore::wait(*m_device, m_semaphoreWaitInfo, std::numeric_limits<uint64_t>::max());
 }
 
 void RenderGraph::execute() {
@@ -434,9 +447,7 @@ void RenderGraph::execute() {
         node->preRender(m_currentFrame);
     }
 
-    for (auto node : m_nodeList) {
-        node->wait(m_currentFrame);
-    }
+    wait(frameCount() - framesInFlight());
 
     m_bufferDestroyQueue.pop();
     m_bufferDestroyQueue.push({});
@@ -456,7 +467,8 @@ void RenderGraph::execute() {
         node->postRender(m_currentFrame);
     }
 
-    m_currentFrame = (m_currentFrame + 1) % m_framesInFlight;
+    m_frameCount++;
+    m_currentFrame = m_frameCount % m_framesInFlight;
 }
 
 void RenderGraph::queueDestroy(BufferState&& state) {
