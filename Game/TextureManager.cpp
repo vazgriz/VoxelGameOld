@@ -90,7 +90,7 @@ void TextureManager::createSampler() {
     info.mipmapMode = vk::SamplerMipmapMode::Linear;
     info.addressModeU = vk::SamplerAddressMode::ClampToEdge;
     info.addressModeV = vk::SamplerAddressMode::ClampToEdge;
-    //info.anisotropyEnable = true;
+    info.anisotropyEnable = true;
     info.maxAnisotropy = 16.0f;
     info.minLod = 0;
     info.maxLod = static_cast<float>(mipLevels);
