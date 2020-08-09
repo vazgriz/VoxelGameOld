@@ -26,7 +26,13 @@ int main() {
     engine.addWindow(window);
 
     VoxelEngine::Graphics& graphics = engine.getGraphics();
-    graphics.pickPhysicalDevice(window);
+    graphics.setWindow(window);
+    vk::PhysicalDeviceFeatures features = {};
+    vk::PhysicalDeviceFeatures supportedFeatures = graphics.getSupportedFeatures();
+
+    if (supportedFeatures.samplerAnisotropy) features.samplerAnisotropy = true;
+
+    graphics.pickPhysicalDevice(&features);
 
     VoxelEngine::RenderGraph renderGraph(graphics.device(), 2);
     engine.setRenderGraph(renderGraph);
