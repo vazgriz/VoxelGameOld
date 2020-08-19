@@ -53,6 +53,8 @@ add_library("Engine"
     include/Engine/BufferedQueue.h
     include/Engine/FreeListAllocator.h
     FreeListAllocator.cpp
+    include/Engine/UI/Canvas.h
+    UI/Canvas.cpp
 )
 
 target_compile_definitions("Engine" PUBLIC
