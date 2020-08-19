@@ -55,6 +55,10 @@ add_library("Engine"
     FreeListAllocator.cpp
     include/Engine/UI/Canvas.h
     UI/Canvas.cpp
+    include/Engine/UI/Transform.h
+    UI/Transform.cpp
+    include/Engine/UI/Element.h
+    UI/Element.cpp
 )
 
 target_compile_definitions("Engine" PUBLIC
