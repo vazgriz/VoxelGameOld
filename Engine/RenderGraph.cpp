@@ -353,6 +353,7 @@ RenderGraph::RenderGraph(vk::Device& device, uint32_t framesInFlight) {
     m_framesInFlight = framesInFlight;
     m_frameCount = framesInFlight;
     m_currentFrame = 0;
+    m_semaphoreWaitInfo = {};
 
     for (uint32_t i = 0; i < framesInFlight; i++) {
         m_bufferDestroyQueue.push({});
