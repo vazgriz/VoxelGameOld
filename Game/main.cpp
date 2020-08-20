@@ -96,7 +96,7 @@ int main() {
     terrainGenerator.stop();
     chunkUpdater.stop();
     chunkMesher.stop();
-    renderer.wait();
+    engine.getGraphics().device().waitIdle();
 
     worldPtr.release(); //drop the pointer on purpose. entt::registry deallocation is slow and not needed by this point
 
