@@ -145,6 +145,12 @@ namespace VoxelEngine {
             vk::CommandPool& commandPool() const { return *m_commandPool; }
 
         private:
+            std::unique_ptr<vk::Semaphore> m_semaphore;
+
+            void createCommandBuffers();
+            void createSemaphore();
+
+        private:
             const vk::Queue* m_queue;
             vk::PipelineStageFlags m_stages;
             RenderGraph* m_graph;
