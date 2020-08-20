@@ -110,7 +110,7 @@ void Graphics::setWindow(Window& window) {
     createSurface(window);
 }
 
-vk::PhysicalDeviceFeatures Graphics::getSupportedFeatures() {
+vk::PhysicalDeviceFeatures2 Graphics::getSupportedFeatures() {
     for (auto& physicalDevice : m_instance->physicalDevices()) {
         QueueIndices indices = getIndices(physicalDevice, *m_surface);
 
@@ -121,7 +121,7 @@ vk::PhysicalDeviceFeatures Graphics::getSupportedFeatures() {
     }
 }
 
-void Graphics::pickPhysicalDevice(vk::PhysicalDeviceFeatures* requestedFeatures) {
+void Graphics::pickPhysicalDevice(vk::PhysicalDeviceFeatures2* requestedFeatures) {
     for (auto& physicalDevice : m_instance->physicalDevices()) {
         QueueIndices indices = getIndices(physicalDevice, *m_surface);
 
@@ -144,7 +144,7 @@ void Graphics::createSurface(Window& window) {
     m_surface = std::make_unique<vk::Surface>(*m_instance, surface);
 }
 
-void Graphics::createDevice(const vk::PhysicalDevice& physicalDevice, vk::PhysicalDeviceFeatures* requestedFeatures, uint32_t graphicsIndex, uint32_t presentIndex, uint32_t transferIndex) {
+void Graphics::createDevice(const vk::PhysicalDevice& physicalDevice, vk::PhysicalDeviceFeatures2* requestedFeatures, uint32_t graphicsIndex, uint32_t presentIndex, uint32_t transferIndex) {
     std::vector<vk::DeviceQueueCreateInfo> queueInfos;
     std::unordered_set<uint32_t> queueFamilySet = { graphicsIndex, presentIndex, transferIndex };
 
@@ -159,8 +159,8 @@ void Graphics::createDevice(const vk::PhysicalDevice& physicalDevice, vk::Physic
 
     vk::DeviceCreateInfo info = {};
     info.queueCreateInfos = std::move(queueInfos);
-    info.enabledFeatures = requestedFeatures;
     info.enabledExtensionNames = deviceExtensions;
+    info.next = requestedFeatures;
 
     m_device = std::make_unique<vk::Device>(physicalDevice, info);
 

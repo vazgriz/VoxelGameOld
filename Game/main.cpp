@@ -27,10 +27,11 @@ int main() {
 
     VoxelEngine::Graphics& graphics = engine.getGraphics();
     graphics.setWindow(window);
-    vk::PhysicalDeviceFeatures features = {};
-    vk::PhysicalDeviceFeatures supportedFeatures = graphics.getSupportedFeatures();
+    vk::PhysicalDeviceFeatures2 features = {};
+    vk::PhysicalDeviceFeatures2 supportedFeatures = graphics.getSupportedFeatures();
 
-    if (supportedFeatures.samplerAnisotropy) features.samplerAnisotropy = true;
+    if (supportedFeatures.features.samplerAnisotropy) features.features.samplerAnisotropy = true;
+    if (supportedFeatures.features12.timelineSemaphore) features.features12.timelineSemaphore = true;
 
     graphics.pickPhysicalDevice(&features);
 

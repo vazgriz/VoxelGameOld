@@ -22,8 +22,8 @@ namespace VoxelEngine {
         entt::sink<void(vk::Swapchain&)>& onSwapchainChanged() { return m_onSwapchainChanged; }
 
         void setWindow(Window& window);
-        vk::PhysicalDeviceFeatures getSupportedFeatures();
-        void pickPhysicalDevice(vk::PhysicalDeviceFeatures* requestedFeatures);
+        vk::PhysicalDeviceFeatures2 getSupportedFeatures();
+        void pickPhysicalDevice(vk::PhysicalDeviceFeatures2* requestedFeatures);
 
     private:
         Window* m_window;
@@ -44,7 +44,7 @@ namespace VoxelEngine {
 
         void createInstance();
         void createSurface(Window& window);
-        void createDevice(const vk::PhysicalDevice& physicalDevice, vk::PhysicalDeviceFeatures* requestedFeatures, uint32_t graphicsIndex, uint32_t presentIndex, uint32_t transferIndex);
+        void createDevice(const vk::PhysicalDevice& physicalDevice, vk::PhysicalDeviceFeatures2* requestedFeatures, uint32_t graphicsIndex, uint32_t presentIndex, uint32_t transferIndex);
         void createSwapchain();
         void createImageViews();
 
