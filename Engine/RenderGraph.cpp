@@ -64,6 +64,14 @@ RenderGraph::BufferEdge::BufferEdge(BufferUsage& sourceUsage, BufferUsage& destU
     m_destUsage = &destUsage;
 }
 
+vk::PipelineStageFlags RenderGraph::BufferEdge::sourceStage() const {
+    return m_sourceUsage->stageFlags();
+}
+
+vk::PipelineStageFlags RenderGraph::BufferEdge::destStage() const {
+    return m_destUsage->stageFlags();
+}
+
 void RenderGraph::BufferEdge::recordSourceBarriers(uint32_t currentFrame, vk::CommandBuffer& commandBuffer) {
     m_barriers.clear();
     vk::PipelineStageFlags sourceStageFlags = m_sourceUsage->stageFlags();
@@ -154,6 +162,14 @@ void RenderGraph::BufferEdge::recordDestBarriers(uint32_t currentFrame, vk::Comm
 RenderGraph::ImageEdge::ImageEdge(ImageUsage& sourceUsage, ImageUsage& destUsage) : Edge(sourceUsage.node(), destUsage.node()) {
     m_sourceUsage = &sourceUsage;
     m_destUsage = &destUsage;
+}
+
+vk::PipelineStageFlags RenderGraph::ImageEdge::sourceStage() const {
+    return m_sourceUsage->stageFlags();
+}
+
+vk::PipelineStageFlags RenderGraph::ImageEdge::destStage() const {
+    return m_destUsage->stageFlags();
 }
 
 void RenderGraph::ImageEdge::recordSourceBarriers(uint32_t currentFrame, vk::CommandBuffer& commandBuffer) {
@@ -427,10 +443,10 @@ void RenderGraph::makeSemaphores() {
         m_semaphoreWaitInfo.semaphores.push_back(semaphore);
         m_semaphoreWaitInfo.values.push_back(0);
 
-        for (Node* outputNode : node->m_outputNodes) {
-
+        for(size_t i = 0; i < node->m_outputNodes.size(); i++) {
+            auto outputNode = node->m_outputNodes[i];
             outputNode->m_submitInfo.waitSemaphores.push_back(semaphore);
-            outputNode->m_submitInfo.waitDstStageMask.push_back(outputNode->m_stages);
+            outputNode->m_submitInfo.waitDstStageMask.push_back(node->m_outputEdges[i]->destStage());
             outputNode->m_timelineSubmitInfo.waitSemaphoreValues.push_back(0);
         }
     }

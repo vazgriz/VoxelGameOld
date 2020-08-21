@@ -12,7 +12,7 @@ AcquireNode::AcquireNode(VoxelEngine::Engine& engine, RenderGraph& graph)
 
     addExternalWait(*m_semaphore, vk::PipelineStageFlags::ColorAttachmentOutput);
 
-    m_imageUsage = std::make_unique<RenderGraph::ImageUsage>(*this, vk::ImageLayout::Undefined, vk::AccessFlags::None, vk::PipelineStageFlags::None);
+    m_imageUsage = std::make_unique<RenderGraph::ImageUsage>(*this, vk::ImageLayout::Undefined, vk::AccessFlags::None, vk::PipelineStageFlags::BottomOfPipe);
 
     engine.getGraphics().onSwapchainChanged().connect<&AcquireNode::onSwapchainChanged>(this);
 }

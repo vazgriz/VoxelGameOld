@@ -85,6 +85,9 @@ namespace VoxelEngine {
             Node& source() const { return *m_sourceNode; }
             Node& dest() const { return *m_destNode; }
 
+            virtual vk::PipelineStageFlags sourceStage() const = 0;
+            virtual vk::PipelineStageFlags destStage() const = 0;
+
         private:
             Node* m_sourceNode;
             Node* m_destNode;
@@ -97,6 +100,8 @@ namespace VoxelEngine {
             friend class RenderGraph;
         public:
             BufferEdge(BufferUsage& sourceUsage, BufferUsage& destUsage);
+            vk::PipelineStageFlags sourceStage() const;
+            vk::PipelineStageFlags destStage() const;
 
         private:
             BufferUsage* m_sourceUsage;
@@ -111,6 +116,8 @@ namespace VoxelEngine {
             friend class RenderGraph;
         public:
             ImageEdge(ImageUsage& sourceUsage, ImageUsage& destUsage);
+            vk::PipelineStageFlags sourceStage() const;
+            vk::PipelineStageFlags destStage() const;
 
         private:
             ImageUsage* m_sourceUsage;
