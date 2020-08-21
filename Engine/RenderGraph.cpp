@@ -368,7 +368,7 @@ void RenderGraph::Node::submit(uint32_t currentFrame) {
     m_submitInfo.commandBuffers[0] = m_commandBuffers[currentFrame];
     
     for (auto& value : m_timelineSubmitInfo.waitSemaphoreValues) {
-        value = m_graph->frameCount() - m_graph->framesInFlight();
+        value = m_graph->frameCount();
     }
 
     for (auto& value : m_timelineSubmitInfo.signalSemaphoreValues) {
