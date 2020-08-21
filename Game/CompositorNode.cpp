@@ -164,6 +164,13 @@ void CompositorNode::createPipeline() {
         | vk::ColorComponentFlags::G
         | vk::ColorComponentFlags::B
         | vk::ColorComponentFlags::A;
+    colorBlendState.blendEnable = true;
+    colorBlendState.colorBlendOp = vk::BlendOp::Add;
+    colorBlendState.alphaBlendOp = vk::BlendOp::Add;
+    colorBlendState.dstAlphaBlendFactor = vk::BlendFactor::Zero;
+    colorBlendState.srcAlphaBlendFactor = vk::BlendFactor::One;
+    colorBlendState.dstColorBlendFactor = vk::BlendFactor::OneMinusSrcAlpha;
+    colorBlendState.srcColorBlendFactor = vk::BlendFactor::SrcAlpha;
 
     vk::PipelineColorBlendStateCreateInfo colorBlendInfo = {};
     colorBlendInfo.attachments = { colorBlendState };
