@@ -26,7 +26,7 @@ Renderer::Renderer(
     m_chunkRenderer = &m_renderGraph->addNode<ChunkRenderer>(*m_engine, *m_renderGraph, *m_acquireNode, *m_transferNode, cameraSystem, world, textureManager, skyboxManager, selectionBox, meshManager);
     m_mipmapGenerator = &m_renderGraph->addNode<MipmapGenerator>(*m_engine, *m_renderGraph);
     m_uiNode = &m_renderGraph->addNode<VoxelEngine::UI::UINode>(*m_renderGraph, *m_engine->getGraphics().graphicsQueue());
-    m_compositor = &m_renderGraph->addNode<CompositorNode>(*m_engine, *m_renderGraph, *m_acquireNode);
+    m_compositor = &m_renderGraph->addNode<CompositorNode>(*m_engine, *m_renderGraph, *m_acquireNode, *m_chunkRenderer);
 
     m_renderGraph->addEdge(VoxelEngine::RenderGraph::BufferEdge(m_transferNode->bufferUsage(), m_chunkRenderer->vertexBufferUsage()));
     m_renderGraph->addEdge(VoxelEngine::RenderGraph::BufferEdge(m_transferNode->bufferUsage(), m_chunkRenderer->indexBufferUsage()));

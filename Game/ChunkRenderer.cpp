@@ -5,6 +5,8 @@
 #include "ChunkMesher.h"
 #include <Engine/Utilities.h>
 
+static const vk::Format colorFormat = vk::Format::R8G8B8A8_Unorm;
+
 ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager, SelectionBox& selectionBox, MeshManager& meshManager)
     : VoxelEngine::RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue(), vk::PipelineStageFlags::ColorAttachmentOutput) {
     m_engine = &engine;
@@ -18,6 +20,7 @@ ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGra
     m_selectionBox = &selectionBox;
     m_meshManager = &meshManager;
 
+    createColorBuffer();
     createDepthBuffer();
     createRenderPass();
     createFramebuffers();
@@ -30,7 +33,7 @@ ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGra
     m_textureUsage = std::make_unique<VoxelEngine::RenderGraph::ImageUsage>(*this, vk::ImageLayout::ShaderReadOnlyOptimal, vk::AccessFlags::ShaderRead, vk::PipelineStageFlags::FragmentShader);
     m_skyboxUsage = std::make_unique<VoxelEngine::RenderGraph::ImageUsage>(*this, vk::ImageLayout::ShaderReadOnlyOptimal, vk::AccessFlags::ShaderRead, vk::PipelineStageFlags::FragmentShader);
     m_selectionTextureUsage = std::make_unique<VoxelEngine::RenderGraph::ImageUsage>(*this, vk::ImageLayout::ShaderReadOnlyOptimal, vk::AccessFlags::ShaderRead, vk::PipelineStageFlags::FragmentShader);
-    m_imageUsage = std::make_unique<VoxelEngine::RenderGraph::ImageUsage>(*this, vk::ImageLayout::ColorAttachmentOptimal, vk::AccessFlags::ColorAttachmentWrite, vk::PipelineStageFlags::ColorAttachmentOutput);
+    m_imageUsage = std::make_unique<VoxelEngine::RenderGraph::ImageUsage>(*this, vk::ImageLayout::ShaderReadOnlyOptimal, vk::AccessFlags::ColorAttachmentWrite, vk::PipelineStageFlags::ColorAttachmentOutput);
 
     m_graphics->onSwapchainChanged().connect<&ChunkRenderer::onSwapchainChanged>(this);
 }
@@ -73,12 +76,16 @@ void ChunkRenderer::preRender(uint32_t currentFrame) {
         subresource.baseArrayLayer = i;
         m_skyboxUsage->sync(m_skyboxManager->image(), subresource);
     }
+
+    subresource.baseArrayLayer = 0;
+
+    m_imageUsage->sync(*m_colorBuffer, subresource);
 }
 
 void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer) {
-    /*vk::RenderPassBeginInfo renderPassInfo = {};
+    vk::RenderPassBeginInfo renderPassInfo = {};
     renderPassInfo.renderPass = m_renderPass.get();
-    renderPassInfo.framebuffer = &m_framebuffers[m_acquireNode->swapchainIndex()];
+    renderPassInfo.framebuffer = m_framebuffer.get();
     renderPassInfo.renderArea.extent = m_graphics->swapchain().extent();
     renderPassInfo.clearValues.push_back({ 0.0f, 0.0f, 0.0f, 1.0f });
 
@@ -133,7 +140,37 @@ void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuff
     m_selectionBox->draw(commandBuffer, viewport, scissor);
     m_skyboxManager->draw(commandBuffer, viewport, scissor);
 
-    commandBuffer.endRenderPass();*/
+    commandBuffer.endRenderPass();
+}
+
+void ChunkRenderer::createColorBuffer() {
+    vk::Extent2D extent = m_engine->getGraphics().swapchain().extent();
+    vk::ImageCreateInfo info = {};
+    info.extent = { extent.width, extent.height, 1 };
+    info.format = colorFormat;
+    info.usage = vk::ImageUsageFlags::ColorAttachment | vk::ImageUsageFlags::Sampled;
+    info.mipLevels = 1;
+    info.arrayLayers = 1;
+    info.samples = vk::SampleCountFlags::_1;
+    info.imageType = vk::ImageType::_2D;
+
+    VmaAllocationCreateInfo allocInfo = {};
+    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    allocInfo.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+    m_colorBuffer = std::make_unique<VoxelEngine::Image>(*m_engine, info, allocInfo);
+
+    vk::ImageViewCreateInfo viewInfo = {};
+    viewInfo.image = &m_colorBuffer->image();
+    viewInfo.format = m_colorBuffer->image().format();
+    viewInfo.viewType = vk::ImageViewType::_2D;
+    viewInfo.subresourceRange.aspectMask = vk::ImageAspectFlags::Color;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount = 1;
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = 1;
+
+    m_colorBufferView = std::make_unique<vk::ImageView>(m_engine->getGraphics().device(), viewInfo);
 }
 
 void ChunkRenderer::createDepthBuffer() {
@@ -168,14 +205,14 @@ void ChunkRenderer::createDepthBuffer() {
 
 void ChunkRenderer::createRenderPass() {
     vk::AttachmentDescription attachment = {};
-    attachment.format = m_graphics->swapchain().format();
+    attachment.format = colorFormat;
     attachment.samples = vk::SampleCountFlags::_1;
     attachment.loadOp = vk::AttachmentLoadOp::Clear;
     attachment.storeOp = vk::AttachmentStoreOp::Store;
     attachment.stencilLoadOp = vk::AttachmentLoadOp::DontCare;
     attachment.stencilStoreOp = vk::AttachmentStoreOp::DontCare;
     attachment.initialLayout = vk::ImageLayout::Undefined;
-    attachment.finalLayout = vk::ImageLayout::PresentSrcKHR;
+    attachment.finalLayout = vk::ImageLayout::ShaderReadOnlyOptimal;
 
     vk::AttachmentDescription depthAttachment = {};
     depthAttachment.format = m_depthBuffer->image().format();
@@ -208,18 +245,14 @@ void ChunkRenderer::createRenderPass() {
 }
 
 void ChunkRenderer::createFramebuffers() {
-    m_framebuffers.clear();
+    vk::FramebufferCreateInfo info = {};
+    info.renderPass = m_renderPass.get();
+    info.attachments = { *m_colorBufferView, *m_depthBufferView };
+    info.width = m_graphics->swapchain().extent().width;
+    info.height = m_graphics->swapchain().extent().height;
+    info.layers = 1;
 
-    for (size_t i = 0; i < m_graphics->swapchain().images().size(); i++) {
-        vk::FramebufferCreateInfo info = {};
-        info.renderPass = m_renderPass.get();
-        info.attachments = { m_graphics->swapchainImageViews()[i], *m_depthBufferView };
-        info.width = m_graphics->swapchain().extent().width;
-        info.height = m_graphics->swapchain().extent().height;
-        info.layers = 1;
-
-        m_framebuffers.emplace_back(m_graphics->device(), info);
-    }
+    m_framebuffer = std::make_unique<vk::Framebuffer>(m_graphics->device(), info);
 }
 
 void ChunkRenderer::createPipelineLayout() {
@@ -329,6 +362,7 @@ void ChunkRenderer::createPipeline() {
 }
 
 void ChunkRenderer::onSwapchainChanged(vk::Swapchain& swapchain) {
+    createColorBuffer();
     createDepthBuffer();
     createFramebuffers();
 }

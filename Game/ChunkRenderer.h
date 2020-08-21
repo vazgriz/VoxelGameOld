@@ -31,6 +31,9 @@ public:
     void render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer);
     void postRender(uint32_t currentFrame) {}
 
+    VoxelEngine::Image& colorBuffer() const { return *m_colorBuffer; }
+    vk::ImageView& colorBufferView() const { return *m_colorBufferView; }
+
 private:
     VoxelEngine::Engine* m_engine;
     VoxelEngine::Graphics* m_graphics;
@@ -43,10 +46,12 @@ private:
     SelectionBox* m_selectionBox;
     MeshManager* m_meshManager;
 
+    std::unique_ptr<VoxelEngine::Image> m_colorBuffer;
+    std::unique_ptr<vk::ImageView> m_colorBufferView;
     std::unique_ptr<VoxelEngine::Image> m_depthBuffer;
     std::unique_ptr<vk::ImageView> m_depthBufferView;
     std::unique_ptr<vk::RenderPass> m_renderPass;
-    std::vector<vk::Framebuffer> m_framebuffers;
+    std::unique_ptr<vk::Framebuffer> m_framebuffer;
     std::unique_ptr<vk::PipelineLayout> m_pipelineLayout;
     std::unique_ptr<vk::Pipeline> m_pipeline;
 
@@ -58,8 +63,9 @@ private:
     std::unique_ptr<VoxelEngine::RenderGraph::ImageUsage> m_selectionTextureUsage;
     std::unique_ptr<VoxelEngine::RenderGraph::ImageUsage> m_imageUsage;
 
-    void createDepthBuffer();
     void createRenderPass();
+    void createColorBuffer();
+    void createDepthBuffer();
     void createFramebuffers();
     void createPipelineLayout();
     void createPipeline();
