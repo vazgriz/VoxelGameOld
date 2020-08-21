@@ -46,7 +46,8 @@ void Graphics::createInstance() {
     }
 
     info.enabledLayerNames = {
-        "VK_LAYER_KHRONOS_validation"
+        "VK_LAYER_KHRONOS_validation",
+        //"VK_LAYER_LUNARG_api_dump"
     };
 
     m_instance = std::make_unique<vk::Instance>(info);
