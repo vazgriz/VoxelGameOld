@@ -4,9 +4,11 @@
 
 namespace VoxelEngine {
     namespace UI {
+        class Canvas;
+
         class UINode : public RenderGraph::Node {
         public:
-            UINode(RenderGraph& graph, const vk::Queue& queue);
+            UINode(Engine& engine, RenderGraph& graph);
 
             UINode(const UINode& other) = delete;
             UINode& operator = (const UINode& other) = delete;
@@ -18,9 +20,22 @@ namespace VoxelEngine {
             void postRender(uint32_t currentFrame) {};
 
             RenderGraph::ImageUsage& imageUsage() const { return *m_imageUsage; }
+            vk::RenderPass& renderPass() const { return *m_renderPass; }
+
+            void addCanvas(Canvas& canvas);
+            Canvas& getCanvas(size_t index) const { return *m_canvases[index]; }
 
         private:
+            Engine* m_engine;
+            Graphics* m_graphics;
+            RenderGraph* m_renderGraph;
+
+            std::vector<Canvas*> m_canvases;
+
             std::unique_ptr<RenderGraph::ImageUsage> m_imageUsage;
+            std::unique_ptr<vk::RenderPass> m_renderPass;
+
+            void createRenderPass();
         };
     }
 }

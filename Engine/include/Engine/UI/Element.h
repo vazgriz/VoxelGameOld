@@ -4,6 +4,8 @@
 
 namespace VoxelEngine {
     namespace UI {
+        class Canvas;
+
         class Element {
         public:
             Element(entt::registry& registry, entt::entity id);
@@ -15,7 +17,7 @@ namespace VoxelEngine {
             entt::registry& registry() const { return *m_registry; }
             entt::entity id() const { return m_id; }
 
-            virtual void render(vk::CommandBuffer& commandBuffer) = 0;
+            virtual void render(Canvas& canvas, vk::CommandBuffer& commandBuffer) = 0;
 
         protected:
             entt::registry* m_registry;

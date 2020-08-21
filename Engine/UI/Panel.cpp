@@ -11,6 +11,6 @@ Panel::Panel(entt::registry& registry, entt::entity id, PanelRenderer* renderer)
     m_color = {};
 }
 
-void Panel::render(vk::CommandBuffer& commandBuffer) {
-    m_renderer->render(m_id, commandBuffer);
+void Panel::render(Canvas& canvas, vk::CommandBuffer& commandBuffer) {
+    m_renderer->render(commandBuffer, canvas, m_id);
 }

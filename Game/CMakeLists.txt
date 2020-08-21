@@ -70,7 +70,9 @@ set(SHADER_SOURCES
     "shaders/selection.vert" ;
     "shaders/selection.frag" ;
     "shaders/composite.vert" ;
-    "shaders/composite.frag"
+    "shaders/composite.frag" ;
+    "shaders/ui_panel.vert" ;
+    "shaders/ui_panel.frag" ;
 )
 set(SPIRV_BINARY_FILES)
 

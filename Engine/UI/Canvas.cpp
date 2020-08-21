@@ -1,22 +1,61 @@
 #include "Engine/UI/Canvas.h"
 #include "Engine/Engine.h"
+#include "Engine/UI/Transform.h"
+#include "Engine/UI/Element.h"
 
 using namespace VoxelEngine;
 using namespace VoxelEngine::UI;
 
+using ElementPtr = std::unique_ptr<Element>;
+
 Canvas::Canvas(Engine& engine, uint32_t width, uint32_t height) {
     m_engine = &engine;
-    m_device = &engine.getGraphics().device();
+    m_graphics = &engine.getGraphics();
+    m_renderPass = nullptr;
 
     setSize(width, height);
+}
+
+void Canvas::render(vk::CommandBuffer& commandBuffer) {
+    vk::RenderPassBeginInfo renderPassInfo = {};
+    renderPassInfo.renderPass = m_renderPass;
+    renderPassInfo.framebuffer = m_framebuffer.get();
+    renderPassInfo.renderArea.extent = m_graphics->swapchain().extent();
+    renderPassInfo.clearValues.push_back({ 0.0f, 0.0f, 0.0f, 0.0f });
+
+    commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::Inline);
+
+    auto view = m_registry.view<Transform, ElementPtr>();
+
+    for (auto entity : view) {
+        auto& transform = view.get<Transform>(entity);
+        auto& element = view.get<ElementPtr>(entity);
+
+        element->render(*this, commandBuffer);
+    }
+
+    commandBuffer.endRenderPass();
 }
 
 void Canvas::setSize(uint32_t width, uint32_t height) {
     m_width = width;
     m_height = height;
 
-    createImage();
-    createImageView();
+    updateResources();
+}
+
+void Canvas::setRenderPass(vk::RenderPass& renderPass) {
+    m_renderPass = &renderPass;
+
+    updateResources();
+}
+
+void Canvas::updateResources() {
+    if (m_renderPass != nullptr) {
+        createImage();
+        createImageView();
+        createFramebuffer();
+    }
 }
 
 void Canvas::addRoot(entt::entity entity) {
@@ -63,5 +102,16 @@ void Canvas::createImageView() {
     info.subresourceRange.layerCount = 1;
     info.subresourceRange.levelCount = 1;
 
-    m_imageView = std::make_unique<vk::ImageView>(*m_device, info);
+    m_imageView = std::make_unique<vk::ImageView>(m_graphics->device(), info);
+}
+
+void Canvas::createFramebuffer() {
+    vk::FramebufferCreateInfo info = {};
+    info.renderPass = m_renderPass;
+    info.attachments = { *m_imageView };
+    info.width = m_width;
+    info.height = m_height;
+    info.layers = 1;
+
+    m_framebuffer = std::make_unique<vk::Framebuffer>(m_graphics->device(), info);
 }

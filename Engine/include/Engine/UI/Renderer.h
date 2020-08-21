@@ -4,9 +4,11 @@
 
 namespace VoxelEngine {
     namespace UI {
+        class Canvas;
+
         class Renderer {
         public:
-            virtual void render(entt::entity entity, vk::CommandBuffer& commandBuffer) = 0;
+            virtual void render(vk::CommandBuffer& commandBuffer, Canvas& canvas, entt::entity) = 0;
         };
     }
 }
