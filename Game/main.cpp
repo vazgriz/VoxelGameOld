@@ -19,6 +19,7 @@
 #include "SkyboxManager.h"
 #include "SelectionBox.h"
 #include "MeshManager.h"
+#include "UIManager.h"
 
 int main() {
     VoxelEngine::Engine engine;
@@ -77,7 +78,9 @@ int main() {
     chunkManager.setChunkUpdater(chunkUpdater);
     chunkManager.setChunkMesher(chunkMesher);
 
-    Renderer renderer(engine, renderGraph, cameraSystem, world, textureManager, skyboxManager, selectionBox, meshManager);
+    UIManager uiManager(engine, renderGraph, window);
+
+    Renderer renderer(engine, renderGraph, cameraSystem, world, textureManager, skyboxManager, selectionBox, meshManager, uiManager);
     engine.getUpdateGroup().add(renderer, 100);
 
     meshManager.setTransferNode(renderer.transferNode());

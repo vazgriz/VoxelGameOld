@@ -59,6 +59,18 @@ add_library("Engine"
     UI/Transform.cpp
     include/Engine/UI/Element.h
     UI/Element.cpp
+    include/Engine/UI/Renderer.h
+    UI/Renderer.cpp
+    include/Engine/UI/Panel.h
+    UI/Panel.cpp
+    include/Engine/UI/Label.h
+    UI/Label.cpp
+    include/Engine/UI/PanelRenderer.h
+    UI/PanelRenderer.cpp
+    include/Engine/UI/LabelRenderer.h
+    UI/LabelRenderer.cpp
+    include/Engine/UI/UINode.h
+    UI/UINode.cpp
 )
 
 target_compile_definitions("Engine" PUBLIC

@@ -46,6 +46,10 @@ add_executable("Game"
     SelectionBox.cpp
     MeshManager.h
     MeshManager.cpp
+    UIManager.h
+    UIManager.cpp
+    CompositorNode.h
+    CompositorNode.cpp
 )
 
 target_link_libraries("Game"
@@ -65,6 +69,8 @@ set(SHADER_SOURCES
     "shaders/skybox.frag" ;
     "shaders/selection.vert" ;
     "shaders/selection.frag" ;
+    "shaders/composite.vert" ;
+    "shaders/composite.frag"
 )
 set(SPIRV_BINARY_FILES)
 

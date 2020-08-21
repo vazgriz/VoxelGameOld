@@ -17,7 +17,6 @@ void Canvas::setSize(uint32_t width, uint32_t height) {
 
     createImage();
     createImageView();
-    createFramebuffer();
 }
 
 void Canvas::addRoot(entt::entity entity) {
@@ -43,16 +42,21 @@ void Canvas::createImage() {
     info.format = vk::Format::R8G8B8A8_Unorm;
     info.usage = vk::ImageUsageFlags::Sampled | vk::ImageUsageFlags::ColorAttachment;
     info.initialLayout = vk::ImageLayout::Undefined;
+    info.imageType = vk::ImageType::_2D;
+    info.samples = vk::SampleCountFlags::_1;
     info.arrayLayers = 1;
     info.mipLevels = 1;
-    info.imageType = vk::ImageType::_2D;
 
-    m_image = std::make_unique<vk::Image>(*m_device, info);
+    VmaAllocationCreateInfo allocInfo = {};
+    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    allocInfo.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+    m_image = std::make_unique<VoxelEngine::Image>(*m_engine, info, allocInfo);
 }
 
 void Canvas::createImageView() {
     vk::ImageViewCreateInfo info = {};
-    info.image = m_image.get();
+    info.image = &m_image->image();
     info.format = vk::Format::R8G8B8A8_Unorm;
     info.viewType = vk::ImageViewType::_2D;
     info.subresourceRange.aspectMask = vk::ImageAspectFlags::Color;
@@ -60,14 +64,4 @@ void Canvas::createImageView() {
     info.subresourceRange.levelCount = 1;
 
     m_imageView = std::make_unique<vk::ImageView>(*m_device, info);
-}
-
-void Canvas::createFramebuffer() {
-    vk::FramebufferCreateInfo info = {};
-    info.attachments = { *m_imageView };
-    info.width = m_width;
-    info.height = m_height;
-    info.layers = 1;
-
-    m_framebuffer = std::make_unique<vk::Framebuffer>(*m_device, info);
 }

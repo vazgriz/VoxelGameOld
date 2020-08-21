@@ -76,7 +76,7 @@ void ChunkRenderer::preRender(uint32_t currentFrame) {
 }
 
 void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer) {
-    vk::RenderPassBeginInfo renderPassInfo = {};
+    /*vk::RenderPassBeginInfo renderPassInfo = {};
     renderPassInfo.renderPass = m_renderPass.get();
     renderPassInfo.framebuffer = &m_framebuffers[m_acquireNode->swapchainIndex()];
     renderPassInfo.renderArea.extent = m_graphics->swapchain().extent();
@@ -133,7 +133,7 @@ void ChunkRenderer::render(uint32_t currentFrame, vk::CommandBuffer& commandBuff
     m_selectionBox->draw(commandBuffer, viewport, scissor);
     m_skyboxManager->draw(commandBuffer, viewport, scissor);
 
-    commandBuffer.endRenderPass();
+    commandBuffer.endRenderPass();*/
 }
 
 void ChunkRenderer::createDepthBuffer() {

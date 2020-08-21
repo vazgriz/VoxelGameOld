@@ -5,6 +5,7 @@
 
 namespace VoxelEngine {
     class Engine;
+    class Image;
 
     namespace UI {
         class Canvas {
@@ -16,9 +17,8 @@ namespace VoxelEngine {
             Canvas& operator = (Canvas&& other) = default;
 
             entt::registry& registry() { return m_registry; }
-            vk::Image& image() const { return *m_image; }
+            VoxelEngine::Image& image() const { return *m_image; }
             vk::ImageView& imageView() const { return *m_imageView; }
-            vk::Framebuffer& framebuffer() const { return *m_framebuffer; }
 
             uint32_t height() { return m_height; }
             uint32_t width() { return m_width; }
@@ -39,13 +39,12 @@ namespace VoxelEngine {
 
             std::vector<entt::entity> m_roots;
 
-            std::unique_ptr<vk::Image> m_image;
+            std::unique_ptr<VoxelEngine::Image> m_image;
             std::unique_ptr<vk::ImageView> m_imageView;
             std::unique_ptr<vk::Framebuffer> m_framebuffer;
 
             void createImage();
             void createImageView();
-            void createFramebuffer();
         };
     }
 }
