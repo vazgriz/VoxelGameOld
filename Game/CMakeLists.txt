@@ -63,8 +63,8 @@ target_include_directories("Game"
 )
 
 set(SHADER_SOURCES
-    "shaders/shader.vert" ;
-    "shaders/shader.frag" ;
+    "shaders/chunk.vert" ;
+    "shaders/chunk.frag" ;
     "shaders/skybox.vert" ;
     "shaders/skybox.frag" ;
     "shaders/selection.vert" ;

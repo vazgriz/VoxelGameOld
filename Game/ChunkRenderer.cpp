@@ -273,8 +273,8 @@ void ChunkRenderer::createPipelineLayout() {
 }
 
 void ChunkRenderer::createPipeline() {
-    std::vector<char> vertShaderCode = VoxelEngine::readFile("shaders/shader.vert.spv");
-    std::vector<char> fragShaderCode = VoxelEngine::readFile("shaders/shader.frag.spv");
+    std::vector<char> vertShaderCode = VoxelEngine::readFile("shaders/chunk.vert.spv");
+    std::vector<char> fragShaderCode = VoxelEngine::readFile("shaders/chunk.frag.spv");
 
     vk::ShaderModule vertShader = VoxelEngine::createShaderModule(m_graphics->device(), vertShaderCode);
     vk::ShaderModule fragShader = VoxelEngine::createShaderModule(m_graphics->device(), fragShaderCode);
