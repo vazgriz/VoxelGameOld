@@ -27,10 +27,11 @@ int main() {
 
     VoxelEngine::Graphics& graphics = engine.getGraphics();
     graphics.setWindow(window);
-    vk::PhysicalDeviceFeatures features = {};
-    vk::PhysicalDeviceFeatures supportedFeatures = graphics.getSupportedFeatures();
+    vk::PhysicalDeviceFeatures2 features = {};
+    vk::PhysicalDeviceFeatures2 supportedFeatures = graphics.getSupportedFeatures();
 
-    if (supportedFeatures.samplerAnisotropy) features.samplerAnisotropy = true;
+    if (supportedFeatures.features.samplerAnisotropy) features.features.samplerAnisotropy = true;
+    if (supportedFeatures.features12.timelineSemaphore) features.features12.timelineSemaphore = true;
 
     graphics.pickPhysicalDevice(&features);
 
@@ -52,8 +53,7 @@ int main() {
     SelectionBox selectionBox(engine, cameraSystem);
     TextureManager textureManager(engine);
     BlockManager blockManager;
-    std::unique_ptr<World> worldPtr = std::make_unique<World>(blockManager);    //allocate on the heap to optimize shutdown (see below)
-    World& world = *worldPtr;
+    World world(blockManager);
 
     FreeCam freeCam(camera, window.input(), world, blockManager, selectionBox);
     engine.getUpdateGroup().add(freeCam, 10);
@@ -95,9 +95,7 @@ int main() {
     terrainGenerator.stop();
     chunkUpdater.stop();
     chunkMesher.stop();
-    renderer.wait();
-
-    worldPtr.release(); //drop the pointer on purpose. entt::registry deallocation is slow and not needed by this point
+    engine.getGraphics().device().waitIdle();
 
     return 0;
 }

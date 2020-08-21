@@ -252,6 +252,11 @@ RenderGraph::Node::Node(RenderGraph& graph, const vk::Queue& queue, vk::Pipeline
     m_queue = &queue;
     m_stages = stages;
 
+    createCommandBuffers();
+    createSemaphore();
+}
+
+void RenderGraph::Node::createCommandBuffers() {
     vk::CommandPoolCreateInfo info = {};
     info.queueFamilyIndex = m_queue->familyIndex();
     info.flags = vk::CommandPoolCreateFlags::ResetCommandBuffer;
@@ -260,7 +265,7 @@ RenderGraph::Node::Node(RenderGraph& graph, const vk::Queue& queue, vk::Pipeline
 
     vk::CommandBufferAllocateInfo allocInfo = {};
     allocInfo.commandPool = m_commandPool.get();
-    allocInfo.commandBufferCount = graph.framesInFlight();
+    allocInfo.commandBufferCount = m_graph->framesInFlight();
     allocInfo.level = vk::CommandBufferLevel::Primary;
 
     m_commandBuffers = m_commandPool->allocate(allocInfo);
@@ -270,15 +275,25 @@ RenderGraph::Node::Node(RenderGraph& graph, const vk::Queue& queue, vk::Pipeline
     m_submitInfo.next = &m_timelineSubmitInfo;
 }
 
+void RenderGraph::Node::createSemaphore() {
+    vk::SemaphoreTypeCreateInfo timelineInfo = {};
+    timelineInfo.semaphoreType = vk::SemaphoreType::Timeline;
+
+    vk::SemaphoreCreateInfo info = {};
+    info.next = &timelineInfo;
+
+    m_semaphore = std::make_unique<vk::Semaphore>(m_graph->device(), info);
+}
+
 void RenderGraph::Node::addExternalWait(vk::Semaphore& semaphore, vk::PipelineStageFlags stages) {
     m_submitInfo.waitSemaphores.push_back(semaphore);
     m_submitInfo.waitDstStageMask.push_back(stages);
-    m_timelineSubmitInfo.waitSemaphoreValues.push_back(m_graph->framesInFlight());
+    m_timelineSubmitInfo.waitSemaphoreValues.push_back(0);
 }
 
 void RenderGraph::Node::addExternalSignal(vk::Semaphore& semaphore) {
     m_submitInfo.signalSemaphores.push_back(semaphore);
-    m_timelineSubmitInfo.signalSemaphoreValues.push_back(m_graph->framesInFlight());
+    m_timelineSubmitInfo.signalSemaphoreValues.push_back(0);
 }
 
 void RenderGraph::Node::addUsage(BufferUsage& usage) {
@@ -353,6 +368,7 @@ RenderGraph::RenderGraph(vk::Device& device, uint32_t framesInFlight) {
     m_framesInFlight = framesInFlight;
     m_frameCount = framesInFlight;
     m_currentFrame = 0;
+    m_semaphoreWaitInfo = {};
 
     for (uint32_t i = 0; i < framesInFlight; i++) {
         m_bufferDestroyQueue.push({});
@@ -403,31 +419,25 @@ void RenderGraph::bake() {
 
 void RenderGraph::makeSemaphores() {
     for (Node* node : m_nodeList) {
+        auto& semaphore = *node->m_semaphore;
+
+        node->m_submitInfo.signalSemaphores.push_back(semaphore);
+        node->m_timelineSubmitInfo.signalSemaphoreValues.push_back(0);
+
+        m_semaphoreWaitInfo.semaphores.push_back(semaphore);
+        m_semaphoreWaitInfo.values.push_back(0);
+
         for (Node* outputNode : node->m_outputNodes) {
-            vk::SemaphoreTypeCreateInfo timelineInfo = {};
-            timelineInfo.semaphoreType = vk::SemaphoreType::Timeline;
-
-            vk::SemaphoreCreateInfo info = {};
-            info.next = &timelineInfo;
-
-            m_semaphores.emplace_back(SemaphoreInfo{ std::make_unique<vk::Semaphore>(*m_device, info), 0 });
-            auto& semaphore = *m_semaphores.back().semaphore;
-
-            node->m_submitInfo.signalSemaphores.push_back(semaphore);
-            node->m_timelineSubmitInfo.signalSemaphoreValues.push_back(framesInFlight());
 
             outputNode->m_submitInfo.waitSemaphores.push_back(semaphore);
             outputNode->m_submitInfo.waitDstStageMask.push_back(outputNode->m_stages);
-            outputNode->m_timelineSubmitInfo.waitSemaphoreValues.push_back(framesInFlight());
-
-            m_semaphoreWaitInfo.semaphores.push_back(semaphore);
-            m_semaphoreWaitInfo.values.push_back(framesInFlight());
+            outputNode->m_timelineSubmitInfo.waitSemaphoreValues.push_back(0);
         }
     }
 }
 
 void RenderGraph::wait() {
-    wait(frameCount() - 1); //wait until previous frame finishes
+    wait(frameCount() - 2); //wait until previous frame finishes
 }
 
 void RenderGraph::wait(uint32_t targetFrame) {
