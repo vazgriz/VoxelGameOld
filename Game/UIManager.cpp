@@ -29,7 +29,7 @@ void UIManager::init() {
 
     transform.setPosition({ 10, 10, 0 });
     transform.setSize({ 20, 20 });
-    panel.setColor({ 1.0, 0, 0, 0 });
+    panel.setColor({ 1.0, 0, 0, 1.0 });
 
     m_canvas->addRoot(entity);
 }

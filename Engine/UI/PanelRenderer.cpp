@@ -4,9 +4,17 @@
 #include "Engine/Utilities.h"
 #include "Engine/UI/UINode.h"
 #include "Engine/UI/Canvas.h"
+#include "Engine/UI/Transform.h"
+#include "Engine/UI/Panel.h"
 
 using namespace VoxelEngine;
 using namespace VoxelEngine::UI;
+
+struct PanelData {
+    glm::vec4 color;
+    glm::vec4 position;
+    glm::vec2 size;
+};
 
 PanelRenderer::PanelRenderer(Engine& engine, UINode& uiNode) {
     m_engine = &engine;
@@ -18,6 +26,10 @@ PanelRenderer::PanelRenderer(Engine& engine, UINode& uiNode) {
 }
 
 void PanelRenderer::render(vk::CommandBuffer& commandBuffer, Canvas& canvas, entt::entity entity) {
+    auto view = canvas.registry().view<Transform, ElementUPtr>();
+    Transform& transform = view.get<Transform>(entity);
+    Panel& panel = *dynamic_cast<Panel*>(view.get<ElementUPtr>(entity).get());
+
     commandBuffer.bindPipeline(vk::PipelineBindPoint::Graphics, *m_pipeline);
 
     vk::Viewport viewport = {};
@@ -32,9 +44,13 @@ void PanelRenderer::render(vk::CommandBuffer& commandBuffer, Canvas& canvas, ent
     commandBuffer.setViewport(0, { viewport });
     commandBuffer.setScissor(0, { scissor });
 
-    glm::vec4 data = {};
+    PanelData data = {
+        panel.color(),
+        glm::vec4(transform.position(), 0),
+        transform.size()
+    };
 
-    commandBuffer.pushConstants(*m_pipelineLayout, vk::ShaderStageFlags::Vertex, 0, sizeof(glm::vec4), &data);
+    commandBuffer.pushConstants(*m_pipelineLayout, vk::ShaderStageFlags::Vertex, 0, sizeof(PanelData), &data);
     commandBuffer.draw(3, 1, 0, 0);
 }
 
@@ -45,7 +61,7 @@ void PanelRenderer::createPipelineLayout() {
         {
             vk::ShaderStageFlags::Vertex,
             0,
-            sizeof(glm::ivec4)
+            sizeof(PanelData)
         }
     };
 

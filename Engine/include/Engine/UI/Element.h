@@ -23,5 +23,7 @@ namespace VoxelEngine {
             entt::registry* m_registry;
             entt::entity m_id;
         };
+
+        using ElementUPtr = std::unique_ptr<Element>;
     }
 }

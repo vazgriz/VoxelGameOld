@@ -6,8 +6,6 @@
 using namespace VoxelEngine;
 using namespace VoxelEngine::UI;
 
-using ElementPtr = std::unique_ptr<Element>;
-
 Canvas::Canvas(Engine& engine, uint32_t width, uint32_t height) {
     m_engine = &engine;
     m_graphics = &engine.getGraphics();
@@ -25,11 +23,11 @@ void Canvas::render(vk::CommandBuffer& commandBuffer) {
 
     commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::Inline);
 
-    auto view = m_registry.view<Transform, ElementPtr>();
+    auto view = m_registry.view<Transform, ElementUPtr>();
 
     for (auto entity : view) {
         auto& transform = view.get<Transform>(entity);
-        auto& element = view.get<ElementPtr>(entity);
+        auto& element = view.get<ElementUPtr>(entity);
 
         element->render(*this, commandBuffer);
     }
