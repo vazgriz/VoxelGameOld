@@ -8,7 +8,7 @@
 static const vk::Format colorFormat = vk::Format::R8G8B8A8_Unorm;
 
 ChunkRenderer::ChunkRenderer(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph, VoxelEngine::AcquireNode& acquireNode, VoxelEngine::TransferNode& transferNode, VoxelEngine::CameraSystem& cameraSystem, World& world, TextureManager& textureManager, SkyboxManager& skyboxManager, SelectionBox& selectionBox, MeshManager& meshManager)
-    : VoxelEngine::RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue(), vk::PipelineStageFlags::ColorAttachmentOutput) {
+    : VoxelEngine::RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue()) {
     m_engine = &engine;
     m_graphics = &engine.getGraphics();
     m_acquireNode = &acquireNode;

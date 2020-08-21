@@ -7,7 +7,7 @@ CompositorNode::CompositorNode(
     VoxelEngine::AcquireNode& acquireNode,
     ChunkRenderer& chunkRenderer
 )
-    : VoxelEngine::RenderGraph::Node(renderGraph, *engine.getGraphics().graphicsQueue(), vk::PipelineStageFlags::ColorAttachmentOutput)
+    : VoxelEngine::RenderGraph::Node(renderGraph, *engine.getGraphics().graphicsQueue())
 {
     m_engine = &engine;
     m_graphics = &engine.getGraphics();

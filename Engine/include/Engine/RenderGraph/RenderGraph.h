@@ -134,7 +134,7 @@ namespace VoxelEngine {
             friend class ImageUsage;
 
         public:
-            Node(RenderGraph& graph, const vk::Queue& queue, vk::PipelineStageFlags stages);
+            Node(RenderGraph& graph, const vk::Queue& queue);
             virtual ~Node() = default;
 
             RenderGraph& graph() const { return *m_graph; }
@@ -159,7 +159,6 @@ namespace VoxelEngine {
 
         private:
             const vk::Queue* m_queue;
-            vk::PipelineStageFlags m_stages;
             RenderGraph* m_graph;
             std::vector<Node*> m_outputNodes;
             std::vector<BufferUsage*> m_bufferUsages;

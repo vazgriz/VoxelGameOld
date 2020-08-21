@@ -3,7 +3,7 @@
 using namespace VoxelEngine;
 
 AcquireNode::AcquireNode(VoxelEngine::Engine& engine, RenderGraph& graph)
-    : RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue(), vk::PipelineStageFlags::TopOfPipe)
+    : RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue())
 {
     m_swapchain = &engine.getGraphics().swapchain();
 

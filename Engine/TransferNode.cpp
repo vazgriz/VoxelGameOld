@@ -4,7 +4,7 @@
 using namespace VoxelEngine;
 
 TransferNode::TransferNode(Engine& engine, RenderGraph& graph)
-    : RenderGraph::Node(graph, *engine.getGraphics().transferQueue(), vk::PipelineStageFlags::TopOfPipe) {
+    : RenderGraph::Node(graph, *engine.getGraphics().transferQueue()) {
     m_engine = &engine;
     m_renderGraph = &graph;
 

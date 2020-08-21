@@ -3,7 +3,7 @@
 using namespace VoxelEngine;
 
 PresentNode::PresentNode(VoxelEngine::Engine& engine, RenderGraph& graph, vk::PipelineStageFlags stage, AcquireNode& acquireNode)
-    : RenderGraph::Node(graph, *engine.getGraphics().presentQueue(), stage) {
+    : RenderGraph::Node(graph, *engine.getGraphics().presentQueue()) {
     m_presentQueue = engine.getGraphics().presentQueue();
     m_acquireNode = &acquireNode;
 
@@ -11,7 +11,7 @@ PresentNode::PresentNode(VoxelEngine::Engine& engine, RenderGraph& graph, vk::Pi
     m_semaphore = std::make_unique<vk::Semaphore>(m_presentQueue->device(), info);
 
     //Dummy ImageUsage. Used to set up semaphore. This should not have any images submitted to it.
-    m_imageUsage = std::make_unique<RenderGraph::ImageUsage>(*this, vk::ImageLayout::Undefined, vk::AccessFlags::None, vk::PipelineStageFlags::BottomOfPipe);
+    m_imageUsage = std::make_unique<RenderGraph::ImageUsage>(*this, vk::ImageLayout::Undefined, vk::AccessFlags::None, stage);
 
     addExternalSignal(*m_semaphore);
 }

@@ -263,10 +263,9 @@ void RenderGraph::ImageEdge::recordDestBarriers(uint32_t currentFrame, vk::Comma
     }
 }
 
-RenderGraph::Node::Node(RenderGraph& graph, const vk::Queue& queue, vk::PipelineStageFlags stages) {
+RenderGraph::Node::Node(RenderGraph& graph, const vk::Queue& queue) {
     m_graph = &graph;
     m_queue = &queue;
-    m_stages = stages;
 
     createCommandBuffers();
     createSemaphore();

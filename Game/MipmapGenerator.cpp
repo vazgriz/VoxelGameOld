@@ -1,7 +1,7 @@
 #include "MipmapGenerator.h"
 
 MipmapGenerator::MipmapGenerator(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& graph)
-    : VoxelEngine::RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue(), vk::PipelineStageFlags::Transfer)
+    : VoxelEngine::RenderGraph::Node(graph, *engine.getGraphics().graphicsQueue())
 {
     m_engine = &engine;
 
