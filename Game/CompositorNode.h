@@ -1,6 +1,7 @@
 #pragma once
 #include <Engine/RenderGraph/RenderGraph.h>
 #include <Engine/RenderGraph/AcquireNode.h>
+#include <Engine/UI/Canvas.h>
 #include "ChunkRenderer.h"
 
 class CompositorNode : public VoxelEngine::RenderGraph::Node {
@@ -19,11 +20,14 @@ public:
     void render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer);
     void postRender(uint32_t currentFrame) {};
 
+    void setCanvas(VoxelEngine::UI::Canvas& canvas);
+
 private:
     VoxelEngine::Engine* m_engine;
     VoxelEngine::Graphics* m_graphics;
     VoxelEngine::AcquireNode* m_acquireNode;
     ChunkRenderer* m_chunkRenderer;
+    VoxelEngine::UI::Canvas* m_canvas;
 
     std::unique_ptr<VoxelEngine::RenderGraph::ImageUsage> m_mainUsage;
     std::unique_ptr<VoxelEngine::RenderGraph::ImageUsage> m_uiUsage;
@@ -35,7 +39,8 @@ private:
     std::unique_ptr<vk::Sampler> m_sampler;
     std::unique_ptr<vk::DescriptorSetLayout> m_descriptorSetLayout;
     std::unique_ptr<vk::DescriptorPool> m_descriptorPool;
-    std::unique_ptr<vk::DescriptorSet> m_descriptorSet;
+    std::unique_ptr<vk::DescriptorSet> m_mainDescriptorSet;
+    std::unique_ptr<vk::DescriptorSet> m_uiDescriptorSet;
 
     void createRenderPass();
     void createFramebuffers();
@@ -44,8 +49,8 @@ private:
     void createSampler();
     void createDescriptorSetLayout();
     void createDescriptorPool();
-    void createDescriptorSet();
-    void writeDescriptorSet();
+    void createDescriptorSet(std::unique_ptr<vk::DescriptorSet>& descriptorSet);
+    void writeDescriptorSet(vk::DescriptorSet& descriptorSet, vk::ImageView& imageView);
 
     void onSwapchainChanged(vk::Swapchain& swapchain);
 };

@@ -17,7 +17,7 @@ PanelRenderer::PanelRenderer(Engine& engine, UINode& uiNode) {
     createPipeline();
 }
 
-void PanelRenderer::render(vk::CommandBuffer& commandBuffer, Canvas& canvas, entt::entity) {
+void PanelRenderer::render(vk::CommandBuffer& commandBuffer, Canvas& canvas, entt::entity entity) {
     commandBuffer.bindPipeline(vk::PipelineBindPoint::Graphics, *m_pipeline);
 
     vk::Viewport viewport = {};

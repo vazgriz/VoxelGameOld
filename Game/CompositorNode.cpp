@@ -24,10 +24,16 @@ CompositorNode::CompositorNode(
     createPipeline();
     createSampler();
     createDescriptorPool();
-    createDescriptorSet();
-    writeDescriptorSet();
+    createDescriptorSet(m_mainDescriptorSet);
+    createDescriptorSet(m_uiDescriptorSet);
+    writeDescriptorSet(*m_mainDescriptorSet, m_chunkRenderer->colorBufferView());
 
     m_graphics->onSwapchainChanged().connect<&CompositorNode::onSwapchainChanged>(this);
+}
+
+void CompositorNode::setCanvas(VoxelEngine::UI::Canvas& canvas) {
+    m_canvas = &canvas;
+    writeDescriptorSet(*m_uiDescriptorSet, m_canvas->imageView());
 }
 
 void CompositorNode::preRender(uint32_t currentFrame) {
@@ -51,7 +57,6 @@ void CompositorNode::render(uint32_t currentFrame, vk::CommandBuffer& commandBuf
     commandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::Inline);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::Graphics, *m_pipeline);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::Graphics, *m_pipelineLayout, 0, { *m_descriptorSet }, nullptr);
 
     vk::Viewport viewport = {};
     viewport.width = static_cast<float>(m_graphics->swapchain().extent().width);
@@ -65,6 +70,12 @@ void CompositorNode::render(uint32_t currentFrame, vk::CommandBuffer& commandBuf
     commandBuffer.setViewport(0, { viewport });
     commandBuffer.setScissor(0, { scissor });
 
+    //draw main scene
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::Graphics, *m_pipelineLayout, 0, { *m_mainDescriptorSet }, nullptr);
+    commandBuffer.draw(3, 1, 0, 0);
+
+    //draw ui
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::Graphics, *m_pipelineLayout, 0, { *m_uiDescriptorSet }, nullptr);
     commandBuffer.draw(3, 1, 0, 0);
 
     commandBuffer.endRenderPass();
@@ -234,48 +245,52 @@ void CompositorNode::createDescriptorSetLayout() {
 
 void CompositorNode::createDescriptorPool() {
     vk::DescriptorPoolCreateInfo info = {};
-    info.maxSets = 1;
+    info.maxSets = 2;
     info.poolSizes = {
-        { vk::DescriptorType::Sampler, 1 },
-        { vk::DescriptorType::SampledImage, 1 }
+        { vk::DescriptorType::Sampler, 2 },
+        { vk::DescriptorType::SampledImage, 2 }
     };
 
     m_descriptorPool = std::make_unique<vk::DescriptorPool>(m_engine->getGraphics().device(), info);
 }
 
-void CompositorNode::createDescriptorSet() {
+void CompositorNode::createDescriptorSet(std::unique_ptr<vk::DescriptorSet>& descriptorSet) {
     vk::DescriptorSetAllocateInfo info = {};
     info.descriptorPool = m_descriptorPool.get();
     info.setLayouts = { *m_descriptorSetLayout };
 
-    m_descriptorSet = std::make_unique<vk::DescriptorSet>(std::move(m_descriptorPool->allocate(info)[0]));
+    descriptorSet = std::make_unique<vk::DescriptorSet>(std::move(m_descriptorPool->allocate(info)[0]));
 }
 
-void CompositorNode::writeDescriptorSet() {
+void CompositorNode::writeDescriptorSet(vk::DescriptorSet& descriptorSet, vk::ImageView& imageView) {
     vk::DescriptorImageInfo imageInfo1 = {};
     imageInfo1.sampler = m_sampler.get();
 
     vk::DescriptorImageInfo imageInfo2 = {};
-    imageInfo2.imageView = &m_chunkRenderer->colorBufferView();
+    imageInfo2.imageView = &imageView;
     imageInfo2.imageLayout = vk::ImageLayout::ShaderReadOnlyOptimal;
 
     vk::WriteDescriptorSet write1 = {};
     write1.imageInfo = { imageInfo1 };
-    write1.dstSet = m_descriptorSet.get();
+    write1.dstSet = &descriptorSet;
     write1.dstBinding = 0;
     write1.descriptorType = vk::DescriptorType::Sampler;
 
     vk::WriteDescriptorSet write2 = {};
     write2.imageInfo = { imageInfo2 };
-    write2.dstSet = m_descriptorSet.get();
+    write2.dstSet = &descriptorSet;
     write2.dstBinding = 1;
     write2.descriptorType = vk::DescriptorType::SampledImage;
 
-    m_descriptorSet->update(m_engine->getGraphics().device(), { write1, write2 }, nullptr);
+    descriptorSet.update(m_engine->getGraphics().device(), { write1, write2 }, nullptr);
 }
 
 void CompositorNode::onSwapchainChanged(vk::Swapchain& swapchain) {
     createRenderPass();
     createFramebuffers();
-    writeDescriptorSet();
+    writeDescriptorSet(*m_mainDescriptorSet, m_chunkRenderer->colorBufferView());
+
+    if (m_canvas != nullptr) {
+        writeDescriptorSet(*m_uiDescriptorSet, m_canvas->imageView());
+    }
 }

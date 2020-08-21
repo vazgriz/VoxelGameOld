@@ -18,7 +18,7 @@ namespace VoxelEngine {
             PanelRenderer(PanelRenderer&& other) = default;
             PanelRenderer& operator = (PanelRenderer&& other) = default;
 
-            void render(vk::CommandBuffer& commandBuffer, Canvas& canvas, entt::entity);
+            void render(vk::CommandBuffer& commandBuffer, Canvas& canvas, entt::entity entity);
 
         private:
             Engine* m_engine;

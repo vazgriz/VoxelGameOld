@@ -2,9 +2,9 @@
 #extension GL_ARB_separate_shader_objects : enable
 
 vec2 positions[3] = vec2[](
-    vec2(-1.0, -1.0),
-    vec2(3.0, -1.0),
-    vec2(-1.0, 3.0)
+    vec2(0.0, 0.0),
+    vec2(1.0, 0.0),
+    vec2(0.0, 1.0)
 );
 
 layout(push_constant) uniform Transform {

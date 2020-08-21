@@ -37,6 +37,7 @@ public:
     MipmapGenerator& mipmapGenerator() const { return *m_mipmapGenerator; }
     ChunkRenderer& chunkRenderer() const { return *m_chunkRenderer; }
     VoxelEngine::UI::UINode& uiNode() const { return *m_uiNode; }
+    CompositorNode& compositorNode() const { return *m_compositor; }
 
     void wait();
 
