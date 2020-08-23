@@ -6,17 +6,16 @@ UIManager::UIManager(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& rend
     m_engine = &engine;
     m_window = &window;
     m_renderGraph = &renderGraph;
-
-    m_canvas = std::make_unique<VoxelEngine::UI::Canvas>(engine, window.getFramebufferWidth(), window.getFramebufferHeight());
-
-    window.onFramebufferResized().connect<&VoxelEngine::UI::Canvas::setSize>(m_canvas.get());
 }
 
-void UIManager::setNode(VoxelEngine::UI::UINode& node) {
-    m_node = &node;
-    m_panelRenderer = std::make_unique<VoxelEngine::UI::PanelRenderer>(*m_engine, node);
+void UIManager::setNode(VoxelEngine::UI::UINode& uiNode, VoxelEngine::TransferNode& transferNode) {
+    m_node = &uiNode;
+    m_panelRenderer = std::make_unique<VoxelEngine::UI::PanelRenderer>(*m_engine, uiNode);
 
-    node.addCanvas(*m_canvas);
+    m_canvas = std::make_unique<VoxelEngine::UI::Canvas>(*m_engine, transferNode, m_window->getFramebufferWidth(), m_window->getFramebufferHeight());
+
+    uiNode.addCanvas(*m_canvas);
+    m_window->onFramebufferResized().connect<&VoxelEngine::UI::Canvas::setSize>(m_canvas.get());
 
     init();
 }

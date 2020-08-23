@@ -92,7 +92,7 @@ int main() {
     selectionBox.transfer(renderer.transferNode());
     selectionBox.createMesh(renderer.transferNode(), meshManager);
     selectionBox.createPipeline(renderer.chunkRenderer().renderPass());
-    uiManager.setNode(renderer.uiNode());
+    uiManager.setNode(renderer.uiNode(), renderer.transferNode());
     renderer.compositorNode().setCanvas(renderer.uiNode().getCanvas(0));
 
     engine.run();

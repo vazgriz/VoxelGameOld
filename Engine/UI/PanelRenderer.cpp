@@ -21,7 +21,7 @@ PanelRenderer::PanelRenderer(Engine& engine, UINode& uiNode) {
     m_graphics = &engine.getGraphics();
     m_uiNode = &uiNode;
 
-    createPipelineLayout();
+    createPipelineLayout(uiNode);
     createPipeline();
 }
 
@@ -31,6 +31,7 @@ void PanelRenderer::render(vk::CommandBuffer& commandBuffer, Canvas& canvas, ent
     Panel& panel = *dynamic_cast<Panel*>(view.get<ElementUPtr>(entity).get());
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::Graphics, *m_pipeline);
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::Graphics, *m_pipelineLayout, 0, { canvas.cameraDescriptor() }, nullptr);
 
     vk::Viewport viewport = {};
     viewport.width = static_cast<float>(m_graphics->swapchain().extent().width);
@@ -51,12 +52,15 @@ void PanelRenderer::render(vk::CommandBuffer& commandBuffer, Canvas& canvas, ent
     };
 
     commandBuffer.pushConstants(*m_pipelineLayout, vk::ShaderStageFlags::Vertex, 0, sizeof(PanelData), &data);
-    commandBuffer.draw(3, 1, 0, 0);
+    commandBuffer.draw(6, 1, 0, 0);
 }
 
 
-void PanelRenderer::createPipelineLayout() {
+void PanelRenderer::createPipelineLayout(UINode& uiNode) {
     vk::PipelineLayoutCreateInfo info = {};
+    info.setLayouts = {
+        uiNode.cameraDescriptorSetLayout()
+    };
     info.pushConstantRanges = {
         {
             vk::ShaderStageFlags::Vertex,

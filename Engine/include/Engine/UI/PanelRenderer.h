@@ -28,7 +28,7 @@ namespace VoxelEngine {
             std::unique_ptr<vk::PipelineLayout> m_pipelineLayout;
             std::unique_ptr<vk::Pipeline> m_pipeline;
 
-            void createPipelineLayout();
+            void createPipelineLayout(UINode& uiNode);
             void createPipeline();
         };
     }

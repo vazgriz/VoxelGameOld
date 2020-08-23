@@ -18,11 +18,19 @@ UINode::UINode(Engine& engine, RenderGraph& graph)
     m_imageUsage = std::make_unique<RenderGraph::ImageUsage>(*this, vk::ImageLayout::ColorAttachmentOptimal, vk::AccessFlags::ShaderWrite, vk::PipelineStageFlags::ColorAttachmentOutput);
 
     createRenderPass();
+    createDescriptorSetLayout();
 }
 
 void UINode::addCanvas(Canvas& canvas) {
     canvas.setRenderPass(*m_renderPass);
+    canvas.setCameraDescriptorLayout(*m_descriptorSetLayout);
     m_canvases.push_back(&canvas);
+}
+
+void UINode::preRender(uint32_t currentFrame) {
+    for (auto& canvas : m_canvases) {
+        canvas->preRender();
+    }
 }
 
 void UINode::render(uint32_t currentFrame, vk::CommandBuffer& commandBuffer) {
@@ -55,4 +63,17 @@ void UINode::createRenderPass() {
     info.subpasses = { subpass };
 
     m_renderPass = std::make_unique<vk::RenderPass>(m_graphics->device(), info);
+}
+
+void UINode::createDescriptorSetLayout() {
+    vk::DescriptorSetLayoutBinding binding = {};
+    binding.binding = 0;
+    binding.descriptorType = vk::DescriptorType::UniformBuffer;
+    binding.descriptorCount = 1;
+    binding.stageFlags = vk::ShaderStageFlags::Vertex;
+
+    vk::DescriptorSetLayoutCreateInfo info = {};
+    info.bindings = { binding };
+
+    m_descriptorSetLayout = std::make_unique<vk::DescriptorSetLayout>(m_engine->getGraphics().device(), info);
 }

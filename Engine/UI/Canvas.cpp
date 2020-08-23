@@ -2,16 +2,35 @@
 #include "Engine/Engine.h"
 #include "Engine/UI/Transform.h"
 #include "Engine/UI/Element.h"
+#include "Engine/RenderGraph/TransferNode.h"
+#include "Engine/Buffer.h"
+#include "glm/gtc/matrix_transform.hpp"
 
 using namespace VoxelEngine;
 using namespace VoxelEngine::UI;
 
-Canvas::Canvas(Engine& engine, uint32_t width, uint32_t height) {
+struct UniformData {
+    glm::mat4 projection;
+};
+
+Canvas::Canvas(Engine& engine, TransferNode& transferNode, uint32_t width, uint32_t height) {
     m_engine = &engine;
     m_graphics = &engine.getGraphics();
+    m_transferNode = &transferNode;
     m_renderPass = nullptr;
+    m_descriptorSetLayout = nullptr;
+
+    createUniformBuffer();
+    createDescriptorPool();
 
     setSize(width, height);
+}
+
+void Canvas::preRender() {
+    UniformData uniform = {};
+    uniform.projection = glm::orthoRH_ZO(0.0f, static_cast<float>(m_width), 0.0f, static_cast<float>(m_height), -1.0f, 1.0f);
+
+    m_transferNode->transfer(*m_uniformBuffer, sizeof(UniformData), 0, &uniform);
 }
 
 void Canvas::render(vk::CommandBuffer& commandBuffer) {
@@ -48,11 +67,22 @@ void Canvas::setRenderPass(vk::RenderPass& renderPass) {
     updateResources();
 }
 
+void Canvas::setCameraDescriptorLayout(vk::DescriptorSetLayout& layout) {
+    m_descriptorSetLayout = &layout;
+
+    updateResources();
+}
+
 void Canvas::updateResources() {
     if (m_renderPass != nullptr) {
         createImage();
         createImageView();
         createFramebuffer();
+    }
+
+    if (m_descriptorSetLayout != nullptr) {
+        createDescriptorSet();
+        writeDescriptor();
     }
 }
 
@@ -112,4 +142,45 @@ void Canvas::createFramebuffer() {
     info.layers = 1;
 
     m_framebuffer = std::make_unique<vk::Framebuffer>(m_graphics->device(), info);
+}
+
+void Canvas::createUniformBuffer() {
+    vk::BufferCreateInfo info = {};
+    info.size = sizeof(UniformData);
+    info.usage = vk::BufferUsageFlags::UniformBuffer | vk::BufferUsageFlags::TransferDst;
+
+    VmaAllocationCreateInfo allocInfo = {};
+    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    allocInfo.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+    m_uniformBuffer = std::make_unique<Buffer>(*m_engine, info, allocInfo);
+}
+
+void Canvas::createDescriptorPool() {
+    vk::DescriptorPoolCreateInfo info = {};
+    info.maxSets = 1;
+    info.poolSizes = { { vk::DescriptorType::UniformBuffer, 1 } };
+
+    m_descriptorPool = std::make_unique<vk::DescriptorPool>(m_engine->getGraphics().device(), info);
+}
+
+void Canvas::createDescriptorSet() {
+    vk::DescriptorSetAllocateInfo info = {};
+    info.descriptorPool = m_descriptorPool.get();
+    info.setLayouts = { *m_descriptorSetLayout };
+
+    m_descriptorSet = std::make_unique<vk::DescriptorSet>(std::move(m_descriptorPool->allocate(info)[0]));
+}
+
+void Canvas::writeDescriptor() {
+    vk::DescriptorBufferInfo info = {};
+    info.buffer = &m_uniformBuffer->buffer();
+    info.range = sizeof(UniformData);
+
+    vk::WriteDescriptorSet write = {};
+    write.dstSet = m_descriptorSet.get();
+    write.bufferInfo = { info };
+    write.descriptorType = vk::DescriptorType::UniformBuffer;
+
+    vk::DescriptorSet::update(m_engine->getGraphics().device(), { write }, nullptr);
 }

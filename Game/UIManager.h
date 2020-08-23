@@ -8,7 +8,7 @@ class UIManager {
 public:
     UIManager(VoxelEngine::Engine& engine, VoxelEngine::RenderGraph& renderGraph, VoxelEngine::Window& window);
 
-    void setNode(VoxelEngine::UI::UINode& node);
+    void setNode(VoxelEngine::UI::UINode& uiNode, VoxelEngine::TransferNode& transferNode);
 
 private:
     VoxelEngine::Engine* m_engine;
